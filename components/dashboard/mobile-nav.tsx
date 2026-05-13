@@ -1,6 +1,7 @@
 "use client"
 
-import { LayoutDashboard, CreditCard, Armchair, Users, Wallet, Layers } from "lucide-react"
+import Image from "next/image"
+import { LayoutDashboard, CreditCard, Armchair, Users, Wallet } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { NavTab } from "./sidebar"
 
@@ -23,7 +24,14 @@ export function MobileNav({ activeTab, onNavChange }: MobileNavProps) {
       {/* Mobile top bar */}
       <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#0f172a] border-b border-white/10 fixed top-0 left-0 right-0 z-40">
         <div className="flex items-center gap-2">
-          <Layers className="w-5 h-5 text-cyan-400" />
+          <Image
+            src="/CoStack_Logo.png"
+            alt="Logo de CoStack"
+            width={38}
+            height={38}
+            className="h-[38px] w-[38px] object-contain"
+            priority
+          />
           <span className="text-lg font-bold">
             <span className="text-white">Co</span>
             <span className="text-cyan-400">Stack</span>

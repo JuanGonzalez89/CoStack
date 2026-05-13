@@ -1,6 +1,7 @@
 "use client"
 
-import { Layers, Zap, Shield, Users, ArrowRight, Bot, CreditCard, Lock } from "lucide-react"
+import Image from "next/image"
+import { Zap, Shield, Users, ArrowRight, Bot, CreditCard, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const features = [
@@ -49,9 +50,14 @@ export function LandingPage({ onEnterApp }: LandingPageProps) {
       {/* ── Navbar ── */}
       <nav className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/5 sticky top-0 z-50 bg-[#0a0f1e]/80 backdrop-blur-md">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-cyan-500/15 flex items-center justify-center">
-            <Layers className="w-4 h-4 text-cyan-400" />
-          </div>
+          <Image
+            src="/CoStack_Logo.png"
+            alt="Logo de CoStack"
+            width={36}
+            height={36}
+            className="h-9 w-9 object-contain"
+            priority
+          />
           <span className="text-lg font-bold tracking-tight">
             <span className="text-white">Co</span>
             <span className="text-cyan-400">Stack</span>
@@ -224,7 +230,13 @@ export function LandingPage({ onEnterApp }: LandingPageProps) {
       {/* ── Footer ── */}
       <footer className="border-t border-white/5 px-6 md:px-12 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
         <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-cyan-500" />
+          <Image
+            src="/CoStack_Logo.png"
+            alt="Logo de CoStack"
+            width={18}
+            height={18}
+            className="h-[18px] w-[18px] object-contain"
+          />
           <span className="font-semibold text-slate-300">CoStack</span>
           <span>— Administrador Invisible de Software</span>
         </div>

@@ -10,21 +10,8 @@ export const metadata: Metadata = {
   description: 'Gestiona suscripciones compartidas de software para tu equipo freelance. Pagos, acceso ciego y turnos de uso.',
   generator: 'v0.app',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/CoStack_Logo.png',
+    apple: '/CoStack_Logo.png',
   },
 }
 

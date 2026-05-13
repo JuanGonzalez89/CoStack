@@ -1,12 +1,12 @@
 "use client"
 
+import Image from "next/image"
 import {
   LayoutDashboard,
   CreditCard,
   Armchair,
   Users,
   Wallet,
-  Layers,
   ChevronRight,
   Settings,
   LogOut,
@@ -33,9 +33,14 @@ export function Sidebar({ activeTab, onNavChange }: SidebarProps) {
     <aside className="hidden lg:flex flex-col w-64 shrink-0 min-h-screen bg-[#0f172a] text-slate-300">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-6 py-6 border-b border-white/5">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-cyan-500/10">
-          <Layers className="w-5 h-5 text-cyan-400" />
-        </div>
+        <Image
+          src="/CoStack_Logo.png"
+          alt="Logo de CoStack"
+          width={44}
+          height={44}
+          className="h-11 w-11 object-contain"
+          priority
+        />
         <span className="text-xl font-bold tracking-tight">
           <span className="text-white">Co</span>
           <span className="text-cyan-400">Stack</span>
