@@ -13,6 +13,7 @@ export default function OnboardingPage() {
         </section>
 
         <DemoSessionForm
+          mode="onboarding"
           title="Completar onboarding"
           description="Marcá el grupo como activo para desbloquear el dashboard."
           submitLabel="Finalizar onboarding"

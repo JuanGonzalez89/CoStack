@@ -13,6 +13,7 @@ export default function RegisterPage() {
         </section>
 
         <DemoSessionForm
+          mode="register"
           title="Crear cuenta"
           description="Inicializá la sesión demo de registro para continuar al onboarding."
           submitLabel="Continuar"

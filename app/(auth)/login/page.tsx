@@ -13,6 +13,7 @@ export default function LoginPage() {
         </section>
 
         <DemoSessionForm
+          mode="login"
           title="Iniciar sesión"
           description="Configurá la sesión demo para entrar al dashboard y validar rutas protegidas."
           submitLabel="Entrar"

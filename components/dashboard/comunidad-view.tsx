@@ -1,21 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import {
-  Heart,
-  MessageCircle,
-  Repeat2,
-  Share2,
-  Send,
-  TrendingUp,
-  Award,
-  ImagePlus,
-} from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { Heart, MessageCircle, Repeat2, Share2, Send, TrendingUp, Award, ImagePlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useDashboardSnapshot } from "@/components/dashboard/use-dashboard-snapshot"
 
 interface Post {
-  id: number
+  id: string
   user: string
   handle: string
   avatar: string
@@ -28,91 +20,42 @@ interface Post {
   liked: boolean
 }
 
-const initialPosts: Post[] = [
-  {
-    id: 1,
-    user: "Santiago Calderon",
-    handle: "@santicaldev",
-    avatar: "SC",
-    avatarBg: "bg-violet-500/20 text-violet-500",
-    time: "hace 12 min",
-    content:
-      "Alguien tiene un asiento disponible para Vercel Pro? Necesito desplegar un proyecto full-stack este finde y compartimos gastos.",
-    likes: 14,
-    comments: 6,
-    reposts: 3,
-    liked: false,
-  },
-  {
-    id: 2,
-    user: "Juan Pablo Garcia",
-    handle: "@jpgarcia_ui",
-    avatar: "JP",
-    avatarBg: "bg-sky-500/20 text-sky-500",
-    time: "hace 1 h",
-    content:
-      "Acabo de liberar 2 asientos en nuestro workspace de Midjourney. El bot ya está configurado para dar acceso automático. Link en mi perfil! #Design",
-    likes: 38,
-    comments: 11,
-    reposts: 9,
-    liked: false,
-  },
-  {
-    id: 3,
-    user: "Martín Pérez",
-    handle: "@martinperez.io",
-    avatar: "MP",
-    avatarBg: "bg-cyan-500/20 text-cyan-600",
-    time: "hace 3 h",
-    content:
-      "Compartiendo mi repositorio de Next.js. Logré integrar la API de CoStack para automatizar cobros de clientes. Opiniones?",
-    likes: 52,
-    comments: 17,
-    reposts: 14,
-    liked: true,
-  },
-]
+function initialsFromName(name: string) {
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("")
+}
 
-const trendingTools = [
-  { name: "Vercel Pro", tag: "#VercelPro", posts: 124 },
-  { name: "GitHub Copilot", tag: "#Copilot", posts: 98 },
-  { name: "Midjourney", tag: "#Midjourney", posts: 76 },
-  { name: "ChatGPT Team", tag: "#ChatGPT", posts: 63 },
-  { name: "Figma Org", tag: "#FigmaOrg", posts: 51 },
-]
+function avatarClass(index: number) {
+  const classes = [
+    "bg-violet-500/20 text-violet-500",
+    "bg-sky-500/20 text-sky-500",
+    "bg-cyan-500/20 text-cyan-600",
+    "bg-amber-500/20 text-amber-600",
+  ]
 
-const topFreelancers = [
-  { name: "Laura Díaz", handle: "@lauradesigns", avatar: "LD", bg: "bg-pink-500/20 text-pink-500", seats: 12 },
-  { name: "Carlos Ruiz", handle: "@cruizdev", avatar: "CR", bg: "bg-emerald-500/20 text-emerald-600", seats: 9 },
-  { name: "Ana Torres", handle: "@ana.freelance", avatar: "AT", bg: "bg-amber-500/20 text-amber-600", seats: 7 },
-]
+  return classes[index % classes.length]
+}
 
-function PostCard({ post, onLike }: { post: Post; onLike: (id: number) => void }) {
+function PostCard({ post, onLike }: { post: Post; onLike: (id: string) => void }) {
   return (
     <article className="bg-card rounded-2xl border border-border p-5 hover:shadow-md transition-shadow duration-200">
       <div className="flex items-start gap-3">
-        {/* Avatar */}
-        <div
-          className={cn(
-            "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0",
-            post.avatarBg
-          )}
-        >
+        <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0", post.avatarBg)}>
           {post.avatar}
         </div>
 
         <div className="flex-1 min-w-0">
-          {/* Author row */}
           <div className="flex items-baseline gap-2 flex-wrap">
             <span className="text-sm font-semibold text-foreground">{post.user}</span>
             <span className="text-xs text-muted-foreground">{post.handle}</span>
             <span className="text-xs text-muted-foreground ml-auto shrink-0">{post.time}</span>
           </div>
 
-          {/* Content */}
           <p className="mt-2 text-sm text-foreground leading-relaxed">{post.content}</p>
 
-          {/* Actions */}
           <div className="flex items-center gap-5 mt-4 pt-3 border-t border-border">
             <button
               onClick={() => onLike(post.id)}
@@ -143,21 +86,45 @@ function PostCard({ post, onLike }: { post: Post; onLike: (id: number) => void }
 }
 
 export function ComunidadView() {
-  const [posts, setPosts] = useState<Post[]>(initialPosts)
+  const { data, isLoading } = useDashboardSnapshot()
+  const [posts, setPosts] = useState<Post[]>([])
   const [draft, setDraft] = useState("")
 
-  const handleLike = (id: number) => {
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 } : p
+  useEffect(() => {
+    const remotePosts = data?.latestGroup?.posts ?? []
+
+    if (remotePosts.length > 0) {
+      setPosts(
+        remotePosts.map((post, index) => ({
+          id: post.id,
+          user: post.user.name ?? post.user.email,
+          handle: `@${(post.user.name ?? post.user.email).split(" ")[0].toLowerCase()}`,
+          avatar: initialsFromName(post.user.name ?? post.user.email),
+          avatarBg: avatarClass(index),
+          time: new Date(post.createdAt).toLocaleString("es-AR", { hour: "2-digit", minute: "2-digit" }),
+          content: post.content,
+          likes: post.likes,
+          comments: Math.max(0, Math.round(post.reposts / 2)),
+          reposts: post.reposts,
+          liked: false,
+        })),
       )
+    }
+  }, [data])
+
+  const handleLike = (id: string) => {
+    setPosts((prev) =>
+      prev.map((post) =>
+        post.id === id ? { ...post, liked: !post.liked, likes: post.liked ? post.likes - 1 : post.likes + 1 } : post,
+      ),
     )
   }
 
   const handlePost = () => {
     if (!draft.trim()) return
+
     const newPost: Post = {
-      id: Date.now(),
+      id: crypto.randomUUID(),
       user: "Martín Pérez",
       handle: "@martinperez.io",
       avatar: "MP",
@@ -169,20 +136,59 @@ export function ComunidadView() {
       reposts: 0,
       liked: false,
     }
+
     setPosts((prev) => [newPost, ...prev])
     setDraft("")
   }
 
+  const trendingTools = useMemo(() => {
+    const counts = new Map<string, number>()
+
+    for (const post of data?.latestGroup?.posts ?? []) {
+      const words = post.content.split(/\s+/)
+      for (const word of words) {
+        if (word.startsWith("#")) {
+          counts.set(word, (counts.get(word) ?? 0) + 1)
+        }
+      }
+    }
+
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([tag, postsCount]) => ({ name: tag.replace(/^#/, ""), tag, posts: postsCount }))
+  }, [data])
+
+  const topFreelancers = useMemo(() => {
+    const seatsByUser = new Map<string, number>()
+
+    for (const seat of data?.latestGroup?.seats ?? []) {
+      const owner = seat.tool.name
+      seatsByUser.set(owner, (seatsByUser.get(owner) ?? 0) + 1)
+    }
+
+    return (data?.latestGroup?.members ?? [])
+      .map((member) => {
+        const name = member.user.name ?? member.user.email
+        return {
+          name,
+          handle: `@${name.split(" ")[0].toLowerCase()}`,
+          avatar: initialsFromName(name),
+          bg: avatarClass(name.length),
+          seats: seatsByUser.get(name) ?? 0,
+        }
+      })
+      .slice(0, 3)
+  }, [data])
+
   return (
     <div className="flex flex-col lg:flex-row gap-6">
-      {/* ── Main feed ── */}
       <div className="flex-1 min-w-0 space-y-4">
         <div>
           <h2 className="text-base font-semibold text-foreground">Comunidad Freelance</h2>
           <p className="text-xs text-muted-foreground mt-0.5">Comparte, co-financia y conecta con tu red</p>
         </div>
 
-        {/* New post composer */}
         <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
           <div className="flex items-start gap-3">
             <div className="w-9 h-9 rounded-full bg-cyan-500/20 flex items-center justify-center font-bold text-sm text-cyan-600 shrink-0">
@@ -212,63 +218,67 @@ export function ComunidadView() {
           </div>
         </div>
 
-        {/* Posts feed */}
         <div className="space-y-3">
           {posts.map((post) => (
             <PostCard key={post.id} post={post} onLike={handleLike} />
           ))}
+          {!posts.length && !isLoading && (
+            <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+              Todavía no hay publicaciones persistidas.
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ── Right sidebar ── */}
       <aside className="w-full lg:w-72 shrink-0 space-y-4">
-        {/* Trending Tools */}
         <div className="bg-card rounded-2xl border border-border p-5">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={15} className="text-cyan-500" />
             <h3 className="text-sm font-semibold text-foreground">Trending Tools</h3>
           </div>
           <ul className="space-y-3">
-            {trendingTools.map((t, i) => (
-              <li key={t.tag} className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-foreground">{t.name}</p>
-                  <p className="text-[11px] text-cyan-500">{t.tag}</p>
-                </div>
-                <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                  {t.posts} posts
-                </span>
-              </li>
-            ))}
+            {trendingTools.length ? (
+              trendingTools.map((tool) => (
+                <li key={tool.tag} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">{tool.name}</p>
+                    <p className="text-[11px] text-cyan-500">{tool.tag}</p>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    {tool.posts} posts
+                  </span>
+                </li>
+              ))
+            ) : (
+              <li className="text-xs text-muted-foreground">Sin hashtags todavía.</li>
+            )}
           </ul>
         </div>
 
-        {/* Top Freelancers */}
         <div className="bg-card rounded-2xl border border-border p-5">
           <div className="flex items-center gap-2 mb-4">
             <Award size={15} className="text-amber-500" />
             <h3 className="text-sm font-semibold text-foreground">Top Freelancers</h3>
           </div>
           <ul className="space-y-3">
-            {topFreelancers.map((f) => (
-              <li key={f.handle} className="flex items-center gap-3">
-                <div
-                  className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
-                    f.bg
-                  )}
-                >
-                  {f.avatar}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-foreground truncate">{f.name}</p>
-                  <p className="text-[11px] text-muted-foreground">{f.handle}</p>
-                </div>
-                <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
-                  {f.seats} asientos
-                </span>
-              </li>
-            ))}
+            {topFreelancers.length ? (
+              topFreelancers.map((freelancer) => (
+                <li key={freelancer.handle} className="flex items-center gap-3">
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0", freelancer.bg)}>
+                    {freelancer.avatar}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground truncate">{freelancer.name}</p>
+                    <p className="text-[11px] text-muted-foreground">{freelancer.handle}</p>
+                  </div>
+                  <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
+                    {freelancer.seats} asientos
+                  </span>
+                </li>
+              ))
+            ) : (
+              <li className="text-xs text-muted-foreground">Sin miembros persistidos todavía.</li>
+            )}
           </ul>
         </div>
       </aside>

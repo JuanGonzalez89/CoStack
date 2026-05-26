@@ -5,6 +5,9 @@ const envSchema = z.object({
   OPENCLAW_BOT_SECRET: z.string().min(32).optional(),
   PAYMENT_WEBHOOK_SECRET: z.string().min(32).optional(),
   DATABASE_URL: z.string().url().optional(),
+  STRIPE_SECRET_KEY: z.string().min(10).optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().min(10).optional(),
+  NEXTAUTH_SECRET: z.string().min(32).optional(),
 })
 
 const parsedEnv = envSchema.safeParse(process.env)
