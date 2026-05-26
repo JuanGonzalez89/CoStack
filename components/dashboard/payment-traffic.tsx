@@ -1,39 +1,8 @@
 "use client"
 
-import { CheckCircle2, Clock, AlertCircle, ChevronDown } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import { useDashboardSnapshot } from "@/components/dashboard/use-dashboard-snapshot"
-
-const statusConfig = {
-  paid: {
-    label: "Pagado",
-    icon: CheckCircle2,
-    badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    dot: "bg-emerald-500",
-  },
-  pending: {
-    label: "Pendiente",
-    icon: Clock,
-    badge: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    dot: "bg-yellow-500",
-  },
-  overdue: {
-    label: "Vencido",
-    icon: AlertCircle,
-    badge: "bg-red-100 text-red-700 border-red-200",
-    dot: "bg-red-500",
-  },
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const cfg = statusConfig[status as keyof typeof statusConfig]
-  const Icon = cfg.icon
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${cfg.badge}`}>
-      <Icon size={10} />
-      {cfg.label}
-    </span>
-  )
-}
+import { StatusBadge } from '@/components/dashboard/status-badge'
 
 export function PaymentTraffic() {
   const { data } = useDashboardSnapshot()
@@ -81,12 +50,18 @@ export function PaymentTraffic() {
         </div>
 
         <div className="px-5 py-3 border-b border-border flex items-center gap-4 bg-muted/30">
-          {Object.entries(statusConfig).map(([key, val]) => (
-            <div key={key} className="flex items-center gap-1.5">
-              <span className={`w-2 h-2 rounded-full ${val.dot}`} />
-              <span className="text-xs text-muted-foreground">{val.label}</span>
-            </div>
-          ))}
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="text-xs text-muted-foreground">Pagado</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-yellow-500" />
+            <span className="text-xs text-muted-foreground">Pendiente</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-red-500" />
+            <span className="text-xs text-muted-foreground">Vencido</span>
+          </div>
         </div>
 
         <div className="overflow-x-auto">

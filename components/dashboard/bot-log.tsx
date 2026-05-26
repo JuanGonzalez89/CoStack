@@ -1,6 +1,3 @@
-"use client"
-
-import { useEffect, useRef, useState } from "react"
 import { Bot, Wifi } from "lucide-react"
 import { cn, now } from "@/lib/utils"
 
@@ -29,18 +26,9 @@ const typePrefixes: Record<LogEntry["type"], string> = {
   action: "[BOT] ",
 }
 
-export function BotLog({ extraLogs }: { extraLogs: LogEntry[] }) {
-  const allLogs = [...initialLogs, ...extraLogs]
-  const bottomRef = useRef<HTMLDivElement>(null)
-  const [cursorTime, setCursorTime] = useState<string | null>(null)
-
-  useEffect(() => {
-    setCursorTime(now())
-  }, [])
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [extraLogs])
+export function BotLog({ entries, limit = 3 }: { entries: LogEntry[]; limit?: number }) {
+  const allLogs = (entries.length > 0 ? entries : initialLogs).slice(0, limit)
+  const cursorTime = now()
 
   return (
     <section>
@@ -58,9 +46,9 @@ export function BotLog({ extraLogs }: { extraLogs: LogEntry[] }) {
         </div>
       </div>
 
-      <div className="bg-[#0f172a] rounded-2xl border border-slate-700/50 shadow-lg overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-lg">
         {/* Terminal top bar */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-white/[0.03]">
+        <div className="flex items-center gap-2 border-b border-white/5 bg-white/[0.03] px-4 py-3">
           <span className="w-3 h-3 rounded-full bg-red-500/70" />
           <span className="w-3 h-3 rounded-full bg-yellow-500/70" />
           <span className="w-3 h-3 rounded-full bg-emerald-500/70" />
@@ -68,13 +56,13 @@ export function BotLog({ extraLogs }: { extraLogs: LogEntry[] }) {
         </div>
 
         {/* Log lines */}
-        <div className="p-4 space-y-2 font-mono text-xs min-h-[200px] max-h-72 overflow-y-auto">
+        <div className="max-h-56 space-y-2 overflow-y-auto p-4 font-mono text-xs">
           {allLogs.map((entry, i) => (
             <div
               key={i}
               className={cn(
                 "flex items-start gap-3 transition-all duration-300",
-                i === allLogs.length - 1 && extraLogs.length > 0 && "animate-pulse-once"
+                i === allLogs.length - 1 && "animate-pulse-once"
               )}
             >
               <span className="text-slate-600 shrink-0 tabular-nums">{entry.time}</span>
@@ -93,7 +81,6 @@ export function BotLog({ extraLogs }: { extraLogs: LogEntry[] }) {
               <span className="inline-block w-2 h-3.5 ml-1 bg-cyan-500/70 animate-pulse align-middle" />
             </span>
           </div>
-          <div ref={bottomRef} />
         </div>
       </div>
     </section>

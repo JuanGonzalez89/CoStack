@@ -189,6 +189,10 @@ middleware.ts
 
 ## Base de utilidades y contratos
 
+### Decisión de auth
+
+La decisión queda cerrada a favor de NextAuth v5. Clerk queda descartado para este proyecto porque el repo ya está alineado con Prisma, sesión de base de datos y protección por middleware; mantener esa familia reduce el boilerplate estructural antes de que la UI dependa de auth real.
+
 ### lib/env.ts
 
 Validar variables de entorno desde el arranque. Como mínimo deben quedar tipadas y chequeadas las credenciales del bot, la URL pública, el webhook de pagos y la base de datos.

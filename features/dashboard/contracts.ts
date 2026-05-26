@@ -1,0 +1,93 @@
+export type AccessState = 'current' | 'overdue' | 'blocked'
+
+export type PaymentStatus = 'paid' | 'pending' | 'overdue'
+
+export type SeatStatus = PaymentStatus | 'free'
+
+export type StatusBadgeStatus = PaymentStatus | 'idle' | 'blocked'
+
+export type ToolCardState = 'pending' | 'paying' | 'assigning' | 'assigned'
+
+export type ToolAccent = 'orange' | 'violet' | 'cyan'
+
+export type ViewFilter = 'all' | 'organizer' | 'member'
+
+export type CommunityFilter = 'all' | 'mine' | 'saved'
+
+export interface DashboardMemberSnapshot {
+  role: string
+  status: string
+  user: { name: string | null; email: string }
+}
+
+export interface DashboardSeatSnapshot {
+  status: SeatStatus
+  accessToken: string | null
+  tool: { name: string; provider: string }
+}
+
+export interface DashboardPaymentSnapshot {
+  id: string
+  amount: string | number
+  status: PaymentStatus
+  createdAt: string
+  user: { name: string | null; email: string }
+  tool: { name: string; provider: string }
+  providerRef: string | null
+}
+
+export interface DashboardPostSnapshot {
+  id: string
+  content: string
+  likes: number
+  reposts: number
+  createdAt: string
+  user: { name: string | null; email: string }
+}
+
+export interface DashboardBotEventSnapshot {
+  id: string
+  type: string
+  message: string
+  createdAt: string
+}
+
+export interface DashboardGroupSnapshot {
+  name: string
+  inviteCode: string
+  members: DashboardMemberSnapshot[]
+  seats: DashboardSeatSnapshot[]
+  payments: DashboardPaymentSnapshot[]
+  posts: DashboardPostSnapshot[]
+  botEvents: DashboardBotEventSnapshot[]
+}
+
+export interface DashboardSnapshot {
+  totals: {
+    groups: number
+    memberships: number
+    payments: number
+    seats: number
+    posts: number
+    botEvents: number
+  }
+  latestGroup: DashboardGroupSnapshot | null
+}
+
+export interface ToolCardData {
+  id: string
+  name: string
+  provider: string
+  monthlyCost: number
+  seatsUsed: number
+  seatsTotal: number
+  status: ToolCardState
+  accent: ToolAccent
+  iconLabel: string
+}
+
+export interface SeatAccessCardData {
+  accessState: AccessState
+  groupName: string
+  accessToken: string
+}

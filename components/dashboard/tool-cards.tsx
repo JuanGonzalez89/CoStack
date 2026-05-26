@@ -1,16 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import {
-  Bot,
-  CheckCircle2,
-  AlertTriangle,
-  Users,
-  Loader2,
-  CreditCard,
-  MessageSquare,
-  Lock,
-} from "lucide-react"
+import { useEffect, useState } from 'react'
+import { CreditCard, Loader2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -20,205 +11,46 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { cn } from "@/lib/utils"
+import { ToolCard } from '@/components/dashboard/tool-card'
+import type { ToolCardData } from '@/features/dashboard/contracts'
+import { EmptyState } from '@/components/dashboard/empty-state'
+import { PackageOpen } from 'lucide-react'
 
-type PaymentState = "pending" | "paying" | "assigning" | "assigned"
-
-interface Tool {
-  id: string
-  name: string
-  provider: string
-  monthlyCost: number
-  seatsUsed: number
-  seatsTotal: number
-  userStatus: PaymentState
-  accentBg: string
-  iconBg: string
-  iconText: string
-  iconLabel: string
-}
-
-const initialTools: Tool[] = [
+const initialTools: ToolCardData[] = [
   {
-    id: "chatgpt",
-    name: "ChatGPT Team Workspace",
-    provider: "OpenAI",
+    id: 'chatgpt',
+    name: 'ChatGPT Team Workspace',
+    provider: 'OpenAI',
     monthlyCost: 30,
     seatsUsed: 4,
     seatsTotal: 5,
-    userStatus: "pending",
-    accentBg: "bg-orange-500",
-    iconBg: "bg-orange-500/10",
-    iconText: "text-orange-600",
-    iconLabel: "GPT",
+    status: 'pending',
+    accent: 'orange',
+    iconLabel: 'GPT',
   },
   {
-    id: "figma",
-    name: "Figma Organization",
-    provider: "Figma Inc.",
+    id: 'figma',
+    name: 'Figma Organization',
+    provider: 'Figma Inc.',
     monthlyCost: 45,
     seatsUsed: 8,
     seatsTotal: 10,
-    userStatus: "assigned",
-    accentBg: "bg-violet-500",
-    iconBg: "bg-violet-500/10",
-    iconText: "text-violet-600",
-    iconLabel: "FIG",
+    status: 'assigned',
+    accent: 'violet',
+    iconLabel: 'FIG',
   },
 ]
 
-const statusLabels: Record<PaymentState, string> = {
-  pending: "Cuota Pendiente",
-  paying: "Procesando Pago...",
-  assigning: "Asignando Asiento...",
-  assigned: "Asiento Asignado",
-}
-
-function SeatDots({ used, total }: { used: number; total: number }) {
-  return (
-    <div className="flex items-center gap-1 flex-wrap">
-      {Array.from({ length: total }).map((_, i) => (
-        <span
-          key={i}
-          className={cn(
-            "w-2.5 h-2.5 rounded-full border transition-all duration-300",
-            i < used ? "bg-cyan-500 border-cyan-500" : "bg-transparent border-border"
-          )}
-        />
-      ))}
-    </div>
-  )
-}
-
-interface ToolCardProps {
-  tool: Tool
-  onRequestPay: (id: string) => void
-}
-
-function ToolCard({ tool, onRequestPay }: ToolCardProps) {
-  const isPending = tool.userStatus === "pending"
-  const isPaying = tool.userStatus === "paying"
-  const isAssigning = tool.userStatus === "assigning"
-  const isAssigned = tool.userStatus === "assigned"
-  const isLoading = isPaying || isAssigning
-
-  return (
-    <div
-      className={cn(
-        "bg-card rounded-2xl border shadow-sm hover:shadow-lg overflow-hidden transition-all duration-300",
-        isPending && "border-orange-200 shadow-orange-50",
-        isLoading && "border-cyan-200",
-        isAssigned && "border-emerald-200 shadow-emerald-50"
-      )}
-    >
-      {/* Top accent stripe */}
-      <div className={cn("h-1 w-full", tool.accentBg)} />
-
-      <div className="p-5">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm", tool.iconBg, tool.iconText)}>
-              {tool.iconLabel}
-            </div>
-            <div>
-              <h3 className="font-semibold text-foreground text-sm leading-tight">{tool.name}</h3>
-              <p className="text-xs text-muted-foreground">{tool.provider}</p>
-            </div>
-          </div>
-
-          {/* Status badge */}
-          <span
-            className={cn(
-              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all duration-300",
-              isPending && "bg-orange-100 text-orange-700",
-              isLoading && "bg-cyan-100 text-cyan-700",
-              isAssigned && "bg-emerald-100 text-emerald-700"
-            )}
-          >
-            {isLoading && <Loader2 size={11} className="animate-spin" />}
-            {isPending && <AlertTriangle size={11} />}
-            {isAssigned && <CheckCircle2 size={11} />}
-            {statusLabels[tool.userStatus]}
-          </span>
-        </div>
-
-        {/* Cost */}
-        <div className="flex items-baseline gap-1 mb-3">
-          <span className="text-2xl font-bold text-foreground">${tool.monthlyCost}</span>
-          <span className="text-xs text-muted-foreground">/mes por asiento</span>
-        </div>
-
-        {/* Seats */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <Users size={12} />
-              Asientos ocupados
-            </span>
-            <span className="text-xs font-semibold text-foreground">
-              {tool.seatsUsed}/{tool.seatsTotal}
-            </span>
-          </div>
-          <SeatDots used={tool.seatsUsed} total={tool.seatsTotal} />
-        </div>
-
-        {/* Bot confirmation row (assigned only) */}
-        {isAssigned && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 mb-4">
-            <Bot size={14} className="text-emerald-600 shrink-0" />
-            <span className="text-xs text-emerald-700 font-medium">
-              OpenClaw Bot envió link de invitación por DM
-            </span>
-            <MessageSquare size={12} className="text-emerald-500 ml-auto shrink-0" />
-          </div>
-        )}
-
-        <div className="border-t border-border mb-4" />
-
-        {/* Action */}
-        {isPending && (
-          <Button
-            onClick={() => onRequestPay(tool.id)}
-            className="w-full bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl gap-2 transition-all duration-150"
-            size="sm"
-          >
-            <CreditCard size={14} />
-            Pagar ${tool.monthlyCost} y Asignar Asiento
-          </Button>
-        )}
-
-        {isLoading && (
-          <Button
-            disabled
-            className="w-full bg-cyan-500/70 text-white font-semibold rounded-xl gap-2 cursor-not-allowed"
-            size="sm"
-          >
-            <Loader2 size={14} className="animate-spin" />
-            {isPaying ? "Verificando pago..." : "Bot asignando asiento..."}
-          </Button>
-        )}
-
-        {isAssigned && (
-          <Button
-            disabled
-            variant="outline"
-            className="w-full border-emerald-300 text-emerald-700 bg-emerald-50 font-semibold rounded-xl gap-2 cursor-default"
-            size="sm"
-          >
-            <Lock size={14} />
-            Pago al día
-          </Button>
-        )}
-      </div>
-    </div>
-  )
-}
-
-export function ToolCards({ onBotLog }: { onBotLog?: (msg: string) => void }) {
-  const [tools, setTools] = useState(initialTools)
+export function ToolCards({ tools: toolsProp }: { tools?: ToolCardData[] }) {
+  const [tools, setTools] = useState(toolsProp ?? initialTools)
   const [pendingPayId, setPendingPayId] = useState<string | null>(null)
   const [isConfirming, setIsConfirming] = useState(false)
+
+  useEffect(() => {
+    if (toolsProp) {
+      setTools(toolsProp)
+    }
+  }, [toolsProp])
 
   const pendingTool = tools.find((t) => t.id === pendingPayId)
 
@@ -232,32 +64,21 @@ export function ToolCards({ onBotLog }: { onBotLog?: (msg: string) => void }) {
     setIsConfirming(true)
 
     setTimeout(() => {
-      // Close modal, start flow
       setIsConfirming(false)
       setPendingPayId(null)
 
-      // Step 1: paying
-      setTools((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, userStatus: "paying" } : t))
-      )
-      onBotLog?.(`Procesando pago de $30.00 de Martín Pérez...`)
+      setTools((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'paying' } : t)))
 
-      // Step 2: assigning
       setTimeout(() => {
         setTools((prev) =>
           prev.map((t) =>
-            t.id === id ? { ...t, userStatus: "assigning", seatsUsed: t.seatsUsed + 1 } : t
+            t.id === id ? { ...t, status: 'assigning', seatsUsed: t.seatsUsed + 1 } : t
           )
         )
-        onBotLog?.(`Pago recibido de Martín Pérez. Liberando 1 asiento para ChatGPT Team.`)
       }, 1800)
 
-      // Step 3: assigned — the "Magic Moment" log line
       setTimeout(() => {
-        setTools((prev) =>
-          prev.map((t) => (t.id === id ? { ...t, userStatus: "assigned" } : t))
-        )
-        onBotLog?.(`[BOT] Pago confirmado. OpenClaw enviando enlace de ChatGPT a Martín Pérez por DM.`)
+        setTools((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'assigned' } : t)))
       }, 3800)
     }, 1000)
   }
@@ -312,19 +133,32 @@ export function ToolCards({ onBotLog }: { onBotLog?: (msg: string) => void }) {
       </Dialog>
 
       <section>
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-semibold text-foreground">Tus Asignaciones</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-600">Herramientas</p>
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">CTA contextual por suscripción</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Gestiona tus asientos en licencias compartidas del equipo
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {tools.map((tool) => (
-            <ToolCard key={tool.id} tool={tool} onRequestPay={handleRequestPay} />
-          ))}
-        </div>
+
+        {tools.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            {tools.map((tool) => (
+              <ToolCard key={tool.id} tool={tool} onRequestPay={handleRequestPay} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon={PackageOpen}
+            variant="action"
+            title="Todavía no hay herramientas cargadas"
+            description="Cuando exista un grupo persistido, las suscripciones y asientos aparecerán acá con su CTA contextual."
+            cta={{ label: 'Crear grupo', href: '/onboarding' }}
+            secondaryCta={{ label: 'Tengo un código', href: '/onboarding' }}
+          />
+        )}
       </section>
     </>
   )

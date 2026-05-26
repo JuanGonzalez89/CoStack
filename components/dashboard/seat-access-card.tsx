@@ -1,13 +1,8 @@
 import Link from "next/link"
 import { KeyRound, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import type { SeatAccessCardData } from "@/features/dashboard/contracts"
 import { cn } from "@/lib/utils"
-
-interface SeatAccessCardProps {
-  accessState: "current" | "overdue" | "blocked"
-  groupName: string
-  accessToken: string
-}
 
 const stateStyles = {
   current: "bg-emerald-100 text-emerald-700 border-emerald-200",
@@ -15,7 +10,7 @@ const stateStyles = {
   blocked: "bg-red-100 text-red-700 border-red-200",
 }
 
-export function SeatAccessCard({ accessState, groupName, accessToken }: SeatAccessCardProps) {
+export function SeatAccessCard({ accessState, groupName, accessToken }: SeatAccessCardData) {
   const maskedToken = `${accessToken.slice(0, 4)}•${accessToken.slice(-4)}`
 
   return (
