@@ -1,5 +1,4 @@
-"use client"
-
+import Link from "next/link"
 import Image from "next/image"
 import { Zap, Shield, Users, ArrowRight, Bot, CreditCard, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -39,11 +38,7 @@ const features = [
 
 const logos = ["ChatGPT", "Figma", "Midjourney", "GitHub", "Vercel", "Notion", "Canva", "Slack"]
 
-interface LandingPageProps {
-  onEnterApp: () => void
-}
-
-export function LandingPage({ onEnterApp }: LandingPageProps) {
+export function LandingPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1e] text-white overflow-x-hidden">
 
@@ -69,21 +64,14 @@ export function LandingPage({ onEnterApp }: LandingPageProps) {
           <a href="#pricing" className="hover:text-white transition-colors">Precios</a>
         </div>
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-slate-300 hover:text-white hover:bg-white/5 rounded-xl"
-            onClick={onEnterApp}
-          >
-            Iniciar Sesión
+          <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-white/5 rounded-xl" asChild>
+            <Link href="/login">Iniciar Sesión</Link>
           </Button>
-          <Button
-            size="sm"
-            className="bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl gap-1.5 shadow-lg shadow-cyan-500/20"
-            onClick={onEnterApp}
-          >
-            Registrarse
-            <ArrowRight size={14} />
+          <Button size="sm" className="bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl gap-1.5 shadow-lg shadow-cyan-500/20" asChild>
+            <Link href="/register">
+              Registrarse
+              <ArrowRight size={14} />
+            </Link>
           </Button>
         </div>
       </nav>
@@ -130,21 +118,14 @@ export function LandingPage({ onEnterApp }: LandingPageProps) {
 
         {/* CTAs */}
         <div className="relative mt-10 flex flex-col sm:flex-row items-center gap-4">
-          <Button
-            size="lg"
-            className="w-full sm:w-auto px-8 bg-cyan-500 hover:bg-cyan-400 text-white font-bold rounded-xl gap-2 shadow-xl shadow-cyan-500/25 text-base transition-all duration-200 hover:scale-105"
-            onClick={onEnterApp}
-          >
-            Iniciar Sesión
-            <ArrowRight size={16} />
+          <Button size="lg" className="w-full sm:w-auto px-8 bg-cyan-500 hover:bg-cyan-400 text-white font-bold rounded-xl gap-2 shadow-xl shadow-cyan-500/25 text-base transition-all duration-200 hover:scale-105" asChild>
+            <Link href="/login">
+              Iniciar Sesión
+              <ArrowRight size={16} />
+            </Link>
           </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="w-full sm:w-auto px-8 border-slate-600 text-slate-200 bg-transparent hover:bg-white/5 hover:border-slate-400 font-bold rounded-xl gap-2 text-base transition-all duration-200"
-            onClick={onEnterApp}
-          >
-            Registrarse
+          <Button size="lg" variant="outline" className="w-full sm:w-auto px-8 border-slate-600 text-slate-200 bg-transparent hover:bg-white/5 hover:border-slate-400 font-bold rounded-xl gap-2 text-base transition-all duration-200" asChild>
+            <Link href="/register">Registrarse</Link>
           </Button>
         </div>
 
@@ -207,21 +188,14 @@ export function LandingPage({ onEnterApp }: LandingPageProps) {
             Crea tu equipo, invita a tus colegas y deja que OpenClaw haga el resto.
           </p>
           <div className="relative flex flex-col sm:flex-row justify-center gap-4">
-            <Button
-              size="lg"
-              className="px-10 bg-cyan-500 hover:bg-cyan-400 text-white font-bold rounded-xl gap-2 shadow-xl shadow-cyan-500/25 hover:scale-105 transition-all duration-200"
-              onClick={onEnterApp}
-            >
-              Iniciar Sesión
-              <ArrowRight size={16} />
+            <Button size="lg" className="px-10 bg-cyan-500 hover:bg-cyan-400 text-white font-bold rounded-xl gap-2 shadow-xl shadow-cyan-500/25 hover:scale-105 transition-all duration-200" asChild>
+              <Link href="/login">
+                Iniciar Sesión
+                <ArrowRight size={16} />
+              </Link>
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="px-10 border-slate-600 text-slate-200 bg-transparent hover:bg-white/5 hover:border-slate-400 font-bold rounded-xl"
-              onClick={onEnterApp}
-            >
-              Registrarse
+            <Button size="lg" variant="outline" className="px-10 border-slate-600 text-slate-200 bg-transparent hover:bg-white/5 hover:border-slate-400 font-bold rounded-xl" asChild>
+              <Link href="/register">Registrarse</Link>
             </Button>
           </div>
         </div>

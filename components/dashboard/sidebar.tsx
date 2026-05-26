@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import Image from "next/image"
 import {
   LayoutDashboard,
@@ -12,23 +14,21 @@ import {
   LogOut,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { ROUTES } from "@/lib/constants/routes"
 
 export type NavTab = "Dashboard" | "Suscripciones" | "Gestión de Asientos" | "Comunidad Freelance" | "Billetera"
 
-const navItems: { label: NavTab; icon: React.ElementType; badge?: string; dot?: boolean }[] = [
-  { label: "Dashboard", icon: LayoutDashboard },
-  { label: "Suscripciones", icon: CreditCard },
-  { label: "Gestión de Asientos", icon: Armchair, badge: "8/10" },
-  { label: "Comunidad Freelance", icon: Users },
-  { label: "Billetera", icon: Wallet },
+const navItems: { label: NavTab; href: string; icon: React.ElementType; badge?: string; dot?: boolean }[] = [
+  { label: "Dashboard", href: ROUTES.overview, icon: LayoutDashboard },
+  { label: "Suscripciones", href: ROUTES.suscripciones, icon: CreditCard },
+  { label: "Gestión de Asientos", href: ROUTES.asientos, icon: Armchair, badge: "8/10" },
+  { label: "Comunidad Freelance", href: ROUTES.comunidad, icon: Users },
+  { label: "Billetera", href: ROUTES.billetera, icon: Wallet },
 ]
 
-interface SidebarProps {
-  activeTab: NavTab
-  onNavChange: (tab: NavTab) => void
-}
+export function Sidebar() {
+  const pathname = usePathname()
 
-export function Sidebar({ activeTab, onNavChange }: SidebarProps) {
   return (
     <aside className="hidden lg:flex flex-col w-64 shrink-0 min-h-screen bg-[#0f172a] text-slate-300">
       {/* Logo */}
@@ -53,11 +53,11 @@ export function Sidebar({ activeTab, onNavChange }: SidebarProps) {
           Principal
         </p>
         {navItems.map((item) => {
-          const isActive = activeTab === item.label
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
           return (
-            <button
+            <Link
               key={item.label}
-              onClick={() => onNavChange(item.label)}
+              href={item.href}
               className={cn(
                 "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
                 isActive
@@ -83,7 +83,7 @@ export function Sidebar({ activeTab, onNavChange }: SidebarProps) {
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               )}
               {isActive && <ChevronRight size={14} className="text-cyan-500/60" />}
-            </button>
+            </Link>
           )
         })}
 

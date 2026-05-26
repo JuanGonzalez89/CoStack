@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Bot, Wifi } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, now } from "@/lib/utils"
 
 export interface LogEntry {
   time: string
@@ -27,10 +27,6 @@ const typePrefixes: Record<LogEntry["type"], string> = {
   info: "[INFO]",
   success: "[PAGO]",
   action: "[BOT] ",
-}
-
-function now(): string {
-  return new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })
 }
 
 export function BotLog({ extraLogs }: { extraLogs: LogEntry[] }) {
@@ -103,5 +99,3 @@ export function BotLog({ extraLogs }: { extraLogs: LogEntry[] }) {
     </section>
   )
 }
-
-export { now }
