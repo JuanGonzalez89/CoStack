@@ -1,24 +1,12 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Heart, MessageCircle, Repeat2, Share2, Send, TrendingUp, Award, ImagePlus } from "lucide-react"
+import { Send, TrendingUp, Award, ImagePlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useDashboardSnapshot } from "@/components/dashboard/use-dashboard-snapshot"
-
-interface Post {
-  id: string
-  user: string
-  handle: string
-  avatar: string
-  avatarBg: string
-  time: string
-  content: string
-  likes: number
-  comments: number
-  reposts: number
-  liked: boolean
-}
+import { CommunityPostRow, type CommunityPost } from "./community-post-row"
+import { RoleFilterBar } from "./role-filter-bar"
 
 function initialsFromName(name: string) {
   return name
@@ -30,65 +18,25 @@ function initialsFromName(name: string) {
 
 function avatarClass(index: number) {
   const classes = [
-    "bg-violet-500/20 text-violet-500",
-    "bg-sky-500/20 text-sky-500",
-    "bg-cyan-500/20 text-cyan-600",
-    "bg-amber-500/20 text-amber-600",
+    "bg-violet-500/10 text-violet-500",
+    "bg-sky-500/10 text-sky-500",
+    "bg-cyan-500/10 text-cyan-500",
+    "bg-amber-500/10 text-amber-500",
   ]
-
   return classes[index % classes.length]
 }
 
-function PostCard({ post, onLike }: { post: Post; onLike: (id: string) => void }) {
-  return (
-    <article className="bg-card rounded-2xl border border-border p-5 hover:shadow-md transition-shadow duration-200">
-      <div className="flex items-start gap-3">
-        <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0", post.avatarBg)}>
-          {post.avatar}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-foreground">{post.user}</span>
-            <span className="text-xs text-muted-foreground">{post.handle}</span>
-            <span className="text-xs text-muted-foreground ml-auto shrink-0">{post.time}</span>
-          </div>
-
-          <p className="mt-2 text-sm text-foreground leading-relaxed">{post.content}</p>
-
-          <div className="flex items-center gap-5 mt-4 pt-3 border-t border-border">
-            <button
-              onClick={() => onLike(post.id)}
-              className={cn(
-                "flex items-center gap-1.5 text-xs font-medium transition-colors",
-                post.liked ? "text-rose-500" : "text-muted-foreground hover:text-rose-500"
-              )}
-            >
-              <Heart size={14} className={cn(post.liked && "fill-rose-500")} />
-              {post.likes}
-            </button>
-            <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-cyan-500 transition-colors">
-              <MessageCircle size={14} />
-              {post.comments}
-            </button>
-            <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-emerald-500 transition-colors">
-              <Repeat2 size={14} />
-              {post.reposts}
-            </button>
-            <button className="ml-auto text-muted-foreground hover:text-foreground transition-colors">
-              <Share2 size={14} />
-            </button>
-          </div>
-        </div>
-      </div>
-    </article>
-  )
-}
+const filterOptions = [
+  { value: "all", label: "Todos" },
+  { value: "my_posts", label: "Mis publicaciones" },
+  { value: "saved", label: "Guardados" },
+]
 
 export function ComunidadView() {
   const { data, isLoading } = useDashboardSnapshot()
-  const [posts, setPosts] = useState<Post[]>([])
+  const [posts, setPosts] = useState<CommunityPost[]>([])
   const [draft, setDraft] = useState("")
+  const [filter, setFilter] = useState("all")
 
   useEffect(() => {
     const remotePosts = data?.latestGroup?.posts ?? []
@@ -123,12 +71,12 @@ export function ComunidadView() {
   const handlePost = () => {
     if (!draft.trim()) return
 
-    const newPost: Post = {
+    const newPost: CommunityPost = {
       id: crypto.randomUUID(),
       user: "Martín Pérez",
       handle: "@martinperez.io",
       avatar: "MP",
-      avatarBg: "bg-cyan-500/20 text-cyan-600",
+      avatarBg: "bg-sky-500/10 text-sky-500",
       time: "ahora",
       content: draft.trim(),
       likes: 0,
@@ -184,14 +132,17 @@ export function ComunidadView() {
   return (
     <div className="flex flex-col lg:flex-row gap-6">
       <div className="flex-1 min-w-0 space-y-4">
-        <div>
-          <h2 className="text-base font-semibold text-foreground">Comunidad Freelance</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Comparte, co-financia y conecta con tu red</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-zinc-50">Comunidad Freelance</h2>
+            <p className="text-xs text-zinc-400 mt-0.5">Comparte, co-financia y conecta con tu red</p>
+          </div>
+          <RoleFilterBar value={filter} onChange={setFilter} options={filterOptions} />
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
+        <div className="bg-zinc-950 rounded-2xl border border-zinc-800 p-4 space-y-3">
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-full bg-cyan-500/20 flex items-center justify-center font-bold text-sm text-cyan-600 shrink-0">
+            <div className="w-9 h-9 rounded-full bg-sky-500/10 flex items-center justify-center font-bold text-sm text-sky-500 shrink-0 border border-zinc-800">
               MP
             </div>
             <textarea
@@ -199,16 +150,16 @@ export function ComunidadView() {
               onChange={(e) => setDraft(e.target.value)}
               placeholder="¿Qué estás buscando compartir o co-financiar?"
               rows={3}
-              className="flex-1 resize-none rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 leading-relaxed"
+              className="flex-1 resize-none rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-50 placeholder:text-zinc-500 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/40 leading-relaxed"
             />
           </div>
           <div className="flex items-center justify-between pl-12">
-            <button className="text-muted-foreground hover:text-foreground transition-colors">
+            <button className="text-zinc-500 hover:text-zinc-300 transition-colors">
               <ImagePlus size={16} />
             </button>
             <Button
               size="sm"
-              className="bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl gap-1.5 px-4"
+              className="bg-sky-500 hover:bg-sky-400 text-white font-semibold rounded-xl gap-1.5 px-4"
               onClick={handlePost}
               disabled={!draft.trim()}
             >
@@ -220,10 +171,10 @@ export function ComunidadView() {
 
         <div className="space-y-3">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} onLike={handleLike} />
+            <CommunityPostRow key={post.id} post={post} onLike={handleLike} />
           ))}
           {!posts.length && !isLoading && (
-            <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5 text-sm text-zinc-500 text-center">
               Todavía no hay publicaciones persistidas.
             </div>
           )}
@@ -231,53 +182,53 @@ export function ComunidadView() {
       </div>
 
       <aside className="w-full lg:w-72 shrink-0 space-y-4">
-        <div className="bg-card rounded-2xl border border-border p-5">
+        <div className="bg-zinc-950 rounded-2xl border border-zinc-800 p-5">
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp size={15} className="text-cyan-500" />
-            <h3 className="text-sm font-semibold text-foreground">Trending Tools</h3>
+            <TrendingUp size={15} className="text-sky-500" />
+            <h3 className="text-sm font-semibold text-zinc-50">Trending Tools</h3>
           </div>
           <ul className="space-y-3">
             {trendingTools.length ? (
               trendingTools.map((tool) => (
                 <li key={tool.tag} className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-foreground">{tool.name}</p>
-                    <p className="text-[11px] text-cyan-500">{tool.tag}</p>
+                    <p className="text-xs font-semibold text-zinc-50">{tool.name}</p>
+                    <p className="text-[11px] text-sky-500">{tool.tag}</p>
                   </div>
-                  <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded-full border border-zinc-800">
                     {tool.posts} posts
                   </span>
                 </li>
               ))
             ) : (
-              <li className="text-xs text-muted-foreground">Sin hashtags todavía.</li>
+              <li className="text-xs text-zinc-500">Sin hashtags todavía.</li>
             )}
           </ul>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-5">
+        <div className="bg-zinc-950 rounded-2xl border border-zinc-800 p-5">
           <div className="flex items-center gap-2 mb-4">
             <Award size={15} className="text-amber-500" />
-            <h3 className="text-sm font-semibold text-foreground">Top Freelancers</h3>
+            <h3 className="text-sm font-semibold text-zinc-50">Top Freelancers</h3>
           </div>
           <ul className="space-y-3">
             {topFreelancers.length ? (
               topFreelancers.map((freelancer) => (
                 <li key={freelancer.handle} className="flex items-center gap-3">
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0", freelancer.bg)}>
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 border border-zinc-800", freelancer.bg)}>
                     {freelancer.avatar}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground truncate">{freelancer.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{freelancer.handle}</p>
+                    <p className="text-xs font-semibold text-zinc-50 truncate">{freelancer.name}</p>
+                    <p className="text-[11px] text-zinc-500">{freelancer.handle}</p>
                   </div>
-                  <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
+                  <span className="text-[10px] text-emerald-500 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full shrink-0">
                     {freelancer.seats} asientos
                   </span>
                 </li>
               ))
             ) : (
-              <li className="text-xs text-muted-foreground">Sin miembros persistidos todavía.</li>
+              <li className="text-xs text-zinc-500">Sin miembros persistidos todavía.</li>
             )}
           </ul>
         </div>
@@ -285,3 +236,4 @@ export function ComunidadView() {
     </div>
   )
 }
+
