@@ -13,32 +13,32 @@ type SummaryCard = {
 
 const colorMap = {
   cyan: {
-    bg: "bg-cyan-500/10",
-    icon: "text-cyan-500",
-    bar: "bg-cyan-500",
-    track: "bg-cyan-100",
-    value: "text-cyan-600",
+    bg: "bg-cyan-400/10",
+    icon: "text-cyan-300",
+    bar: "bg-cyan-400",
+    track: "bg-cyan-500/15",
+    value: "text-cyan-100",
   },
   indigo: {
-    bg: "bg-indigo-500/10",
-    icon: "text-indigo-500",
-    bar: "bg-indigo-500",
-    track: "bg-indigo-100",
-    value: "text-foreground",
+    bg: "bg-sky-400/10",
+    icon: "text-sky-300",
+    bar: "bg-sky-400",
+    track: "bg-sky-500/15",
+    value: "text-zinc-50",
   },
   amber: {
-    bg: "bg-amber-500/10",
-    icon: "text-amber-500",
-    bar: "bg-amber-500",
-    track: "bg-amber-100",
-    value: "text-amber-600",
+    bg: "bg-amber-400/10",
+    icon: "text-amber-300",
+    bar: "bg-amber-400",
+    track: "bg-amber-500/15",
+    value: "text-amber-200",
   },
   emerald: {
-    bg: "bg-emerald-500/10",
-    icon: "text-emerald-500",
-    bar: "bg-emerald-500",
-    track: "bg-emerald-100",
-    value: "text-emerald-600",
+    bg: "bg-emerald-400/10",
+    icon: "text-emerald-300",
+    bar: "bg-emerald-400",
+    track: "bg-emerald-500/15",
+    value: "text-emerald-200",
   },
 }
 
@@ -94,21 +94,21 @@ export function SummaryCards({ snapshot }: { snapshot: DashboardSnapshot }) {
         return (
           <div
             key={card.title}
-            className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow duration-200 hover:shadow-lg"
+            className="rounded-2xl border border-white/5 bg-white/[0.03] p-5 shadow-[0_1px_0_rgba(255,255,255,0.03)_inset] transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-400/15 hover:bg-white/[0.045]"
           >
             <div className="mb-4 flex items-start justify-between">
               <div className={`rounded-xl p-2.5 ${colors.bg}`}>
                 <card.icon className={`h-5 w-5 ${colors.icon}`} />
               </div>
               {card.title === 'Pagos en mora' && overduePayments > 0 && (
-                <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700">
+                <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-100">
                   Riesgo
                 </span>
               )}
             </div>
-            <p className="mb-1 text-xs font-medium text-muted-foreground">{card.title}</p>
+            <p className="mb-1 text-xs font-medium text-cyan-100/65">{card.title}</p>
             <p className={`text-2xl font-bold leading-tight ${colors.value}`}>{card.value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{card.sub}</p>
+            <p className="mt-1 text-xs text-slate-400">{card.sub}</p>
 
             {card.extra && (
               <div className="mt-3">
@@ -118,7 +118,7 @@ export function SummaryCards({ snapshot }: { snapshot: DashboardSnapshot }) {
                     style={{ width: `${(card.extra.used / card.extra.total) * 100}%` }}
                   />
                 </div>
-                <p className="mt-1.5 text-[10px] text-muted-foreground">
+                <p className="mt-1.5 text-[10px] text-slate-400">
                   {card.footnote ?? `${card.extra.total - card.extra.used} libres de ${card.extra.total}`}
                 </p>
               </div>

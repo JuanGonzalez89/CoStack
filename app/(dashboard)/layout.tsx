@@ -13,11 +13,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-background lg:flex">
+    <div className="min-h-screen bg-[#07111d] text-slate-100 lg:flex">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileNav />
-        <main className="min-w-0 flex-1 lg:pt-0">
+        <main className="min-w-0 flex-1 bg-[#07111d] lg:pt-0">
           <div className="mx-auto max-w-7xl px-4 py-6 pb-24 pt-16 lg:px-8 lg:pb-8 lg:pt-8">
             {children}
           </div>

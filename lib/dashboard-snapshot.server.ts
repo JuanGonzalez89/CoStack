@@ -44,7 +44,7 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
             id: "seat-1", groupId: "mock-group-1", toolId: "tool-1",
             status: "assigned", assigneeId: "user-1", accessToken: "TOKEN-123",
             createdAt: new Date(), updatedAt: new Date(),
-            tool: { id: "tool-1", slug: "figma", name: "Figma Pro", provider: "Figma", monthlyCost: 15, createdAt: new Date() } as any
+            tool: { id: "tool-1", slug: "figma-pro", name: "Figma Pro", provider: "Figma", monthlyCost: 15, createdAt: new Date() } as any
           }
         ],
         payments: [],

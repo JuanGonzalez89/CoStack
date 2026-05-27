@@ -56,8 +56,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className={`bg-background ${plusJakartaSans.variable}`} suppressHydrationWarning>
-      <body className="font-sans antialiased">
+    <html lang="es" className={`bg-[#07111d] ${plusJakartaSans.variable}`} suppressHydrationWarning>
+      <body className="min-h-screen bg-[#07111d] font-sans antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

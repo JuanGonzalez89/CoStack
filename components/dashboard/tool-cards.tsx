@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import { useRouter } from "next/navigation"
 import { CreditCard, Loader2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import {
@@ -42,9 +43,11 @@ const initialTools: ToolCardData[] = [
 ]
 
 export function ToolCards({ tools: toolsProp }: { tools?: ToolCardData[] }) {
+  const router = useRouter()
   const [tools, setTools] = useState(toolsProp ?? initialTools)
   const [pendingPayId, setPendingPayId] = useState<string | null>(null)
   const [isConfirming, setIsConfirming] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (toolsProp) {
@@ -56,31 +59,43 @@ export function ToolCards({ tools: toolsProp }: { tools?: ToolCardData[] }) {
 
   const handleRequestPay = (id: string) => {
     setPendingPayId(id)
+    setStatusMessage(null)
   }
 
-  const handleConfirmPay = () => {
+  const handleConfirmPay = async () => {
     if (!pendingPayId) return
+
     const id = pendingPayId
     setIsConfirming(true)
+    setStatusMessage(null)
 
-    setTimeout(() => {
-      setIsConfirming(false)
+    try {
+      const response = await fetch('/api/payments/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ toolSlug: id }),
+      })
+
+      const payload = (await response.json().catch(() => null)) as { error?: string; message?: string } | null
+
+      if (!response.ok) {
+        setStatusMessage(payload?.error ?? 'No pudimos procesar el pago demo.')
+        return
+      }
+
+      setTools((prev) =>
+        prev.map((tool) =>
+          tool.id === id ? { ...tool, status: 'assigned', seatsUsed: Math.min(tool.seatsTotal, tool.seatsUsed + 1) } : tool,
+        ),
+      )
       setPendingPayId(null)
-
-      setTools((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'paying' } : t)))
-
-      setTimeout(() => {
-        setTools((prev) =>
-          prev.map((t) =>
-            t.id === id ? { ...t, status: 'assigning', seatsUsed: t.seatsUsed + 1 } : t
-          )
-        )
-      }, 1800)
-
-      setTimeout(() => {
-        setTools((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'assigned' } : t)))
-      }, 3800)
-    }, 1000)
+      setStatusMessage(payload?.message ?? 'Pago registrado y correo demo enviado.')
+      router.refresh()
+    } finally {
+      setIsConfirming(false)
+    }
   }
 
   return (
@@ -97,7 +112,7 @@ export function ToolCards({ tools: toolsProp }: { tools?: ToolCardData[] }) {
                   <span className="font-semibold text-foreground">${pendingTool.monthlyCost}.00</span>{" "}
                   por un asiento en{" "}
                   <span className="font-semibold text-foreground">{pendingTool.name}</span>.
-                  OpenClaw Bot te enviará el enlace de acceso por DM al confirmar.
+                    Vamos a registrar el pago en PostgreSQL y dejar un correo demo con el acceso listo.
                 </>
               )}
             </DialogDescription>
@@ -135,16 +150,22 @@ export function ToolCards({ tools: toolsProp }: { tools?: ToolCardData[] }) {
       <section>
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-600">Herramientas</p>
-            <h2 className="text-lg font-semibold tracking-tight text-foreground">CTA contextual por suscripción</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Herramientas</p>
+            <h2 className="text-lg font-semibold tracking-tight text-zinc-50">CTA contextual por suscripción</h2>
+            <p className="mt-0.5 text-xs text-slate-300">
               Gestiona tus asientos en licencias compartidas del equipo
             </p>
           </div>
         </div>
 
+        {statusMessage && (
+          <div className="mb-4 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-50">
+            {statusMessage}
+          </div>
+        )}
+
         {tools.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[repeat(auto-fit,minmax(230px,1fr))]">
             {tools.map((tool) => (
               <ToolCard key={tool.id} tool={tool} onRequestPay={handleRequestPay} />
             ))}

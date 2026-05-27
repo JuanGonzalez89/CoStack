@@ -23,7 +23,7 @@ export interface DashboardMemberSnapshot {
 export interface DashboardSeatSnapshot {
   status: SeatStatus
   accessToken: string | null
-  tool: { name: string; provider: string }
+  tool: { slug: string; name: string; provider: string; monthlyCost: number }
 }
 
 export interface DashboardPaymentSnapshot {
@@ -32,7 +32,7 @@ export interface DashboardPaymentSnapshot {
   status: PaymentStatus
   createdAt: string
   user: { name: string | null; email: string }
-  tool: { name: string; provider: string }
+  tool: { slug: string; name: string; provider: string; monthlyCost: number }
   providerRef: string | null
 }
 
