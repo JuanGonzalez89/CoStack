@@ -5,7 +5,7 @@ import { ToolCards } from '@/components/dashboard/tool-cards'
 import { BotLog, type LogEntry } from '@/components/dashboard/bot-log'
 import { PaymentTraffic } from '@/components/dashboard/payment-traffic'
 import { SeatAccessCard } from '@/components/dashboard/seat-access-card'
-import { EmptyState } from '@/components/dashboard/empty-state'
+import { OnboardingPrompt } from '@/components/dashboard/onboarding-prompt'
 import type { ToolCardData } from '@/features/dashboard/contracts'
 import { getDashboardSnapshot } from '@/lib/dashboard-snapshot.server'
 import Link from 'next/link'
@@ -19,17 +19,17 @@ export default async function OverviewPage() {
 
   return (
     <div className="space-y-6">
-      <header className="rounded-3xl border border-border bg-card px-5 py-5 shadow-sm lg:px-6">
+      <header className="rounded-3xl border border-zinc-800 bg-zinc-950 px-5 py-5 shadow-sm lg:px-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-600">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-sky-500">
               <span>Dashboard</span>
-              <span className="text-muted-foreground">/</span>
+              <span className="text-zinc-600">/</span>
               <span>Control operativo</span>
             </div>
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">Gestión de licencias y acceso</h1>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+              <h1 className="text-3xl font-bold tracking-tight text-zinc-50">Gestión de licencias y acceso</h1>
+              <p className="max-w-2xl text-sm leading-6 text-zinc-400">
                 La pantalla prioriza riesgo, métricas, acciones y actividad real para que el estado del equipo se entienda de un vistazo.
               </p>
             </div>
@@ -38,12 +38,12 @@ export default async function OverviewPage() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5">
               <span className="h-2 w-2 rounded-full animate-pulse bg-emerald-500" />
-              <Bot size={13} className="text-emerald-600" />
-              <span className="text-xs font-semibold text-emerald-700">Bot Online</span>
+              <Bot size={13} className="text-emerald-500" />
+              <span className="text-xs font-semibold text-emerald-400">Bot Online</span>
             </div>
-            <button className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card transition-colors hover:bg-muted">
-              <Bell size={16} className="text-muted-foreground" />
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border-2 border-card bg-cyan-500" />
+            <button className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 transition-colors hover:bg-zinc-800">
+              <Bell size={16} className="text-zinc-400" />
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border-2 border-zinc-900 bg-sky-500" />
             </button>
           </div>
         </div>
@@ -80,8 +80,8 @@ export default async function OverviewPage() {
       <section className="space-y-4">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-600">Resumen</p>
-            <h2 className="text-lg font-semibold tracking-tight text-foreground">Estado del snapshot</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-500">Resumen</p>
+            <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Estado del snapshot</h2>
           </div>
         </div>
         <SummaryCards snapshot={snapshot} />
@@ -92,14 +92,7 @@ export default async function OverviewPage() {
           {hasTools ? (
             <ToolCards tools={tools} />
           ) : (
-            <EmptyState
-              icon={Box}
-              variant="action"
-              title="No hay herramientas cargadas todavía"
-              description="Cuando el grupo tenga suscripciones persistidas, este bloque mostrará las herramientas con su CTA contextual."
-              cta={{ label: 'Crear grupo', href: '/onboarding' }}
-              secondaryCta={{ label: 'Tengo un código', href: '/onboarding' }}
-            />
+            <OnboardingPrompt />
           )}
 
           <PaymentTraffic />
@@ -108,11 +101,11 @@ export default async function OverviewPage() {
         <div className="space-y-6">
           <SeatAccessCard accessState="current" groupName={snapshot.latestGroup?.name ?? 'CoStack Studio'} accessToken={snapshot.latestGroup?.seats[0]?.accessToken ?? 'COSTACK-74A2-9X11'} />
 
-          <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+          <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-600">Atajos</p>
-                <h3 className="text-base font-semibold tracking-tight text-foreground">Funcionalidades principales</h3>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-500">Atajos</p>
+                <h3 className="text-base font-semibold tracking-tight text-zinc-50">Funcionalidades principales</h3>
               </div>
             </div>
 
@@ -128,8 +121,8 @@ export default async function OverviewPage() {
 
       <section className="space-y-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-600">Actividad</p>
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">Bot log reducido</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-500">Actividad</p>
+          <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Bot log reducido</h2>
         </div>
         <BotLog entries={botEntries} limit={3} />
       </section>
@@ -195,18 +188,18 @@ function buildToolCards(snapshot: DashboardSnapshot): ToolCardData[] {
 
 function MiniStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-border bg-muted/30 px-4 py-3">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-bold tracking-tight text-foreground">{value}</p>
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 px-4 py-3">
+      <p className="text-xs font-medium text-zinc-400">{label}</p>
+      <p className="mt-1 text-2xl font-bold tracking-tight text-zinc-50">{value}</p>
     </div>
   )
 }
 
 function DashboardLinkCard({ href, title, description }: { href: string; title: string; description: string }) {
   return (
-    <Link href={href} className="rounded-2xl border border-border bg-muted/30 p-4 transition-colors hover:border-zinc-700 hover:bg-muted/60">
-      <p className="text-sm font-semibold text-foreground">{title}</p>
-      <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
+    <Link href={href} className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4 transition-colors hover:border-zinc-700 hover:bg-zinc-800">
+      <p className="text-sm font-semibold text-zinc-50">{title}</p>
+      <p className="mt-1 text-xs leading-5 text-zinc-400">{description}</p>
     </Link>
   )
 }

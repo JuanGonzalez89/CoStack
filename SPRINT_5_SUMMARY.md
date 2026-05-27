@@ -22,15 +22,15 @@ A continuación se detalla todo el alcance funcional y visual de este sprint.
 - [ ] **`StatusBadge`**: Unificar definitivamente todos los estados (`paid`, `pending`, `overdue`, `idle`, `blocked`) para evitar su repetición en las distintas pantallas.
 - [ ] **`EmptyState`**: Componente global (con variantes `default` y `action`) para pantallas sin datos, que obligue a pasar un `LucideIcon`, un título, y CTAs de onboarding.
 - [x] **`RoleFilterBar`**: Barra estándar de filtros (`Todos`, `Organizador`, `Miembro`).
-- [ ] **`OnboardingPrompt`**: Tarjetas o banners para guiar al usuario hacia la creación de un grupo o su primera suscripción desde el `overview` cuando está vacío.
+- [x] **`OnboardingPrompt`**: Tarjetas o banners para guiar al usuario hacia la creación de un grupo o su primera suscripción desde el `overview` cuando está vacío.
 - [ ] **`ToolCard`**: Revisar contrato; debe recibir eventos `onAction` pero no debe tener lógica de rutas ni pagos interna.
 
 ### 3. Rutas, Shells y Estados de Error (Next.js App Router)
-- [ ] **Aislar Landing**: Crear `app/(marketing)/layout.tsx` para separar definitivamente la UI pública de los shells del dashboard.
-- [ ] **Estados de Carga (Loading)**:
+- [x] **Aislar Landing**: Crear `app/(marketing)/layout.tsx` para separar definitivamente la UI pública de los shells del dashboard y nueva landing con 3D Spline.
+- [x] **Estados de Carga (Loading)**:
   - Implementar `app/(dashboard)/loading.tsx`.
   - Implementar `app/(dashboard)/overview/loading.tsx`.
-- [ ] **Estados de Error**:
+- [x] **Estados de Error**:
   - Implementar `app/(dashboard)/error.tsx`.
   - Implementar `app/not-found.tsx` con un diseño técnico y coherente.
 - [ ] **Nuevas Rutas**:
@@ -50,7 +50,12 @@ A continuación se detalla todo el alcance funcional y visual de este sprint.
 - [x] Plan de Sprint 5 documentado y expandido con todos los faltantes reales de la arquitectura visual.
 - [x] Creado componente `RoleFilterBar` (`components/dashboard/role-filter-bar.tsx`).
 - [x] Refactor de `suscripciones-view.tsx` completado (lista, roles, estado vacío).
+- [x] Landing page rediseñada y aislada en `app/(marketing)`, incluyendo modelo 3D con Spline y animaciones.
+- [x] Rutas y estados de Error/Loading agregados para el dashboard (`error.tsx`, `loading.tsx`, `not-found.tsx`).
+- [x] Estabilización de base de datos a entorno local con SQLite y corrección de la instanciación de Prisma y rutas conflictivas.
+- [x] Componente `OnboardingPrompt` creado.
 - [ ] Refactor de `gestion-asientos-view.tsx` (En espera).
-- [ ] ...
+- [ ] Refactor de `billetera-view.tsx` y vistas de Comunidad.
+- [ ] Consolidación de StatusBadge, EmptyState, y ToolCard.
 
 *(Este documento servirá de mapa a lo largo de toda la iteración, marcando el progreso a medida que avancen los commits).*

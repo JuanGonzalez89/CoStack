@@ -1,4 +1,5 @@
 import Credentials from 'next-auth/providers/credentials'
+import type { AuthOptions } from 'next-auth'
 import { compare, hash } from 'bcryptjs'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
@@ -26,6 +27,10 @@ export const authOptions = {
         const parsed = credentialsSchema.safeParse(rawCredentials)
 
         if (!parsed.success) {
+          if (process.env.NODE_ENV !== 'production') {
+            // eslint-disable-next-line no-console
+            console.warn('[auth] credentials parse failed:', rawCredentials)
+          }
           return null
         }
 
@@ -37,26 +42,23 @@ export const authOptions = {
           const passwordMatches = await compare(parsed.data.password, existingUser.passwordHash)
 
           if (!passwordMatches) {
+            if (process.env.NODE_ENV !== 'production') {
+              // eslint-disable-next-line no-console
+              console.warn('[auth] password mismatch for', parsed.data.email)
+            }
             return null
           }
 
           return existingUser
         }
 
-        if (parsed.data.name) {
-          const createdUser = await prisma.user.create({
-            data: {
-              name: parsed.data.name,
-              email: parsed.data.email,
-              passwordHash: await hash(parsed.data.password, 10),
-            },
-          })
-
-          return createdUser
+        if (process.env.NODE_ENV !== 'production') {
+          // eslint-disable-next-line no-console
+          console.warn('[auth] no matching user for', parsed.data.email)
         }
 
         return null
       },
     }),
   ],
-}
+} satisfies AuthOptions

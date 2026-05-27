@@ -1,7 +1,8 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Zap, Shield, Users, ArrowRight, Bot, CreditCard, Lock } from "lucide-react"
+import { Zap, Shield, Users, ArrowRight, Bot, CreditCard, Lock, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { HeroRobotScene } from "@/components/landing/hero-robot-scene"
 
 const features = [
   {
@@ -77,63 +78,7 @@ export function LandingPage() {
       </nav>
 
       {/* ── Hero ── */}
-      <section className="relative flex flex-col items-center justify-center text-center px-6 pt-24 pb-28 md:pt-32 md:pb-36 overflow-hidden">
-        {/* Dot grid background */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle, rgba(6,182,212,0.15) 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-          }}
-        />
-        {/* Radial fade from center */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ background: "radial-gradient(ellipse 80% 60% at 50% 50%, transparent 30%, #0a0f1e 100%)" }}
-        />
-        {/* Cyan glow blob */}
-        <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full bg-cyan-500/10 blur-3xl" />
-
-        {/* Badge */}
-        <div className="relative mb-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/25 bg-cyan-500/8 text-xs font-semibold text-cyan-400 tracking-wide uppercase">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-          Plataforma para equipos freelance
-        </div>
-
-        {/* Headline */}
-        <h1 className="relative text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-balance max-w-4xl leading-[1.05]">
-          <span className="text-white">CoStack: </span>
-          <span className="text-cyan-400">El Administrador</span>
-          <br className="hidden sm:block" />
-          <span className="text-white"> Invisible de Software</span>
-        </h1>
-
-        {/* Sub-headline */}
-        <p className="relative mt-6 text-base md:text-lg text-slate-400 max-w-xl leading-relaxed text-pretty">
-          Automatiza pagos y accesos para equipos freelance.
-          <br className="hidden sm:block" />
-          Sin fricción, sin deudas.
-        </p>
-
-        {/* CTAs */}
-        <div className="relative mt-10 flex flex-col sm:flex-row items-center gap-4">
-          <Button size="lg" className="w-full sm:w-auto px-8 bg-cyan-500 hover:bg-cyan-400 text-white font-bold rounded-xl gap-2 shadow-xl shadow-cyan-500/25 text-base transition-all duration-200 hover:scale-105" asChild>
-            <Link href="/login">
-              Iniciar Sesión
-              <ArrowRight size={16} />
-            </Link>
-          </Button>
-          <Button size="lg" variant="outline" className="w-full sm:w-auto px-8 border-slate-600 text-slate-200 bg-transparent hover:bg-white/5 hover:border-slate-400 font-bold rounded-xl gap-2 text-base transition-all duration-200" asChild>
-            <Link href="/register">Registrarse</Link>
-          </Button>
-        </div>
-
-        {/* Social proof */}
-        <p className="relative mt-8 text-xs text-slate-500">
-          Más de <span className="text-slate-300 font-semibold">2,400 freelancers</span> ya comparten licencias en CoStack
-        </p>
-      </section>
+      <HeroRobotScene />
 
       {/* ── Logo cloud ── */}
       <section id="tools" className="border-y border-white/5 bg-white/[0.02] py-8 px-6">

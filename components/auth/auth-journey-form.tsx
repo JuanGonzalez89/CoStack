@@ -111,16 +111,36 @@ export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJ
           return
         }
 
+        const registerResponse = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(parsed.data),
+        })
+
+        if (!registerResponse.ok) {
+          const payload = (await registerResponse.json().catch(() => null)) as { error?: string } | null
+          setErrorMessage(payload?.error ?? 'No pudimos crear la cuenta. Revisá los datos e intentá de nuevo.')
+          return
+        }
+
         const result = await signIn('credentials', {
           redirect: false,
-          name: parsed.data.name,
           email: parsed.data.email,
           password: parsed.data.password,
           callbackUrl: ROUTES.onboarding,
         })
 
         if (result?.error) {
-          setErrorMessage('No pudimos crear la cuenta. Revisá los datos e intentá de nuevo.')
+          const serverError = result.error
+          if (process.env.NODE_ENV !== 'production') {
+            // eslint-disable-next-line no-console
+            console.warn('[auth] signIn error:', serverError)
+          }
+          setErrorMessage(
+            process.env.NODE_ENV !== 'production' ? `La cuenta se creó, pero no pudimos iniciar sesión: ${serverError}` : 'No pudimos iniciar sesión. Intentá nuevamente.'
+          )
           return
         }
 

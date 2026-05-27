@@ -1,9 +1,10 @@
 generator client {
   provider = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 enum UserRole {
@@ -79,7 +80,7 @@ model Tool {
   slug        String   @unique
   name        String
   provider    String
-  monthlyCost Decimal  @db.Decimal(10, 2)
+  monthlyCost Float
   createdAt   DateTime @default(now())
   seats       Seat[]
   payments    Payment[]
@@ -103,7 +104,7 @@ model Payment {
   userId      String
   groupId     String
   toolId      String
-  amount      Decimal      @db.Decimal(10, 2)
+  amount      Float
   status      PaymentStatus @default(pending)
   providerRef String?
   createdAt   DateTime     @default(now())

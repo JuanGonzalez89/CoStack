@@ -22,7 +22,7 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline' https://vitals.vercel-insights.com; style-src 'self' 'unsafe-inline'; connect-src 'self';",
+            value: "default-src 'self'; img-src 'self' data: blob: https://prod.spline.design; media-src 'self' data: blob: https://prod.spline.design; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vitals.vercel-insights.com https://unpkg.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://prod.spline.design https://unpkg.com;",
           },
           {
             key: 'Strict-Transport-Security',
