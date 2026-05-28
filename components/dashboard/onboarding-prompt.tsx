@@ -16,19 +16,19 @@ export function OnboardingPrompt() {
         
         <h2 className="mb-3 text-2xl font-bold text-zinc-50 tracking-tight">¡Bienvenido a CoStack!</h2>
         <p className="mb-8 text-sm text-zinc-400 leading-relaxed">
-          Todavía no eres parte de ninguna herramienta compartida. Para empezar a gestionar tus gastos y compartir asientos, crea tu propio grupo o únete a uno existente usando un código de invitación.
+          Aun no tienes una licencia activa. Elige como quieres empezar y te guiamos para reservar tu cupo y pagar sin vueltas.
         </p>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button asChild className="w-full sm:w-auto rounded-xl bg-sky-500 px-6 py-6 text-sm font-bold text-white hover:bg-sky-400 transition-colors shadow-sm">
-            <Link href="/onboarding/herramienta">
+            <Link href="/onboarding?mode=create">
               <Plus size={18} className="mr-2" />
               Crear mi primer grupo
             </Link>
           </Button>
           
           <Button asChild variant="outline" className="w-full sm:w-auto rounded-xl border border-zinc-700 bg-transparent px-6 py-6 text-sm font-bold text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50 transition-colors">
-            <Link href="/onboarding/unirse">
+            <Link href="/onboarding?mode=join">
               <UserPlus size={18} className="mr-2" />
               Tengo un código
             </Link>

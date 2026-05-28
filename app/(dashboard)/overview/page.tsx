@@ -1,5 +1,7 @@
 import type { DashboardSnapshot } from '@/lib/dashboard-snapshot'
 import { AlertTriangle, Bell, Bot, Box } from 'lucide-react'
+import { getServerSession } from 'next-auth'
+import { redirect } from 'next/navigation'
 import { SummaryCards } from '@/components/dashboard/summary-cards'
 import { ToolCards } from '@/components/dashboard/tool-cards'
 import { BotLog, type LogEntry } from '@/components/dashboard/bot-log'
@@ -8,9 +10,21 @@ import { SeatAccessCard } from '@/components/dashboard/seat-access-card'
 import { OnboardingPrompt } from '@/components/dashboard/onboarding-prompt'
 import type { ToolCardData } from '@/features/dashboard/contracts'
 import { getDashboardSnapshot } from '@/lib/dashboard-snapshot.server'
+import { authOptions } from '@/lib/auth'
+import { ROUTES } from '@/lib/constants/routes'
+import { resolvePostAuthPath } from '@/lib/user-journey.server'
 import Link from 'next/link'
 
 export default async function OverviewPage() {
+  const session = await getServerSession(authOptions)
+
+  if (session?.user?.email) {
+    const targetPath = await resolvePostAuthPath(session.user.email)
+    if (targetPath === ROUTES.start) {
+      redirect(targetPath)
+    }
+  }
+
   const snapshot = await getDashboardSnapshot()
   const botEntries = formatBotEntries(snapshot)
   const overduePayments = snapshot.latestGroup?.payments.filter((payment) => payment.status === 'overdue') ?? []

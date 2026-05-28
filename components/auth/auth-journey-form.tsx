@@ -16,6 +16,7 @@ interface AuthJourneyFormProps {
   title: string
   description: string
   submitLabel: string
+  onboardingIntent?: 'create' | 'join'
 }
 
 const loginSchema = z.object({
@@ -27,11 +28,23 @@ const registerSchema = loginSchema.extend({
   name: z.string().trim().min(2, 'Escribí tu nombre'),
 })
 
-const onboardingSchema = z.object({
-  groupName: z.string().trim().min(2, 'Definí el nombre del grupo'),
-  inviteCode: z.string().trim().optional(),
-  role: z.enum(['member', 'organizer']),
-})
+const onboardingSchema = z
+  .object({
+    groupName: z.string().trim().optional(),
+    inviteCode: z.string().trim().optional(),
+    role: z.enum(['member', 'organizer']),
+  })
+  .superRefine((data, ctx) => {
+    const hasGroupName = Boolean(data.groupName && data.groupName.length >= 2)
+    const hasInviteCode = Boolean(data.inviteCode && data.inviteCode.length >= 2)
+
+    if (!hasGroupName && !hasInviteCode) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Ingresa un codigo de invitacion o define el nombre de tu grupo.',
+      })
+    }
+  })
 
 type AuthFormState = {
   name: string
@@ -51,11 +64,11 @@ const initialFormState: AuthFormState = {
   role: 'member',
 }
 
-function resolveSuccessPath(mode: JourneyMode) {
-  return mode === 'register' ? ROUTES.onboarding : ROUTES.overview
+function resolveSuccessPath() {
+  return ROUTES.suscripciones
 }
 
-export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJourneyFormProps) {
+export function AuthJourneyForm({ mode, title, description, submitLabel, onboardingIntent }: AuthJourneyFormProps) {
   const router = useRouter()
   const [form, setForm] = useState<AuthFormState>(initialFormState)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -86,7 +99,7 @@ export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJ
           redirect: false,
           email: parsed.data.email,
           password: parsed.data.password,
-          callbackUrl: ROUTES.overview,
+          callbackUrl: ROUTES.suscripciones,
         })
 
         if (result?.error) {
@@ -94,7 +107,7 @@ export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJ
           return
         }
 
-        router.replace(resolveSuccessPath(mode))
+        router.replace(resolveSuccessPath())
         router.refresh()
         return
       }
@@ -129,7 +142,7 @@ export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJ
           redirect: false,
           email: parsed.data.email,
           password: parsed.data.password,
-          callbackUrl: ROUTES.onboarding,
+          callbackUrl: ROUTES.suscripciones,
         })
 
         if (result?.error) {
@@ -144,7 +157,7 @@ export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJ
           return
         }
 
-        router.replace(resolveSuccessPath(mode))
+        router.replace(resolveSuccessPath())
         router.refresh()
         return
       }
@@ -173,7 +186,7 @@ export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJ
         return
       }
 
-      router.replace(ROUTES.overview)
+      router.replace(ROUTES.suscripciones)
       router.refresh()
     } finally {
       setIsSubmitting(false)
@@ -212,15 +225,19 @@ export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJ
 
         {mode === 'onboarding' && (
           <>
-            <div className="space-y-2">
-              <Label htmlFor="groupName">Nombre del grupo</Label>
-              <Input id="groupName" value={form.groupName} onChange={(event) => patchForm({ groupName: event.target.value })} placeholder="CoStack Studio" />
-            </div>
+            {onboardingIntent !== 'join' && (
+              <div className="space-y-2">
+                <Label htmlFor="groupName">Nombre del grupo</Label>
+                <Input id="groupName" value={form.groupName} onChange={(event) => patchForm({ groupName: event.target.value })} placeholder="CoStack Studio" />
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="inviteCode">Código de invitación</Label>
-              <Input id="inviteCode" value={form.inviteCode} onChange={(event) => patchForm({ inviteCode: event.target.value })} placeholder="Opcional: COSTACK-84A2" />
-            </div>
+            {onboardingIntent !== 'create' && (
+              <div className="space-y-2">
+                <Label htmlFor="inviteCode">Codigo de invitacion</Label>
+                <Input id="inviteCode" value={form.inviteCode} onChange={(event) => patchForm({ inviteCode: event.target.value })} placeholder="Ejemplo: COSTACK-84A2" />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="role">Rol inicial</Label>
