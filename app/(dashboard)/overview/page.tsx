@@ -7,10 +7,12 @@ import { ToolCards } from '@/components/dashboard/tool-cards'
 import { BotLog, type LogEntry } from '@/components/dashboard/bot-log'
 import { PaymentTraffic } from '@/components/dashboard/payment-traffic'
 import { SeatAccessCard } from '@/components/dashboard/seat-access-card'
+import { SuccessAccessCard } from '@/components/dashboard/success-access-card'
 import { OnboardingPrompt } from '@/components/dashboard/onboarding-prompt'
 import type { ToolCardData } from '@/features/dashboard/contracts'
 import { getDashboardSnapshot } from '@/lib/dashboard-snapshot.server'
 import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 import { ROUTES } from '@/lib/constants/routes'
 import { resolvePostAuthPath } from '@/lib/user-journey.server'
 import Link from 'next/link'
@@ -20,10 +22,13 @@ export default async function OverviewPage() {
 
   if (session?.user?.email) {
     const targetPath = await resolvePostAuthPath(session.user.email)
-    if (targetPath === ROUTES.start) {
+    if (targetPath !== ROUTES.overview) {
       redirect(targetPath)
     }
   }
+
+  const user = await prisma.user.findUnique({ where: { email: session?.user?.email ?? '' } })
+  const isOrganizer = user?.role === 'organizer'
 
   const snapshot = await getDashboardSnapshot()
   const botEntries = formatBotEntries(snapshot)
@@ -37,14 +42,18 @@ export default async function OverviewPage() {
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">
-              <span>Dashboard</span>
+              <span>{isOrganizer ? 'Dashboard' : 'Tu Espacio'}</span>
               <span className="text-cyan-500/50">/</span>
-              <span>Control operativo</span>
+              <span>{isOrganizer ? 'Control operativo' : 'Billetera de Suscripciones'}</span>
             </div>
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight text-zinc-50">CoStack en tiempo real</h1>
+              <h1 className="text-3xl font-bold tracking-tight text-zinc-50">
+                {isOrganizer ? 'CoStack en tiempo real' : 'Tus Accesos y Licencias'}
+              </h1>
               <p className="max-w-2xl text-sm leading-6 text-slate-300">
-                Accesos, pagos y actividad del grupo en una vista compacta, con foco visual en el estado de cada suscripción.
+                {isOrganizer
+                  ? 'Accesos, pagos y actividad del grupo en una vista compacta, con foco visual en el estado de cada suscripción.'
+                  : 'Aquí tienes todas tus herramientas activas y sus credenciales listas para usar.'}
               </p>
             </div>
           </div>
@@ -63,7 +72,7 @@ export default async function OverviewPage() {
         </div>
       </header>
 
-      {overduePayments.length > 0 && (
+      {isOrganizer && overduePayments.length > 0 && (
         <div className="rounded-3xl bg-gradient-to-br from-amber-500/12 to-amber-500/6 p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-3">
@@ -89,10 +98,12 @@ export default async function OverviewPage() {
         <div className="flex items-end justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Resumen</p>
-            <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Estado del snapshot</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-zinc-50">
+              {isOrganizer ? 'Estado del snapshot' : 'Métricas del mes'}
+            </h2>
           </div>
         </div>
-        <SummaryCards snapshot={snapshot} />
+        <SummaryCards snapshot={snapshot} isOrganizer={isOrganizer} />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.5fr)]">
@@ -103,20 +114,25 @@ export default async function OverviewPage() {
             <OnboardingPrompt />
           )}
 
-          <PaymentTraffic />
+          {isOrganizer && <PaymentTraffic />}
         </div>
 
         <div className="space-y-6">
-          <SeatAccessCard accessState="current" groupName={snapshot.latestGroup?.name ?? 'CoStack Studio'} accessToken={snapshot.latestGroup?.seats[0]?.accessToken ?? 'COSTACK-74A2-9X11'} />
+          {isOrganizer ? (
+            <SeatAccessCard accessState="current" groupName={snapshot.latestGroup?.name ?? 'CoStack Studio'} accessToken={snapshot.latestGroup?.seats[0]?.accessToken ?? 'COSTACK-74A2-9X11'} />
+          ) : (
+            <SuccessAccessCard accessState="current" groupName={snapshot.latestGroup?.name ?? 'CoStack Studio'} accessToken={snapshot.latestGroup?.seats[0]?.accessToken ?? 'COSTACK-84A2-2B22'} />
+          )}
+          {isOrganizer && (
+            <section className="space-y-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Actividad</p>
+                <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Bot log reducido</h2>
+              </div>
+              <BotLog entries={botEntries} limit={3} />
+            </section>
+          )}
         </div>
-      </section>
-
-      <section className="space-y-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Actividad</p>
-          <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Bot log reducido</h2>
-        </div>
-        <BotLog entries={botEntries} limit={3} />
       </section>
     </div>
   )

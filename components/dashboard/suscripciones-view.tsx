@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   MessageSquare,
   Pen,
@@ -80,9 +81,10 @@ const CATALOG_TOOLS: ToolCatalogItem[] = [
 ]
 
 export function SuscripcionesView() {
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
-  
-  const filteredTools = CATALOG_TOOLS.filter(tool => 
+
+  const filteredTools = CATALOG_TOOLS.filter(tool =>
     tool.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     tool.provider.toLowerCase().includes(searchTerm.toLowerCase())
   )
@@ -101,8 +103,8 @@ export function SuscripcionesView() {
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder="Buscar por herramienta o proveedor (ej. JetBrains)..." 
+          <Input
+            placeholder="Buscar por herramienta o proveedor (ej. JetBrains)..."
             className="pl-9 bg-card border-border rounded-xl focus-visible:ring-cyan-500/20"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -119,7 +121,12 @@ export function SuscripcionesView() {
           return (
             <div
               key={tool.id}
-              className="group relative flex flex-col p-6 rounded-2xl border border-border bg-card hover:border-cyan-500/30 hover:bg-cyan-500/5 transition-all duration-300 overflow-hidden"
+              className={cn(
+                "group relative flex flex-col p-6 rounded-2xl border border-border bg-card transition-all duration-300 overflow-hidden",
+                isSoldOut 
+                  ? "opacity-75 grayscale-[0.5]" 
+                  : "hover:border-cyan-500/30 hover:bg-cyan-500/5 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 cursor-pointer"
+              )}
             >
               {/* Etiqueta de Escasez / Promoción */}
               <div className="absolute top-4 right-4 flex items-center gap-2">
@@ -166,10 +173,11 @@ export function SuscripcionesView() {
               {/* CTA */}
               <Button 
                 disabled={isSoldOut}
+                onClick={() => router.push(`/suscripciones/checkout/${tool.id}`)}
                 className={cn(
-                  "w-full rounded-xl py-6 font-bold shadow-sm transition-all",
+                  "w-full rounded-xl py-6 font-bold shadow-sm transition-all duration-200",
                   !isSoldOut 
-                    ? "bg-cyan-500 hover:bg-cyan-400 text-white" 
+                    ? "bg-cyan-500 hover:bg-cyan-400 text-white active:scale-[0.98]" 
                     : "bg-zinc-800 text-zinc-500 border border-zinc-700"
                 )}
               >
@@ -178,7 +186,7 @@ export function SuscripcionesView() {
             </div>
           )
         })}
-        
+
         {filteredTools.length === 0 && (
           <div className="col-span-full py-16 text-center border border-dashed border-border rounded-2xl">
             <p className="text-muted-foreground">No encontramos herramientas con ese nombre.</p>

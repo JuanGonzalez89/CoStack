@@ -81,6 +81,7 @@ model Tool {
   name        String
   provider    String
   monthlyCost Float
+  marketPrice Float?
   createdAt   DateTime @default(now())
   seats       Seat[]
   payments    Payment[]

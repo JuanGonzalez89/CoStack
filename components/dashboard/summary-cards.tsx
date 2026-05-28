@@ -42,17 +42,52 @@ const colorMap = {
   },
 }
 
-export function SummaryCards({ snapshot }: { snapshot: DashboardSnapshot }) {
+export function SummaryCards({ snapshot, isOrganizer = true }: { snapshot: DashboardSnapshot, isOrganizer?: boolean }) {
   const latestGroup = snapshot.latestGroup
   const payments = latestGroup?.payments ?? []
   const seats = latestGroup?.seats ?? []
   const members = latestGroup?.members ?? []
+  
   const paidAmount = payments.reduce((acc, payment) => acc + Number(payment.amount), 0)
   const occupiedSeats = seats.filter((seat) => seat.status !== 'free').length
   const overduePayments = payments.filter((payment) => payment.status === 'overdue').length
   const activeTools = Array.from(new Set(seats.map((seat) => `${seat.tool.name}::${seat.tool.provider}`))).length
 
-  const cards: SummaryCard[] = [
+  // B2C Metrics
+  const activeLicenses = seats.filter((seat) => seat.status === 'assigned').length // Simplificado
+  // Suma del ahorro: marketPrice - monthlyCost para las licencias asignadas (o pendientes/pagadas)
+  const totalSavings = seats.reduce((acc, seat) => {
+    if (seat.status !== 'free' && seat.tool.marketPrice) {
+      return acc + (Number(seat.tool.marketPrice) - Number(seat.tool.monthlyCost))
+    }
+    return acc
+  }, 0)
+
+  const b2cCards: SummaryCard[] = [
+    {
+      title: 'Tus Licencias',
+      value: `${activeLicenses}`,
+      sub: 'Herramientas listas para usar.',
+      icon: Layers,
+      color: 'cyan',
+    },
+    {
+      title: 'Ahorro Mensual',
+      value: `$${totalSavings.toFixed(2)}`,
+      sub: 'Lo que no estás pagándole a corporaciones.',
+      icon: DollarSign,
+      color: 'emerald',
+    },
+    {
+      title: 'Próximo Vencimiento',
+      value: 'En 14 días', // Mock B2C
+      sub: 'Renovación automática segura.',
+      icon: CalendarClock,
+      color: 'indigo',
+    }
+  ]
+
+  const organizerCards: SummaryCard[] = [
     {
       title: 'Gasto acumulado',
       value: `$${paidAmount.toFixed(2)}`,
@@ -87,8 +122,10 @@ export function SummaryCards({ snapshot }: { snapshot: DashboardSnapshot }) {
     },
   ]
 
+  const cards = isOrganizer ? organizerCards : b2cCards
+
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${isOrganizer ? 'xl:grid-cols-4' : 'xl:grid-cols-3'}`}>
       {cards.map((card) => {
         const colors = colorMap[card.color as keyof typeof colorMap]
         return (

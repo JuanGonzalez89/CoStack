@@ -106,6 +106,22 @@ Objetivo: Garantizar la inmersión B2C (0% lenguaje interno).
 
 ---
 
+### Etapa 6 - Seguridad y Escalabilidad del Checkout (Deuda Técnica)
+Objetivo: Implementar integraciones reales y robustez en la reserva de cupos, pasando de una simulación de producto a una arquitectura lista para producción.
+
+Cambios UI/UX:
+- Integrar la UI del Checkout Embebido de Stripe directamente en la vista para evitar desvíos o fugas del funnel.
+- Proveer feedback de error preciso si el asiento expira o si el pago con tarjeta es rechazado.
+
+Cambios tecnico-funcionales:
+- **Urgencia del lado del Servidor (Server-Side Urgency)**: Migrar el temporizador de 10 minutos (Client-Side) a una validación Server-Side (hidratando la UI desde `expiresAt` en BD) para evitar alteraciones manipulando el cliente.
+- **Limpieza de Asientos (Cronjob)**: Configurar un Cronjob (ej. Vercel Cron) que limpie activamente los asientos en estado `pending` vencidos (`UPDATE Seat SET status="free" WHERE status="pending" AND updatedAt < NOW() - 10 MINS`).
+- **Pasarela Real (Stripe)**: Reemplazar el Mock de latencia por una integración real con la pasarela de pagos de Stripe utilizando sus webhooks para asentar los registros en la tabla `Payment`.
+- **Pulido de Redirección Post-Auth**: Corregir la constante faltante `ROUTES.start` y refactorizar `user-journey.server.ts` para que la lógica de redirecciones sea 100% resiliente y evite redirecciones vacías o erróneas.
+- **Preparar Scraping de Precios (Bot)**: Implementar una rutina básica (o documentar la estructura API) para que el agente OpenClaw actualice periódicamente el campo `marketPrice` en la base de datos a partir de los precios reales de los vendors.
+- **Estandarizar Error Boundaries**: Extender la buena práctica del `error.tsx` detectado en el dashboard al resto de rutas clave (checkout, catálogo) para asegurar que cualquier fallo de React sea interceptado y reportado sin romper la UX global.
+
+---
 ## Backlog priorizado Sprint 7
 
 ### P0 (Obligatorio para cierre de sprint)
