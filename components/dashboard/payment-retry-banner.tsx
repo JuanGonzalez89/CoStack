@@ -9,7 +9,7 @@ interface PaymentRetryBannerProps {
 
 export function PaymentRetryBanner({
   title = "Hay un pago pendiente que bloquea el acceso",
-  description = "Reintentá la operación para recuperar el estado al día y volver a navegar sin restricciones.",
+  description = "Reintentá la operación para recuperar tu acceso y seguir navegando sin restricciones.",
   onRetry,
 }: PaymentRetryBannerProps) {
   return (

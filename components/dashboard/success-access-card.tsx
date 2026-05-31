@@ -31,9 +31,9 @@ export function SuccessAccessCard({ accessState, groupName, accessToken }: SeatA
           <CheckCircle2 className="w-8 h-8 text-white" />
         </div>
         
-        <h3 className="text-3xl font-extrabold text-zinc-50 tracking-tight mb-2">¡Tu licencia está lista!</h3>
+        <h3 className="text-3xl font-extrabold text-zinc-50 tracking-tight mb-2">Tu acceso está listo</h3>
         <p className="text-slate-300 max-w-md mx-auto mb-8">
-          Ya eres parte de <strong className="text-cyan-300">{groupName}</strong>. Tienes acceso completo y garantizado a tu herramienta.
+          Ya sos parte de <strong className="text-cyan-300">{groupName}</strong>. Tenés acceso listo para usar tu herramienta.
         </p>
 
         {!showCredentials ? (
@@ -49,7 +49,7 @@ export function SuccessAccessCard({ accessState, groupName, accessToken }: SeatA
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">
                 <KeyRound size={14} />
-                Token de Acceso
+                Credencial de acceso
               </div>
               <div className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider", stateStyles[accessState])}>
                 <ShieldCheck size={12} />
@@ -69,7 +69,7 @@ export function SuccessAccessCard({ accessState, groupName, accessToken }: SeatA
               </Button>
             </div>
             <p className="text-xs text-slate-400 mt-4">
-              No compartas esta credencial. Es única para tu usuario.
+              No compartas esta credencial. Es personal para tu usuario.
             </p>
           </div>
         )}

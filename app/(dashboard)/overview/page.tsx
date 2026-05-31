@@ -1,5 +1,5 @@
 import type { DashboardSnapshot } from '@/lib/dashboard-snapshot'
-import { AlertTriangle, Bell, Bot, Box } from 'lucide-react'
+import { AlertTriangle, Bell, Bot, Box, ShieldCheck } from 'lucide-react'
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { SummaryCards } from '@/components/dashboard/summary-cards'
@@ -44,25 +44,27 @@ export default async function OverviewPage() {
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">
               <span>{isOrganizer ? 'Dashboard' : 'Tu Espacio'}</span>
               <span className="text-cyan-500/50">/</span>
-              <span>{isOrganizer ? 'Control operativo' : 'Billetera de Suscripciones'}</span>
+              <span>{isOrganizer ? 'Vista general' : 'Billetera de Suscripciones'}</span>
             </div>
             <div className="space-y-2">
               <h1 className="text-3xl font-bold tracking-tight text-zinc-50">
-                {isOrganizer ? 'CoStack en tiempo real' : 'Tus Accesos y Licencias'}
+                {isOrganizer ? 'CoStack en una sola pantalla' : 'Tus Accesos y Licencias'}
               </h1>
               <p className="max-w-2xl text-sm leading-6 text-slate-300">
                 {isOrganizer
-                  ? 'Accesos, pagos y actividad del grupo en una vista compacta, con foco visual en el estado de cada suscripción.'
+                  ? 'Accesos, pagos y actividad del espacio en una vista clara, con foco en lo esencial para entender el estado de cada suscripción.'
                   : 'Aquí tienes todas tus herramientas activas y sus credenciales listas para usar.'}
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-full bg-cyan-400/10 px-3 py-1.5">
-              <span className="h-2 w-2 rounded-full animate-pulse bg-cyan-300" />
-              <Bot size={13} className="text-cyan-300" />
-              <span className="text-xs font-semibold text-cyan-100">Bot Online</span>
+            <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 ${isOrganizer ? 'bg-cyan-400/10' : 'bg-emerald-400/10'}`}>
+              <span className={`h-2 w-2 rounded-full animate-pulse ${isOrganizer ? 'bg-cyan-300' : 'bg-emerald-300'}`} />
+              {isOrganizer ? <Bot size={13} className="text-cyan-300" /> : <ShieldCheck size={13} className="text-emerald-300" />}
+              <span className={`text-xs font-semibold ${isOrganizer ? 'text-cyan-100' : 'text-emerald-100'}`}>
+                {isOrganizer ? 'Sistema activo' : 'Acceso listo'}
+              </span>
             </div>
             <button className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 transition-colors hover:bg-white/10">
               <Bell size={16} className="text-cyan-100/70" />
@@ -83,7 +85,7 @@ export default async function OverviewPage() {
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">Alerta de mora</p>
                 <h2 className="mt-1 text-lg font-semibold text-amber-50">Hay pagos vencidos que necesitan seguimiento</h2>
                 <p className="mt-1 text-sm text-amber-100/80">
-                  {overduePayments.length} {overduePayments.length === 1 ? 'pago está' : 'pagos están'} vencido{overduePayments.length === 1 ? '' : 's'} en el grupo activo.
+                  {overduePayments.length} {overduePayments.length === 1 ? 'pago está' : 'pagos están'} vencido{overduePayments.length === 1 ? '' : 's'} en el espacio activo.
                 </p>
               </div>
             </div>
@@ -99,7 +101,7 @@ export default async function OverviewPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Resumen</p>
             <h2 className="text-lg font-semibold tracking-tight text-zinc-50">
-              {isOrganizer ? 'Estado del snapshot' : 'Métricas del mes'}
+              {isOrganizer ? 'Estado operativo' : 'Resumen de valor'}
             </h2>
           </div>
         </div>
@@ -127,7 +129,7 @@ export default async function OverviewPage() {
             <section className="space-y-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Actividad</p>
-                <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Bot log reducido</h2>
+                <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Actividad reciente</h2>
               </div>
               <BotLog entries={botEntries} limit={3} />
             </section>

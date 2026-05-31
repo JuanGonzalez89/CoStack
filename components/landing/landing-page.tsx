@@ -13,7 +13,7 @@ const features = [
   {
     icon: Users,
     title: "Cupos disponibles al instante",
-    desc: "Encuentra grupos con lugar libre y evita perder tiempo en opciones cerradas.",
+    desc: "Encuentra licencias con lugar libre y evita perder tiempo en opciones cerradas.",
   },
   {
     icon: Bot,
@@ -23,7 +23,7 @@ const features = [
   {
     icon: Shield,
     title: "Compra con confianza",
-    desc: "Reglas de grupo y estado de pago visibles para que sepas siempre en que etapa estas.",
+    desc: "Reglas de acceso y estado de pago visibles para que sepas siempre en que etapa estas.",
   },
   {
     icon: Zap,
@@ -113,7 +113,7 @@ export function LandingPage({ hasSession = false }: { hasSession?: boolean }) {
               Todo lo que necesitas para pagar menos y entrar rapido
             </h2>
             <p className="mt-3 text-slate-400 text-base max-w-lg mx-auto">
-              CoStack te guia desde la busqueda de licencia hasta el acceso activo, sin lenguaje tecnico innecesario.
+              CoStack te guía desde la búsqueda de licencias hasta el acceso activo, sin lenguaje técnico innecesario.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

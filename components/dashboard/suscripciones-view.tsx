@@ -93,9 +93,9 @@ export function SuscripcionesView() {
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header del Catálogo */}
       <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-bold text-foreground tracking-tight">Catálogo de Herramientas</h2>
+        <h2 className="text-2xl font-bold text-foreground tracking-tight">Catálogo de herramientas</h2>
         <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
-          Encuentra licencias premium a una fracción del costo. Selecciona tu herramienta, confirma el pago y nuestro Auto-Match te asignará al instante.
+          Encuentra licencias premium a una fracción del costo. Selecciona tu herramienta, confirma el pago y el sistema te guía al siguiente paso.
         </p>
       </div>
 

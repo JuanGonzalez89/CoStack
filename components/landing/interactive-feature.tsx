@@ -32,10 +32,10 @@ export function InteractiveFeature() {
               Interactividad Total
             </div>
             <h2 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400 leading-tight">
-              Control <span className="text-cyan-400">dinámico</span> de asientos
+              Control <span className="text-cyan-400">dinámico</span> de cupos
             </h2>
             <p className="mt-4 text-slate-400 max-w-md leading-relaxed">
-              Descubre una forma completamente inmersiva de visualizar quién tiene acceso a cada herramienta. Administra credenciales y libéralas en tiempo real.
+              Descubre una forma completamente inmersiva de visualizar quién tiene acceso a cada herramienta. Administra credenciales y actualízalas en tiempo real.
             </p>
           </div>
 

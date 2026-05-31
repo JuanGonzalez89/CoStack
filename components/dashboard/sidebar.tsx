@@ -17,12 +17,12 @@ import {
 import { cn } from "@/lib/utils"
 import { ROUTES } from "@/lib/constants/routes"
 
-export type NavTab = "Dashboard" | "Suscripciones" | "Gestión de Asientos" | "Comunidad Freelance" | "Billetera"
+export type NavTab = "Dashboard" | "Suscripciones" | "Gestión de cupos" | "Comunidad Freelance" | "Billetera"
 
 const navItems: { label: NavTab; href: string; icon: React.ElementType; badge?: string; adminOnly?: boolean; dot?: boolean }[] = [
   { label: "Dashboard", href: ROUTES.overview, icon: LayoutDashboard },
   { label: "Suscripciones", href: ROUTES.suscripciones, icon: CreditCard },
-  { label: "Gestión de Asientos", href: ROUTES.asientos, icon: Armchair, badge: "8/10", adminOnly: true },
+  { label: "Gestión de cupos", href: ROUTES.asientos, icon: Armchair, badge: "8/10", adminOnly: true },
   { label: "Comunidad Freelance", href: ROUTES.comunidad, icon: Users },
   { label: "Billetera", href: ROUTES.billetera, icon: Wallet },
 ]

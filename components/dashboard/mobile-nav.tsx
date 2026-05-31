@@ -12,7 +12,7 @@ import type { NavTab } from "./sidebar"
 const navItems: { label: NavTab; shortLabel: string; href: string; icon: React.ElementType; adminOnly?: boolean }[] = [
   { label: "Dashboard", shortLabel: "Inicio", href: ROUTES.overview, icon: LayoutDashboard },
   { label: "Suscripciones", shortLabel: "Catálogo", href: ROUTES.suscripciones, icon: CreditCard },
-  { label: "Gestión de Asientos", shortLabel: "Asientos", href: ROUTES.asientos, icon: Armchair, adminOnly: true },
+  { label: "Gestión de cupos", shortLabel: "Cupos", href: ROUTES.asientos, icon: Armchair, adminOnly: true },
   { label: "Comunidad Freelance", shortLabel: "Comunidad", href: ROUTES.comunidad, icon: Users },
   { label: "Billetera", shortLabel: "Billetera", href: ROUTES.billetera, icon: Wallet },
 ]
@@ -46,7 +46,7 @@ export function MobileNav({
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 hidden sm:flex">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[11px] font-medium text-emerald-400">Bot Online</span>
+            <span className="text-[11px] font-medium text-emerald-400">Sistema activo</span>
           </div>
           <button 
             onClick={() => signOut({ callbackUrl: '/login' })}

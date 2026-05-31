@@ -110,9 +110,9 @@ export function ToolCards({ tools: toolsProp }: { tools?: ToolCardData[] }) {
                 <>
                   Estás a punto de pagar{" "}
                   <span className="font-semibold text-foreground">${pendingTool.monthlyCost}.00</span>{" "}
-                  por un asiento en{" "}
+                  para reservar cupo en{" "}
                   <span className="font-semibold text-foreground">{pendingTool.name}</span>.
-                    Vamos a registrar el pago en PostgreSQL y dejar un correo demo con el acceso listo.
+                    Vamos a registrar el pago demo y dejar un correo con el acceso listo.
                 </>
               )}
             </DialogDescription>
@@ -151,9 +151,9 @@ export function ToolCards({ tools: toolsProp }: { tools?: ToolCardData[] }) {
         <div className="mb-4 flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Herramientas</p>
-            <h2 className="text-lg font-semibold tracking-tight text-zinc-50">CTA contextual por suscripción</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Siguiente paso por suscripción</h2>
             <p className="mt-0.5 text-xs text-slate-300">
-              Gestiona tus asientos en licencias compartidas del equipo
+              Gestiona tus cupos y continúa el pago desde cada herramienta
             </p>
           </div>
         </div>
@@ -175,8 +175,8 @@ export function ToolCards({ tools: toolsProp }: { tools?: ToolCardData[] }) {
             icon={PackageOpen}
             variant="action"
             title="Todavía no hay herramientas cargadas"
-            description="Cuando exista un grupo persistido, las suscripciones y asientos aparecerán acá con su CTA contextual."
-            cta={{ label: 'Crear grupo', href: '/onboarding' }}
+            description="Cuando exista una herramienta activa, las suscripciones y cupos aparecerán acá con una acción clara para continuar."
+            cta={{ label: 'Ir al catálogo', href: '/suscripciones' }}
             secondaryCta={{ label: 'Tengo un código', href: '/onboarding' }}
           />
         )}

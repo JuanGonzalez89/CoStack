@@ -8,10 +8,10 @@ export interface LogEntry {
 }
 
 const initialLogs: LogEntry[] = [
-  { time: "14:28", message: "OpenClaw Bot conectado al servidor. Escuchando eventos de pago.", type: "info" },
-  { time: "14:29", message: "Verificación de asientos completada. 8/10 ocupados.", type: "info" },
-  { time: "14:30", message: "Pago recibido de Santiago Gómez. Liberando 1 asiento para Figma Organization.", type: "success" },
-  { time: "14:31", message: "OpenClaw Bot envió enlace de invitación privado a Santiago Gómez.", type: "action" },
+  { time: "14:28", message: "Sistema conectado. Escuchando eventos de pago.", type: "info" },
+  { time: "14:29", message: "Verificación de cupos completada. 8/10 ocupados.", type: "info" },
+  { time: "14:30", message: "Pago recibido de Santiago Gómez. Activando acceso para Figma Organization.", type: "success" },
+  { time: "14:31", message: "El sistema envió un enlace privado a Santiago Gómez.", type: "action" },
 ]
 
 const typeStyles: Record<LogEntry["type"], string> = {
@@ -34,14 +34,14 @@ export function BotLog({ entries, limit = 3 }: { entries: LogEntry[]; limit?: nu
     <section>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-base font-semibold text-zinc-50">Log de Actividad del Bot</h2>
-          <p className="mt-0.5 text-xs text-slate-300">Acciones en tiempo real del agente OpenClaw</p>
+          <h2 className="text-base font-semibold text-zinc-50">Actividad reciente</h2>
+          <p className="mt-0.5 text-xs text-slate-300">Eventos en tiempo real del sistema</p>
         </div>
         {/* Online indicator */}
         <div className="flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/10 px-3 py-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <Bot size={13} className="text-emerald-300" />
-          <span className="text-xs font-semibold text-emerald-100">OpenClaw: Online</span>
+          <span className="text-xs font-semibold text-emerald-100">Sistema activo</span>
           <Wifi size={12} className="text-emerald-300" />
         </div>
       </div>
@@ -52,7 +52,7 @@ export function BotLog({ entries, limit = 3 }: { entries: LogEntry[]; limit?: nu
           <span className="w-3 h-3 rounded-full bg-red-500/70" />
           <span className="w-3 h-3 rounded-full bg-yellow-500/70" />
           <span className="w-3 h-3 rounded-full bg-emerald-500/70" />
-          <span className="ml-3 font-mono text-xs text-slate-400">openclaw-bot ~ activity-log</span>
+          <span className="ml-3 font-mono text-xs text-slate-400">costack-system ~ activity-log</span>
         </div>
 
         {/* Log lines */}

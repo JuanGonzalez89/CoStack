@@ -10,7 +10,7 @@ interface AccessRevokedScreenProps {
 
 export function AccessRevokedScreen({
   title = "Acceso temporalmente revocado",
-  description = "La cuenta quedó limitada hasta resolver el pago pendiente o volver a habilitar el grupo.",
+  description = "La cuenta quedó limitada hasta resolver el pago pendiente o volver a habilitar el acceso.",
   ctaHref = "/billetera?status=overdue",
 }: AccessRevokedScreenProps) {
   return (

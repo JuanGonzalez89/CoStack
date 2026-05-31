@@ -9,8 +9,8 @@ import { cn } from '@/lib/utils'
 const statusLabels: Record<ToolCardState, { label: string; tone: StatusTone }> = {
   pending: { label: 'Cuota Pendiente', tone: 'warning' },
   paying: { label: 'Procesando Pago...', tone: 'neutral' },
-  assigning: { label: 'Asignando Asiento...', tone: 'neutral' },
-  assigned: { label: 'Asiento Asignado', tone: 'success' },
+  assigning: { label: 'Reservando Cupo...', tone: 'neutral' },
+  assigned: { label: 'Cupo Confirmado', tone: 'success' },
 }
 
 const accentStyles: Record<ToolCardData['accent'], { stripe: string; iconBg: string; iconText: string }> = {
@@ -79,7 +79,7 @@ export function ToolCard({ tool, onRequestPay }: { tool: ToolCardData; onRequest
           <div className="mb-2 flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-xs text-slate-400">
               <Users size={12} />
-              Asientos ocupados
+              Cupos ocupados
             </span>
             <span className="text-xs font-semibold text-zinc-50">
               {tool.seatsUsed}/{tool.seatsTotal}
@@ -91,7 +91,7 @@ export function ToolCard({ tool, onRequestPay }: { tool: ToolCardData; onRequest
         {isAssigned && (
           <div className="mb-3 flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2">
             <Bot size={14} className="shrink-0 text-emerald-500" />
-            <span className="text-xs font-medium text-emerald-400">Correo demo con acceso enviado y asiento asignado</span>
+            <span className="text-xs font-medium text-emerald-400">Correo demo con acceso enviado y cupo reservado</span>
             <MessageSquare size={12} className="ml-auto shrink-0 text-emerald-500" />
           </div>
         )}
@@ -101,14 +101,14 @@ export function ToolCard({ tool, onRequestPay }: { tool: ToolCardData; onRequest
         {isPending && (
           <Button onClick={() => onRequestPay(tool.id)} className="w-full rounded-xl bg-cyan-500 font-semibold text-white hover:bg-cyan-400" size="sm">
             <CreditCard size={14} />
-            Pagar ${tool.monthlyCost} y Asignar Asiento
+            Pagar ${tool.monthlyCost} y Reservar Cupo
           </Button>
         )}
 
         {isLoading && (
           <Button disabled className="w-full cursor-not-allowed rounded-xl bg-cyan-500/70 font-semibold text-white" size="sm">
             <Loader2 size={14} className="animate-spin" />
-            {isPaying ? 'Verificando pago...' : 'Bot asignando asiento...'}
+            {isPaying ? 'Verificando pago...' : 'Sistema reservando cupo...'}
           </Button>
         )}
 

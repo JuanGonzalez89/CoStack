@@ -17,9 +17,9 @@ export function SeatAccessCard({ accessState, groupName, accessToken }: SeatAcce
     <section className="rounded-3xl border border-white/5 bg-white/[0.03] p-5 shadow-[0_1px_0_rgba(255,255,255,0.03)_inset]">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">Acceso ciego</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">Acceso protegido</p>
           <h3 className="mt-1 text-xl font-bold text-zinc-50">{groupName}</h3>
-          <p className="mt-1 text-sm text-slate-300">El miembro recibe un token temporal. La credencial maestra no se expone.</p>
+          <p className="mt-1 text-sm text-slate-300">El acceso se entrega con una credencial temporal sin exponer la credencial principal.</p>
         </div>
         <div className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold", stateStyles[accessState])}>
           <ShieldCheck size={12} />
@@ -31,13 +31,13 @@ export function SeatAccessCard({ accessState, groupName, accessToken }: SeatAcce
         <div className="rounded-2xl border border-white/5 bg-black/20 px-4 py-3">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
             <KeyRound size={12} />
-            Token temporal
+            Credencial temporal
           </div>
           <p className="mt-2 font-mono text-sm text-zinc-50">{maskedToken}</p>
         </div>
 
         <Button asChild className="rounded-xl bg-cyan-500 text-white hover:bg-cyan-400">
-          <Link href="/settings/grupo">Administrar grupo</Link>
+          <Link href="/settings/grupo">Administrar espacio</Link>
         </Button>
       </div>
     </section>

@@ -19,7 +19,7 @@ export function BilleteraPageClient({ isOverdue }: BilleteraPageClientProps) {
         <PaymentRetryBanner
           onRetry={() => setFailureOpen(true)}
           title="Tu acceso quedó en pausa por un pago vencido"
-          description="Reintentá el pago o actualizá tu medio de pago para liberar el asiento y restaurar el acceso ciego."
+          description="Reintentá el pago o actualizá tu medio de pago para recuperar tu acceso."
         />
         <AccessRevokedScreen />
         <PaymentFailureModal

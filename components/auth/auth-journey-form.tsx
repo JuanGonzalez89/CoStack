@@ -41,7 +41,7 @@ const onboardingSchema = z
     if (!hasGroupName && !hasInviteCode) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Ingresa un codigo de invitacion o define el nombre de tu grupo.',
+        message: 'Ingresa un codigo de acceso o define el nombre de tu espacio.',
       })
     }
   })
@@ -227,14 +227,14 @@ export function AuthJourneyForm({ mode, title, description, submitLabel, onboard
           <>
             {onboardingIntent !== 'join' && (
               <div className="space-y-2">
-                <Label htmlFor="groupName">Nombre del grupo</Label>
+                <Label htmlFor="groupName">Nombre de tu espacio</Label>
                 <Input id="groupName" value={form.groupName} onChange={(event) => patchForm({ groupName: event.target.value })} placeholder="CoStack Studio" />
               </div>
             )}
 
             {onboardingIntent !== 'create' && (
               <div className="space-y-2">
-                <Label htmlFor="inviteCode">Codigo de invitacion</Label>
+                <Label htmlFor="inviteCode">Codigo de acceso</Label>
                 <Input id="inviteCode" value={form.inviteCode} onChange={(event) => patchForm({ inviteCode: event.target.value })} placeholder="Ejemplo: COSTACK-84A2" />
               </div>
             )}
@@ -248,7 +248,7 @@ export function AuthJourneyForm({ mode, title, description, submitLabel, onboard
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 <option value="member">Miembro</option>
-                <option value="organizer">Organizador</option>
+                <option value="organizer">Administrador</option>
               </select>
             </div>
           </>

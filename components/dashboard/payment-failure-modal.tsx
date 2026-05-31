@@ -33,7 +33,7 @@ export function PaymentFailureModal({
           </div>
           <DialogTitle className="text-xl">El pago no pudo completarse</DialogTitle>
           <DialogDescription className="text-sm">
-            No logramos confirmar <span className="font-semibold text-foreground">{toolName}</span> por <span className="font-semibold text-foreground">{amount}</span>. Reintentá para recuperar el asiento y evitar que el acceso quede bloqueado.
+            No logramos confirmar <span className="font-semibold text-foreground">{toolName}</span> por <span className="font-semibold text-foreground">{amount}</span>. Reintentá para recuperar tu acceso y evitar que quede bloqueado.
           </DialogDescription>
         </DialogHeader>
 

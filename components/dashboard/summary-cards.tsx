@@ -89,25 +89,32 @@ export function SummaryCards({ snapshot, isOrganizer = true }: { snapshot: Dashb
 
   const organizerCards: SummaryCard[] = [
     {
-      title: 'Gasto acumulado',
+      title: 'Gasto operativo',
       value: `$${paidAmount.toFixed(2)}`,
-      sub: 'Suma de pagos persistidos en el snapshot.',
+      sub: 'Suma de pagos del grupo activo.',
       icon: DollarSign,
       color: 'cyan',
     },
     {
-      title: 'Asientos ocupados',
-      value: `${occupiedSeats}/${seats.length || 1}`,
+      title: 'Cupos ocupados',
+      value:
+        seats.length === 0
+          ? '0/0'
+          : seats.length === 1
+            ? occupiedSeats === 1
+              ? 'Completo'
+              : 'Disponible'
+            : `${occupiedSeats}/${seats.length}`,
       sub: 'Estado real de ocupación por herramienta.',
       icon: Layers,
       color: 'indigo',
-      extra: { used: occupiedSeats, total: seats.length || 1 },
-      footnote: seats.length ? `${seats.length - occupiedSeats} libres de ${seats.length}` : 'No hay asientos cargados',
+      extra: seats.length > 0 ? { used: occupiedSeats, total: seats.length } : undefined,
+      footnote: seats.length ? `${occupiedSeats} ocupados de ${seats.length}` : 'No hay cupos cargados',
     },
     {
       title: 'Miembros activos',
       value: `${members.length}`,
-      sub: 'Usuarios vinculados al último grupo.',
+      sub: 'Usuarios vinculados al grupo activo.',
       icon: Users,
       color: 'emerald',
     },

@@ -30,7 +30,7 @@ export default function TwitterImage() {
           Compartí licencias sin perder control.
         </div>
         <div style={{ marginTop: 20, fontSize: 26, color: '#cbd5e1', maxWidth: 880, lineHeight: 1.35 }}>
-          Dashboard con pagos, asientos y acceso ciego para equipos freelance.
+          Dashboard con pagos, cupos y acceso protegido para equipos freelance.
         </div>
       </div>
     ),

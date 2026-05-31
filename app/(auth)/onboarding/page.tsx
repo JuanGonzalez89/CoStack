@@ -1,18 +1,19 @@
 import { AuthJourneyForm } from '@/components/auth/auth-journey-form'
 
-export default function OnboardingPage({
+export default async function OnboardingPage({
   searchParams,
 }: {
-  searchParams?: { mode?: string }
+  searchParams?: Promise<{ mode?: string }>
 }) {
-  const intent = searchParams?.mode === 'join' ? 'join' : searchParams?.mode === 'create' ? 'create' : undefined
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const intent = resolvedSearchParams?.mode === 'join' ? 'join' : resolvedSearchParams?.mode === 'create' ? 'create' : undefined
 
-  const title = intent === 'join' ? 'Unirte con codigo' : intent === 'create' ? 'Crear tu primer grupo' : 'Completar onboarding'
+  const title = intent === 'join' ? 'Continuar con un código' : intent === 'create' ? 'Continuar al catálogo' : 'Completar onboarding'
   const description =
     intent === 'join'
-      ? 'Ingresa tu codigo de invitacion para reservar tu lugar y continuar al pago.'
+      ? 'Ingresa tu código de invitación para reservar tu lugar y seguir con el flujo.'
       : intent === 'create'
-        ? 'Define el nombre de tu grupo para empezar a buscar licencias y compartir cupos.'
+        ? 'Completa este paso para seguir al catálogo y elegir tu herramienta.'
         : 'Completa este paso para entrar al flujo de compra.'
 
   return (

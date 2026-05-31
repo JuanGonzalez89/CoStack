@@ -26,11 +26,11 @@ export function PaymentTraffic() {
     <section>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-base font-semibold text-zinc-50">Semáforo de Pagos</h2>
-          <p className="mt-0.5 text-xs text-slate-300">Estado real de pagos persistidos</p>
+          <h2 className="text-base font-semibold text-zinc-50">Actividad de pagos</h2>
+          <p className="mt-0.5 text-xs text-slate-300">Estado actual de pagos del espacio</p>
         </div>
         <button className="flex items-center gap-1 rounded-lg border border-cyan-500/10 bg-slate-950/80 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:text-cyan-100">
-          Snapshot actual <ChevronDown size={12} />
+          Vista actual <ChevronDown size={12} />
         </button>
       </div>
 

@@ -169,7 +169,7 @@ export function HeroRobotScene() {
         <div className="max-w-[34rem] text-left lg:-translate-x-6 xl:-translate-x-10">
           <div className="relative mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-4 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-cyan-300 shadow-lg shadow-cyan-500/10 backdrop-blur-md">
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 animate-pulse" />
-            Bot de acceso invisible
+            Bot de acceso
           </div>
 
           <h1 className="relative text-5xl font-extrabold leading-[0.94] tracking-tight text-balance drop-shadow-2xl sm:text-6xl md:text-7xl lg:text-[5rem] xl:text-[5.6rem]">
@@ -182,7 +182,7 @@ export function HeroRobotScene() {
           </h1>
 
           <p className="relative mt-6 max-w-lg text-[1.05rem] leading-relaxed text-slate-300 text-pretty md:text-[1.1rem]">
-            Un bot que comparte licencias, coordina pagos y libera asientos sin fricción.
+            Un bot que comparte licencias, coordina pagos y activa accesos sin fricción.
             <br className="hidden sm:block" />
             Fondo oscuro, acentos cyan y una escena 3D que le da presencia a la landing.
           </p>

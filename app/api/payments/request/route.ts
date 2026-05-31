@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   })
 
   if (!group) {
-    return NextResponse.json({ error: 'Todavía no tenés un grupo activo. Completá el onboarding primero.' }, { status: 409 })
+    return NextResponse.json({ error: 'Todavía no tenés una suscripción activa. Completá el onboarding primero.' }, { status: 409 })
   }
 
   const tool = await prisma.tool.findUnique({
