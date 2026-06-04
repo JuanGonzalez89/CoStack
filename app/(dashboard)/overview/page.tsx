@@ -8,6 +8,7 @@ import { BotLog, type LogEntry } from '@/components/dashboard/bot-log'
 import { PaymentTraffic } from '@/components/dashboard/payment-traffic'
 import { SeatAccessCard } from '@/components/dashboard/seat-access-card'
 import { SuccessAccessCard } from '@/components/dashboard/success-access-card'
+import { PaymentRetryBanner } from '@/components/dashboard/payment-retry-banner'
 import { OnboardingPrompt } from '@/components/dashboard/onboarding-prompt'
 import type { ToolCardData } from '@/features/dashboard/contracts'
 import { getDashboardSnapshot } from '@/lib/dashboard-snapshot.server'
@@ -37,40 +38,32 @@ export default async function OverviewPage() {
   const hasTools = tools.length > 0
 
   return (
-    <div className="space-y-6 bg-[#07111d]">
-      <header className="rounded-[30px] border border-slate-800/30 bg-slate-900/70 px-5 py-5 lg:px-6 shadow-[0_10px_30px_rgba(2,6,23,0.6)]">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">
-              <span>{isOrganizer ? 'Dashboard' : 'Tu Espacio'}</span>
-              <span className="text-cyan-500/50">/</span>
-              <span>{isOrganizer ? 'Vista general' : 'Billetera de Suscripciones'}</span>
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight text-zinc-50">
-                {isOrganizer ? 'CoStack en una sola pantalla' : 'Tus Accesos y Licencias'}
-              </h1>
-              <p className="max-w-2xl text-sm leading-6 text-slate-300">
-                {isOrganizer
-                  ? 'Accesos, pagos y actividad del espacio en una vista clara, con foco en lo esencial para entender el estado de cada suscripción.'
-                  : 'Aquí tienes todas tus herramientas activas y sus credenciales listas para usar.'}
-              </p>
-            </div>
+    <div className="space-y-6 bg-zinc-950">
+      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between mb-8">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.1em] text-cyan-400 mb-2">
+            <span>{isOrganizer ? 'Vista de Organizador' : 'Tu Suscripción'}</span>
           </div>
+          <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-white">
+            {isOrganizer ? 'CoStack Studio' : 'Tus Herramientas'}
+          </h1>
+          <p className="mt-2 text-sm text-zinc-400 max-w-xl">
+            {isOrganizer
+              ? 'Administrá el acceso, pagos y el estado general de tu espacio de trabajo.'
+              : 'Accedé a tus licencias y gestioná tus herramientas desde aquí.'}
+          </p>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 ${isOrganizer ? 'bg-cyan-400/10' : 'bg-emerald-400/10'}`}>
-              <span className={`h-2 w-2 rounded-full animate-pulse ${isOrganizer ? 'bg-cyan-300' : 'bg-emerald-300'}`} />
-              {isOrganizer ? <Bot size={13} className="text-cyan-300" /> : <ShieldCheck size={13} className="text-emerald-300" />}
-              <span className={`text-xs font-semibold ${isOrganizer ? 'text-cyan-100' : 'text-emerald-100'}`}>
-                {isOrganizer ? 'Sistema activo' : 'Acceso listo'}
-              </span>
-            </div>
-            <button className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 transition-colors hover:bg-white/10">
-              <Bell size={16} className="text-cyan-100/70" />
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-amber-400" />
-            </button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.02] px-3 py-1.5 backdrop-blur-md">
+            <span className={`h-1.5 w-1.5 rounded-full ${isOrganizer ? 'bg-cyan-400 animate-pulse' : 'bg-emerald-400'}`} />
+            <span className="text-xs font-medium text-zinc-300">
+              {isOrganizer ? 'Sistema activo' : 'Acceso garantizado'}
+            </span>
           </div>
+          <button className="flex h-9 w-9 items-center justify-center rounded-full border border-white/5 bg-white/[0.02] text-zinc-400 hover:text-white transition-colors">
+            <Bell size={16} />
+          </button>
         </div>
       </header>
 
@@ -96,24 +89,32 @@ export default async function OverviewPage() {
         </div>
       )}
 
-      <section className="space-y-4">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Resumen</p>
-            <h2 className="text-lg font-semibold tracking-tight text-zinc-50">
-              {isOrganizer ? 'Estado operativo' : 'Resumen de valor'}
-            </h2>
+      {!isOrganizer && overduePayments.length > 0 && (
+        <PaymentRetryBanner 
+          title="Tu acceso está suspendido por falta de pago"
+          description="Abona tu cuota mensual para reactivar el acceso inmediatamente."
+          href="/billetera"
+        />
+      )}
+
+      {isOrganizer && (
+        <section className="space-y-4">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Resumen</p>
+              <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Estado operativo</h2>
+            </div>
           </div>
-        </div>
-        <SummaryCards snapshot={snapshot} isOrganizer={isOrganizer} />
-      </section>
+          <SummaryCards snapshot={snapshot} isOrganizer={isOrganizer} />
+        </section>
+      )}
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.5fr)]">
         <div className="space-y-6">
           {hasTools ? (
-            <ToolCards tools={tools} />
+            <ToolCards tools={tools} isOrganizer={isOrganizer} />
           ) : (
-            <OnboardingPrompt />
+            <OnboardingPrompt isOrganizer={isOrganizer} />
           )}
 
           {isOrganizer && <PaymentTraffic />}
@@ -121,27 +122,34 @@ export default async function OverviewPage() {
 
         <div className="space-y-6">
           {isOrganizer ? (
-            <SeatAccessCard accessState="current" groupName={snapshot.latestGroup?.name ?? 'CoStack Studio'} accessToken={snapshot.latestGroup?.seats[0]?.accessToken ?? 'COSTACK-74A2-9X11'} />
+            <SeatAccessCard 
+              accessState="current" 
+              groupName={snapshot.latestGroup?.name ?? 'CoStack Studio'} 
+              accessToken={snapshot.latestGroup?.inviteCode ?? 'COSTACK-84A2'} 
+            />
           ) : (
-            <SuccessAccessCard accessState="current" groupName={snapshot.latestGroup?.name ?? 'CoStack Studio'} accessToken={snapshot.latestGroup?.seats[0]?.accessToken ?? 'COSTACK-84A2-2B22'} />
-          )}
-          {isOrganizer && (
-            <section className="space-y-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Actividad</p>
-                <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Actividad reciente</h2>
-              </div>
-              <BotLog entries={botEntries} limit={3} />
-            </section>
+            <SuccessAccessCard 
+              seatId={snapshot.latestGroup?.seats[0]?.id}
+              accessState="current" 
+              groupName={snapshot.latestGroup?.name ?? 'CoStack Studio'} 
+              accessToken={snapshot.latestGroup?.seats[0]?.accessToken ?? 'COSTACK-84A2-2B22'}
+              isBusiness={snapshot.latestGroup?.seats[0]?.tool?.slug === 'figma'} // Simulamos que figma es business temporalmente hasta tener el backend
+            />
           )}
         </div>
       </section>
+
+      {isOrganizer && (
+        <section className="pt-8">
+          <BotLog entries={botEntries} limit={5} />
+        </section>
+      )}
     </div>
   )
 }
 
 function formatBotEntries(snapshot: DashboardSnapshot): LogEntry[] {
-  return snapshot.latestGroup?.botEvents.map((event) => ({
+  return snapshot.latestGroup?.botEvents?.map((event) => ({
     time: new Date(event.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
     message: event.message,
     type: event.type === 'payment' ? 'success' : event.type === 'error' ? 'action' : 'info',
