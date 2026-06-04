@@ -8,16 +8,17 @@ import { PaymentRetryBanner } from "@/components/dashboard/payment-retry-banner"
 
 interface BilleteraPageClientProps {
   isOverdue: boolean
+  isOrganizer: boolean
 }
 
-export function BilleteraPageClient({ isOverdue }: BilleteraPageClientProps) {
+export function BilleteraPageClient({ isOverdue, isOrganizer }: BilleteraPageClientProps) {
   const [failureOpen, setFailureOpen] = useState(isOverdue)
 
   if (isOverdue) {
     return (
       <div className="space-y-6">
         <PaymentRetryBanner
-          onRetry={() => setFailureOpen(true)}
+          href="/suscripciones"
           title="Tu acceso quedó en pausa por un pago vencido"
           description="Reintentá el pago o actualizá tu medio de pago para recuperar tu acceso."
         />
@@ -33,5 +34,5 @@ export function BilleteraPageClient({ isOverdue }: BilleteraPageClientProps) {
     )
   }
 
-  return <BilleteraView />
+  return <BilleteraView isOrganizer={isOrganizer} />
 }
