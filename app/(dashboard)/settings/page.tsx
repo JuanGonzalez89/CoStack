@@ -1,4 +1,17 @@
-export default function SettingsPage() {
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { redirect } from 'next/navigation'
+
+export default async function SettingsPage() {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.email) redirect('/login')
+
+  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
+  if (user?.role !== 'organizer') {
+    redirect('/overview')
+  }
+
   return (
     <section className="space-y-4">
       <div>
