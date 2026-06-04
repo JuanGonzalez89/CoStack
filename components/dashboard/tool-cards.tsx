@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { CreditCard, Loader2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import {
@@ -42,7 +43,7 @@ const initialTools: ToolCardData[] = [
   },
 ]
 
-export function ToolCards({ tools: toolsProp }: { tools?: ToolCardData[] }) {
+export function ToolCards({ tools: toolsProp, isOrganizer = false }: { tools?: ToolCardData[], isOrganizer?: boolean }) {
   const router = useRouter()
   const [tools, setTools] = useState(toolsProp ?? initialTools)
   const [pendingPayId, setPendingPayId] = useState<string | null>(null)
@@ -148,14 +149,14 @@ export function ToolCards({ tools: toolsProp }: { tools?: ToolCardData[] }) {
       </Dialog>
 
       <section>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Herramientas</p>
-            <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Siguiente paso por suscripción</h2>
-            <p className="mt-0.5 text-xs text-slate-300">
-              Gestiona tus cupos y continúa el pago desde cada herramienta
-            </p>
+            <h2 className="text-xl font-bold tracking-tight text-white">Suscripciones Activas</h2>
+            <p className="mt-1 text-sm text-zinc-400">Gestioná tus herramientas y cupos</p>
           </div>
+          <Button asChild className="rounded-xl h-12 bg-white text-black hover:bg-zinc-200 font-bold text-sm px-6 shadow-none">
+            <Link href="/suscripciones">+ Nueva Suscripción</Link>
+          </Button>
         </div>
 
         {statusMessage && (
@@ -165,9 +166,9 @@ export function ToolCards({ tools: toolsProp }: { tools?: ToolCardData[] }) {
         )}
 
         {tools.length > 0 ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[repeat(auto-fit,minmax(230px,1fr))]">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-[repeat(auto-fit,minmax(340px,1fr))]">
             {tools.map((tool) => (
-              <ToolCard key={tool.id} tool={tool} onRequestPay={handleRequestPay} />
+              <ToolCard key={tool.id} tool={tool} onRequestPay={handleRequestPay} isOrganizer={isOrganizer} />
             ))}
           </div>
         ) : (
@@ -176,7 +177,7 @@ export function ToolCards({ tools: toolsProp }: { tools?: ToolCardData[] }) {
             variant="action"
             title="Todavía no hay herramientas cargadas"
             description="Cuando exista una herramienta activa, las suscripciones y cupos aparecerán acá con una acción clara para continuar."
-            cta={{ label: 'Ir al catálogo', href: '/suscripciones' }}
+            actionButton={{ label: 'Ir al catálogo', href: '/suscripciones' }}
             secondaryCta={{ label: 'Tengo un código', href: '/onboarding' }}
           />
         )}
