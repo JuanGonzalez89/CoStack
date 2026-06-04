@@ -34,42 +34,42 @@ export function BotLog({ entries, limit = 3 }: { entries: LogEntry[]; limit?: nu
     <section>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-base font-semibold text-zinc-50">Actividad reciente</h2>
-          <p className="mt-0.5 text-xs text-slate-300">Eventos en tiempo real del sistema</p>
+          <h2 className="text-xl font-bold text-white">Registro de Actividad</h2>
+          <p className="mt-1 text-sm text-zinc-400">Eventos en tiempo real del sistema</p>
         </div>
         {/* Online indicator */}
-        <div className="flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/10 px-3 py-1.5">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <Bot size={13} className="text-emerald-300" />
-          <span className="text-xs font-semibold text-emerald-100">Sistema activo</span>
-          <Wifi size={12} className="text-emerald-300" />
+        <div className="flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/10 px-4 py-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+          <Bot size={16} className="text-emerald-300" />
+          <span className="text-sm font-semibold text-emerald-100">Sistema activo</span>
+          <Wifi size={14} className="text-emerald-300" />
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-white/5 bg-white/[0.03] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset]">
+      <div className="overflow-hidden rounded-3xl border border-white/5 bg-black/40 shadow-[0_1px_0_rgba(255,255,255,0.03)_inset]">
         {/* Terminal top bar */}
-        <div className="flex items-center gap-2 border-b border-white/5 bg-white/[0.02] px-4 py-3">
-          <span className="w-3 h-3 rounded-full bg-red-500/70" />
-          <span className="w-3 h-3 rounded-full bg-yellow-500/70" />
-          <span className="w-3 h-3 rounded-full bg-emerald-500/70" />
-          <span className="ml-3 font-mono text-xs text-slate-400">costack-system ~ activity-log</span>
+        <div className="flex items-center gap-2 border-b border-white/5 bg-white/[0.02] px-6 py-4">
+          <span className="w-3.5 h-3.5 rounded-full bg-red-500/70" />
+          <span className="w-3.5 h-3.5 rounded-full bg-yellow-500/70" />
+          <span className="w-3.5 h-3.5 rounded-full bg-emerald-500/70" />
+          <span className="ml-3 font-mono text-sm font-medium text-slate-400">costack-system ~ activity-log</span>
         </div>
 
         {/* Log lines */}
-        <div className="max-h-56 space-y-2 overflow-y-auto p-4 font-mono text-xs">
+        <div className="max-h-72 space-y-3 overflow-y-auto p-6 font-mono text-sm">
           {allLogs.map((entry, i) => (
             <div
               key={i}
               className={cn(
-                "flex items-start gap-3 transition-all duration-300",
+                "flex items-start gap-4 transition-all duration-300",
                 i === allLogs.length - 1 && "animate-pulse-once"
               )}
             >
               <span className="shrink-0 tabular-nums text-slate-500">{entry.time}</span>
-              <span className={cn("shrink-0 font-semibold", typeStyles[entry.type])}>
+              <span className={cn("shrink-0 font-bold", typeStyles[entry.type])}>
                 {typePrefixes[entry.type]}
               </span>
-              <span className="leading-relaxed text-slate-200">{entry.message}</span>
+              <span className="leading-relaxed text-zinc-300">{entry.message}</span>
             </div>
           ))}
           {/* Blinking cursor */}
