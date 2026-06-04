@@ -16,11 +16,11 @@ export function SeatRow({ name, status, isOrganizer = false, email }: SeatRowPro
   const isFree = status === 'free'
   
   return (
-    <div className="flex items-center justify-between px-5 py-3 hover:bg-zinc-900/50 transition-colors">
+    <div className="flex items-center justify-between px-5 py-3 hover:bg-white/[0.03] transition-colors rounded-xl mx-2 my-1">
       <div className="flex items-center gap-3">
         <div className={cn(
           "w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold",
-          isFree ? "bg-zinc-900 text-zinc-500 border border-dashed border-zinc-700" : "bg-zinc-800 text-zinc-300"
+          isFree ? "bg-white/5 text-slate-500 border border-dashed border-white/10" : "bg-cyan-500/20 text-cyan-200"
         )}>
           {isFree ? "—" : name.charAt(0).toUpperCase()}
         </div>
@@ -62,15 +62,22 @@ export function SeatRow({ name, status, isOrganizer = false, email }: SeatRowPro
                     <Copy className="mr-2 h-4 w-4" />
                     Copiar Email
                   </DropdownMenuItem>
-                  {status === 'blocked' ? (
+                  {status === 'blocked' && (
                     <DropdownMenuItem className="focus:bg-zinc-800 focus:text-zinc-50 cursor-pointer text-emerald-500 focus:text-emerald-400">
                       <CheckCircle2 className="mr-2 h-4 w-4" />
                       Liberar
                     </DropdownMenuItem>
-                  ) : (
+                  )}
+                  {status !== 'assigned' && status !== 'blocked' && (
                     <DropdownMenuItem className="focus:bg-zinc-800 focus:text-zinc-50 cursor-pointer text-red-500 focus:text-red-400">
                       <Trash2 className="mr-2 h-4 w-4" />
                       Revocar
+                    </DropdownMenuItem>
+                  )}
+                  {status === 'assigned' && (
+                    <DropdownMenuItem className="focus:bg-zinc-800 focus:text-zinc-50 cursor-pointer text-amber-500 focus:text-amber-400">
+                      <Share className="mr-2 h-4 w-4" />
+                      Reportar Incidencia
                     </DropdownMenuItem>
                   )}
                 </>
