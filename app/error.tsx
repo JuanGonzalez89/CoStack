@@ -8,13 +8,13 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   }, [error])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
-      <div className="max-w-lg space-y-4 rounded-3xl border border-border bg-card p-8 text-center shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-600">Error global</p>
-        <h1 className="text-2xl font-bold">La aplicación encontró un problema.</h1>
-        <p className="text-sm text-muted-foreground">Podés reintentar la acción para volver a cargar la ruta actual.</p>
-        <button onClick={reset} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-          Reintentar
+    <div className="flex min-h-screen items-center justify-center bg-[#07111d] px-4 text-slate-100">
+      <div className="max-w-lg space-y-4 rounded-3xl border border-white/5 bg-white/[0.03] p-8 text-center shadow-[0_1px_0_rgba(255,255,255,0.03)_inset]">
+        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-500">Interrupción Inesperada</p>
+        <h1 className="text-2xl font-bold">Algo no salió como esperábamos.</h1>
+        <p className="text-sm text-slate-400">Hubo un fallo en la comunicación o una ruta inválida. Puedes recargar la página para limpiar el estado y continuar navegando.</p>
+        <button onClick={reset} className="rounded-xl bg-cyan-500 hover:bg-cyan-400 transition-colors px-6 py-3 mt-4 text-sm font-semibold text-white shadow-md">
+          Recargar y continuar
         </button>
       </div>
     </div>
