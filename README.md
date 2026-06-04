@@ -164,4 +164,6 @@ CoStack incorpora OpenClaw Bot para automatizar la entrega de accesos. El flujo 
 
 ## Estado del proyecto
 
-Este repositorio contiene un prototipo frontend funcional construido con Next.js y preparado para demostración, iteración de producto y publicación en GitHub.
+Este repositorio contiene un prototipo frontend funcional construido con Next.js y preparado para demostración, iteración de producto y publicación en GitHub. 
+
+Recientemente se completaron las implementaciones del **Sprint 8** (Refinamiento de UX/UI, inclusión de modales de retiros y credenciales, y flujo dinámico de Automatch) y se proyectó el **Sprint 9** para la migración transaccional completa.
