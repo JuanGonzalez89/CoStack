@@ -24,57 +24,57 @@ export function PaymentTraffic() {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h2 className="text-base font-semibold text-zinc-50">Actividad de pagos</h2>
-          <p className="mt-0.5 text-xs text-slate-300">Estado actual de pagos del espacio</p>
+          <h2 className="text-xl font-semibold text-white tracking-tight">Actividad de pagos</h2>
+          <p className="mt-1 text-sm text-zinc-400">Estado actual de pagos del espacio</p>
         </div>
-        <button className="flex items-center gap-1 rounded-lg border border-cyan-500/10 bg-slate-950/80 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:text-cyan-100">
-          Vista actual <ChevronDown size={12} />
+        <button className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2 text-sm text-zinc-300 transition-colors hover:text-white hover:bg-white/[0.04]">
+          Vista actual <ChevronDown size={16} />
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-white/5 bg-white/[0.03] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset]">
-        <div className="flex items-center justify-between gap-4 border-b border-white/5 px-5 pb-4 pt-5">
-          <div className="flex items-center gap-3 flex-1">
-            <div className="flex-1 h-2 overflow-hidden rounded-full bg-slate-800/90">
-              <div className="h-2 rounded-full bg-cyan-400 transition-all duration-700" style={{ width: `${percent}%` }} />
+      <div className="overflow-hidden rounded-[24px] border border-white/5 bg-white/[0.02] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset]">
+        <div className="flex items-center justify-between gap-6 border-b border-white/5 px-6 pb-5 pt-6">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="flex-1 h-3 overflow-hidden rounded-full bg-black/40 border border-white/5">
+              <div className="h-3 rounded-full bg-cyan-500 transition-all duration-700" style={{ width: `${percent}%` }} />
             </div>
-            <span className="whitespace-nowrap text-sm font-semibold text-zinc-50">
+            <span className="whitespace-nowrap text-base font-semibold text-zinc-50">
               {totalPaid}/{totalAll} pagos
             </span>
           </div>
-          <span className="rounded-full bg-cyan-400/10 px-2.5 py-1 text-xs font-medium text-cyan-100">
+          <span className="rounded-full bg-cyan-500/10 px-3 py-1.5 text-sm font-semibold text-cyan-400">
             {percent}% al día
           </span>
         </div>
 
-        <div className="flex items-center gap-4 border-b border-white/5 bg-white/[0.02] px-5 py-3">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="text-xs text-slate-300">Pagado</span>
+        <div className="flex items-center gap-6 border-b border-white/5 bg-white/[0.01] px-6 py-4">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            <span className="text-sm font-medium text-zinc-400">Pagado</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-yellow-500" />
-            <span className="text-xs text-slate-300">Pendiente</span>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+            <span className="text-sm font-medium text-zinc-400">Pendiente</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-red-500" />
-            <span className="text-xs text-slate-300">Vencido</span>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+            <span className="text-sm font-medium text-zinc-400">Vencido</span>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/5 bg-white/[0.015]">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 w-40">Miembro</th>
+              <tr className="border-b border-white/5 bg-black/10">
+                <th className="text-left px-6 py-4 text-xs font-bold uppercase tracking-wider text-zinc-500 w-48">Miembro</th>
                 {tools.map((tool) => (
-                  <th key={tool} className="text-center px-4 py-3 text-xs font-semibold text-slate-400">
+                  <th key={tool} className="text-center px-4 py-4 text-xs font-bold uppercase tracking-wider text-zinc-500">
                     {tool}
                   </th>
                 ))}
-                <th className="text-center px-4 py-3 text-xs font-semibold text-slate-400">Total</th>
+                <th className="text-center px-6 py-4 text-xs font-bold uppercase tracking-wider text-zinc-500">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -85,28 +85,28 @@ export function PaymentTraffic() {
                 return (
                   <tr
                     key={member.user.email}
-                    className={`border-b border-white/5 transition-colors hover:bg-white/[0.02] ${i === members.length - 1 ? "border-b-0" : ""}`}
+                    className={`border-b border-white/5 transition-colors hover:bg-white/[0.03] ${i === members.length - 1 ? "border-b-0" : ""}`}
                   >
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-cyan-400/15 flex items-center justify-center shrink-0">
-                          <span className="text-xs font-bold text-cyan-100">{memberName.slice(0, 1).toUpperCase()}</span>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0">
+                          <span className="text-sm font-bold text-zinc-300">{memberName.slice(0, 1).toUpperCase()}</span>
                         </div>
                         <div>
-                          <p className="text-sm font-medium leading-tight text-zinc-50">{memberName}</p>
-                          <p className="text-[10px] text-slate-400">{member.role}</p>
+                          <p className="text-sm font-semibold text-zinc-50">{memberName}</p>
+                          <p className="text-xs text-zinc-500">{member.role}</p>
                         </div>
                       </div>
                     </td>
                     {tools.map((tool) => (
-                      <td key={tool} className="px-4 py-3.5 text-center">
+                      <td key={tool} className="px-4 py-4 text-center">
                         <StatusBadge status={statusByMemberAndTool(member.user.email, tool)} />
                       </td>
                     ))}
-                    <td className="px-4 py-3.5 text-center">
+                    <td className="px-6 py-4 text-center">
                       <span
-                        className={`text-xs font-semibold ${
-                          paidCount === tools.length ? "text-emerald-300" : paidCount === 0 ? "text-red-300" : "text-amber-300"
+                        className={`text-sm font-bold ${
+                          paidCount === tools.length ? "text-emerald-400" : paidCount === 0 ? "text-red-400" : "text-amber-400"
                         }`}
                       >
                         {paidCount}/{tools.length || 1}
@@ -117,7 +117,7 @@ export function PaymentTraffic() {
               })}
               {!members.length && (
                 <tr>
-                  <td className="px-5 py-6 text-sm text-slate-400" colSpan={tools.length + 2}>
+                  <td className="px-6 py-8 text-sm text-zinc-500 text-center" colSpan={tools.length + 2}>
                     Todavía no hay miembros persistidos.
                   </td>
                 </tr>
