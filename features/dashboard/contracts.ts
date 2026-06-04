@@ -2,9 +2,9 @@ export type AccessState = 'current' | 'overdue' | 'blocked'
 
 export type PaymentStatus = 'paid' | 'pending' | 'overdue'
 
-export type SeatStatus = PaymentStatus | 'free'
+export type SeatStatus = PaymentStatus | 'free' | 'assigned'
 
-export type StatusBadgeStatus = PaymentStatus | 'idle' | 'blocked'
+export type StatusBadgeStatus = PaymentStatus | 'idle' | 'blocked' | 'free' | 'assigned'
 
 export type ToolCardState = 'pending' | 'paying' | 'assigning' | 'assigned'
 
@@ -21,6 +21,7 @@ export interface DashboardMemberSnapshot {
 }
 
 export interface DashboardSeatSnapshot {
+  id: string
   status: SeatStatus
   accessToken: string | null
   tool: { slug: string; name: string; provider: string; monthlyCost: number }
@@ -87,6 +88,7 @@ export interface ToolCardData {
 }
 
 export interface SeatAccessCardData {
+  seatId?: string
   accessState: AccessState
   groupName: string
   accessToken: string
