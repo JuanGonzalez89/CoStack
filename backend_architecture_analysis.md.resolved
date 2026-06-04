@@ -1,0 +1,77 @@
+# Arquitectura de Backend & Base de Datos (Sprint 9)
+**Por:** Senior Full-Stack Engineer @ CoStack
+
+Con la interfaz de usuario (Fase 2) cerrada al 100%, todos los flujos están cubiertos. Sin embargo, para que el sistema cobre vida (el 20% restante del MVP), necesitamos actualizar el "cerebro": nuestro esquema de Prisma, el motor de Automatch y la pasarela de pagos. 
+
+A continuación, el roadmap técnico y el análisis arquitectónico necesario para darle funcionalidad a las pantallas que acabamos de construir.
+
+---
+
+## 1. Actualización Crítica del `schema.prisma`
+
+Para soportar el catálogo dinámico, los roles estrictos y el sistema de ingresos/egresos de billetera que creamos en el frontend, el modelo de datos debe expandirse:
+
+### Modelo `Tool` (Herramientas)
+Necesitamos reflejar la dualidad de las cuentas (Shared vs Business) y las categorías (AI, Design, IDE):
+* **`category`** (String): Ej. "AI", "Design".
+* **`originalPrice`** (Float): Para calcular y mostrar el "Ahorro del X%".
+* **`isBusiness`** (Boolean): Determina si la herramienta requiere que el Miembro espere una invitación por email (Figma) o si se le revela el `SharedToken` automáticamente (ChatGPT).
+
+### Modelo `Group` / `Seat` (Asientos y Grupos)
+* **`automatchEnabled`** (Boolean): El toggle que agregamos en la UI. Por defecto en `true`. Si está en `false`, el algoritmo de Automatch debe ignorar este grupo aunque tenga `freeSeats > 0`.
+* **`sharedCredentials`** (JSON / String Encriptado): Cuando el organizador hace click en *"Configurar Credenciales"*, acá se guarda (encriptado) el email/password del pool.
+
+### Modelo `Payment` / `Transaction` (Billetera)
+* **`type`** (Enum: "income", "expense"): Para soportar las pestañas nuevas de la Billetera.
+* **`escrowStatus`** (Enum: "locked", "released", "refunded"): Cuando un miembro reporta una incidencia con el botón *"Reportar Problema"*, el estado pasa a `locked` y el organizador no puede retirar sus fondos.
+
+---
+
+## 2. El Algoritmo Core: Automatch Engine
+
+El **Automatch** es la pieza central de nuestro negocio. Ya creamos el botón en el Frontend (`suscripciones-view.tsx`), pero el backend debe ser capaz de emparejar oferta y demanda en milisegundos sin causar concurrencia (Race Conditions).
+
+**Lógica del Algoritmo (Server Action):**
+1. Un Miembro hace click en "Unirse con Automatch" a `midjourney`.
+2. El sistema inicia una transacción de base de datos (`prisma.$transaction`).
+3. Busca el primer `Group` donde:
+   * `tool.slug == 'midjourney'`
+   * `automatchEnabled == true`
+   * `(seatsTotal - occupiedSeats) > 0`
+4. Si encuentra un grupo, **bloquea el asiento por 10 minutos** (Estado: `reserved`) mientras el usuario paga en Stripe.
+5. Si el pago es exitoso, el asiento pasa a `assigned`. Si falla o pasan los 10 min, vuelve a `free`.
+6. *Puntos de fallo a testear:* ¿Qué pasa si 2 miembros le dan click al último asiento libre al mismo tiempo? (Solución: Locks a nivel de fila en Postgres o Redis).
+
+---
+
+## 3. Integración Segura de Pagos & Retiros
+
+### Stripe Webhooks (Pagos Entrantes)
+El botón *"Confirmar Pago"* de nuestro `CheckoutView` actual es un frontend dummy.
+1. Al hacer click, el backend debe crear una `Stripe Checkout Session` y devolver la URL.
+2. El usuario paga en Stripe.
+3. Stripe dispara un webhook `/api/webhooks/stripe`.
+4. El webhook actualiza el `payment.status` a `paid` y dispara el correo de bienvenida.
+
+### Flujo de "Retirar Fondos" (Pagos Salientes / Payouts)
+Para el Organizador, el botón de "Retirar Fondos" que agregamos implica conectarnos con Stripe Connect o MercadoPago Split.
+* **Lógica Sugerida:** No procesar retiros en tiempo real para evitar fraudes. Cuando el Organizador presiona "Retirar", se genera una entidad `PayoutRequest` (Estado: `pending`). Un cronjob o administrador de CoStack revisa y aprueba el pago los días 1 y 15 de cada mes. Esto nos da aire operativo.
+
+---
+
+## 4. Estado "Esperando Invitación" (Business Logic)
+
+Cuando un Miembro compra Figma (isBusiness = true), nuestra UI ya muestra la tarjeta de "Esperando Invitación". El motor debe:
+1. Notificar por email al Organizador: *"Tenes un nuevo miembro. Agregalo a tu panel de Figma: juan@mail.com"*.
+2. El Organizador va a la herramienta externa, lo agrega, y luego vuelve a CoStack y hace click en un botón (futuro) *"Invitación Enviada"*.
+3. Ese click le avisa al Miembro (vía email/dashboard) que ya puede acceder y libera los fondos de Escrow.
+
+---
+
+### Resumen de Próximos Pasos de Desarrollo
+1. Actualizar `schema.prisma` y generar las migraciones (`npx prisma migrate dev`).
+2. Programar las Server Actions de `Checkout` conectando el SDK de Stripe.
+3. Escribir el Motor de `Automatch` con bloqueos de base de datos (`Transactions`).
+4. Reemplazar la data dummy (mocks) de la Interfaz por los fetchers reales de Prisma.
+
+Con esto, pasamos de una Interfaz "Maqueta de Alta Fidelidad" a un SaaS real y transaccional.
