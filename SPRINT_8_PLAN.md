@@ -73,6 +73,16 @@ Buenas prácticas:
 - Mensajes accionables, no mensajes internos del stack.
 - Revisar contraste, foco y navegación por teclado.
 
+#### 6. Sistema Anti-Fraude (Modelo Escrow y Reporte)
+Tareas:
+- Retener fondos de los organizadores antes de liquidar los pagos.
+- Implementar un botón "Reportar Problema" en las credenciales activas del Member.
+- Generar acciones de congelamiento y auditoría (bot events) ante el reporte de cuentas caídas.
+
+Buenas prácticas:
+- Alinear incentivos económicos para desalentar estafas sin requerir verificaciones API invasivas en cada herramienta.
+- Hacer que el flujo de reporte sea claro y advierta las consecuencias transaccionales.
+
 ### Parte 2 - Visual final
 Objetivo: que la segunda parte también se vea más clara, liviana y respirable.
 
@@ -260,6 +270,7 @@ Buenas prácticas:
 1. Separación más fuerte entre member y organizer.
 2. Gestión de invitaciones y acceso protegido.
 3. Mejoras de errores y observabilidad.
+4. Prevención de fraude (Escrow y sistema de reportes comunitarios).
 
 ### P2
 1. Ajustes finos de copy si reaparece jerga interna.
