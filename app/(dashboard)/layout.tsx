@@ -17,7 +17,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const isOrganizer = user?.role === 'organizer'
 
   return (
-    <div className="min-h-screen bg-[#07111d] text-slate-100 lg:flex">
+    <div className="min-h-screen bg-zinc-950 text-slate-100 lg:flex">
       <Sidebar 
         isOrganizer={isOrganizer} 
         user={{ name: user?.name || session.user.name || '', email: session.user.email }} 
@@ -27,8 +27,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           isOrganizer={isOrganizer}
           user={{ name: user?.name || session.user.name || '', email: session.user.email }}
         />
-        <main className="min-w-0 flex-1 bg-[#07111d] lg:pt-0">
-          <div className="mx-auto max-w-7xl px-4 py-6 pb-24 pt-16 lg:px-8 lg:pb-8 lg:pt-8">
+        <main className="min-w-0 flex-1 bg-zinc-950 lg:pt-0">
+          <div className="px-4 py-6 pb-24 pt-16 lg:px-12 lg:pb-12 lg:pt-10">
             {children}
           </div>
         </main>
