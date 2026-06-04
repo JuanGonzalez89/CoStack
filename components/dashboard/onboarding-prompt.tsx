@@ -2,37 +2,50 @@ import Link from 'next/link'
 import { Rocket, Plus, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-export function OnboardingPrompt() {
+export function OnboardingPrompt({ isOrganizer = false }: { isOrganizer?: boolean }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950 p-8 sm:p-12 text-center shadow-lg">
+    <div className="relative overflow-hidden rounded-[24px] border border-white/5 bg-white/[0.02] p-10 sm:p-16 text-center shadow-lg">
       <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
-        <Rocket size={180} />
+        <Rocket size={200} />
       </div>
       
-      <div className="relative z-10 max-w-lg mx-auto">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-500 border border-sky-500/20">
-          <Rocket size={32} />
+      <div className="relative z-10 max-w-xl mx-auto">
+        <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-3xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
+          <Rocket size={40} />
         </div>
         
-        <h2 className="mb-3 text-2xl font-bold text-zinc-50 tracking-tight">¡Bienvenido a CoStack!</h2>
-        <p className="mb-8 text-sm text-zinc-400 leading-relaxed">
-          Aún no tienes licencias activas. Puedes explorar el catálogo o usar un código de invitación para continuar.
+        <h2 className="mb-4 text-3xl font-bold text-white tracking-tight">
+          {isOrganizer ? '¡Bienvenido a CoStack Studio!' : '¡Bienvenido a tu espacio CoStack!'}
+        </h2>
+        <p className="mb-10 text-base text-zinc-400 leading-relaxed">
+          {isOrganizer 
+            ? 'Para comenzar a rentabilizar tus licencias, añade la herramienta que quieres compartir con tu equipo y te daremos un código de invitación.'
+            : 'Aún no tienes licencias activas asignadas. Únete a un espacio privado usando un código de acceso o encuentra grupos con cupos libres en Automatch.'}
         </p>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button asChild className="w-full sm:w-auto rounded-xl bg-sky-500 px-6 py-6 text-sm font-bold text-white hover:bg-sky-400 transition-colors shadow-sm">
-            <Link href="/suscripciones">
-              <Plus size={18} className="mr-2" />
-              Ir al catálogo
-            </Link>
-          </Button>
-          
-          <Button asChild variant="outline" className="w-full sm:w-auto rounded-xl border border-zinc-700 bg-transparent px-6 py-6 text-sm font-bold text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50 transition-colors">
-            <Link href="/onboarding?mode=join">
-              <UserPlus size={18} className="mr-2" />
-              Tengo un código de invitación
-            </Link>
-          </Button>
+          {isOrganizer ? (
+            <Button asChild className="w-full sm:w-auto rounded-xl bg-cyan-500 px-8 h-14 text-base font-bold text-white hover:bg-cyan-400 transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.5)]">
+              <Link href="/suscripciones">
+                <Plus size={20} className="mr-2" />
+                + Nueva Suscripción
+              </Link>
+            </Button>
+          ) : (
+            <>
+              <Button asChild className="w-full sm:w-auto rounded-xl bg-cyan-500 px-8 h-14 text-base font-bold text-white hover:bg-cyan-400 transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.5)]">
+                <Link href="/onboarding?mode=join">
+                  <UserPlus size={20} className="mr-2" />
+                  Ingresar Código
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full sm:w-auto rounded-xl border border-white/10 bg-white/5 px-8 h-14 text-base font-bold text-zinc-300 hover:bg-white/10 hover:text-white transition-colors">
+                <Link href="/comunidad">
+                  Explorar Automatch
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>
