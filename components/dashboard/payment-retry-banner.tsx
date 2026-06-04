@@ -1,16 +1,17 @@
 import { RotateCcw, TriangleAlert } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 interface PaymentRetryBannerProps {
   title?: string
   description?: string
-  onRetry: () => void
+  href?: string
 }
 
 export function PaymentRetryBanner({
   title = "Hay un pago pendiente que bloquea el acceso",
   description = "Reintentá la operación para recuperar tu acceso y seguir navegando sin restricciones.",
-  onRetry,
+  href = "/billetera",
 }: PaymentRetryBannerProps) {
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 shadow-sm md:flex-row md:items-center md:justify-between">
@@ -24,9 +25,11 @@ export function PaymentRetryBanner({
         </div>
       </div>
 
-      <Button onClick={onRetry} className="rounded-xl bg-amber-600 text-white hover:bg-amber-500">
-        <RotateCcw size={14} />
-        Reintentar pago
+      <Button asChild className="rounded-xl bg-amber-600 text-white hover:bg-amber-500">
+        <Link href={href}>
+          <RotateCcw size={14} className="mr-2" />
+          Reintentar pago
+        </Link>
       </Button>
     </div>
   )
