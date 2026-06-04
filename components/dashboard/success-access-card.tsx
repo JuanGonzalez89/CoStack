@@ -1,10 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { KeyRound, ShieldCheck, CheckCircle2, Copy } from "lucide-react"
+import { KeyRound, ShieldCheck, CheckCircle2, Copy, AlertTriangle, Mail, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { SeatAccessCardData } from "@/features/dashboard/contracts"
 import { cn } from "@/lib/utils"
+import { ReportIssueButton } from "./report-issue-button"
 
 const stateStyles = {
   current: "bg-emerald-400/10 text-emerald-200 border-emerald-400/20",
@@ -12,7 +13,11 @@ const stateStyles = {
   blocked: "bg-red-400/10 text-red-100 border-red-400/20",
 }
 
-export function SuccessAccessCard({ accessState, groupName, accessToken }: SeatAccessCardData) {
+interface SuccessAccessCardProps extends SeatAccessCardData {
+  isBusiness?: boolean
+}
+
+export function SuccessAccessCard({ seatId, accessState, groupName, accessToken, isBusiness = false }: SuccessAccessCardProps) {
   const [showCredentials, setShowCredentials] = useState(false)
 
   const handleCopy = () => {
@@ -21,58 +26,81 @@ export function SuccessAccessCard({ accessState, groupName, accessToken }: SeatA
   }
 
   return (
-    <section className="relative rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-indigo-500/5 p-8 shadow-lg overflow-hidden">
-      {/* Elementos decorativos */}
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-cyan-500/20 blur-3xl rounded-full pointer-events-none" />
-      <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-500/20 blur-3xl rounded-full pointer-events-none" />
-
-      <div className="relative z-10 flex flex-col items-center text-center">
-        <div className="w-16 h-16 rounded-2xl bg-cyan-500 flex items-center justify-center mb-6 shadow-xl shadow-cyan-500/20">
-          <CheckCircle2 className="w-8 h-8 text-white" />
+    <section className="rounded-[24px] border border-white/5 bg-white/[0.02] p-8 shadow-sm">
+      <div className="flex flex-col items-center text-center">
+        <div className={cn(
+          "w-16 h-16 rounded-2xl border flex items-center justify-center mb-6",
+          isBusiness ? "bg-violet-500/10 border-violet-500/20" : "bg-cyan-500/10 border-cyan-500/20"
+        )}>
+          {isBusiness ? <Mail className="w-8 h-8 text-violet-400" /> : <CheckCircle2 className="w-8 h-8 text-cyan-400" />}
         </div>
         
-        <h3 className="text-3xl font-extrabold text-zinc-50 tracking-tight mb-2">Tu acceso está listo</h3>
-        <p className="text-slate-300 max-w-md mx-auto mb-8">
-          Ya sos parte de <strong className="text-cyan-300">{groupName}</strong>. Tenés acceso listo para usar tu herramienta.
+        <h3 className="text-3xl font-bold text-zinc-50 mb-2">
+          {isBusiness ? "Esperando Invitación" : "Acceso listo"}
+        </h3>
+        <p className="text-base text-zinc-400 max-w-md mb-8">
+          Ya eres parte de <strong className="text-zinc-200">{groupName}</strong>. 
+          {isBusiness 
+            ? " Esta herramienta requiere que el organizador te invite oficialmente a tu correo. Por favor espera." 
+            : " Tu credencial está habilitada."}
         </p>
 
-        {!showCredentials ? (
+        {!isBusiness && !showCredentials && (
           <Button 
             onClick={() => setShowCredentials(true)}
-            size="lg"
-            className="w-full sm:w-auto rounded-xl bg-cyan-500 text-white hover:bg-cyan-400 font-bold text-lg h-14 px-8 shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all hover:scale-105"
+            className="w-full sm:w-auto rounded-2xl h-14 bg-white text-black hover:bg-zinc-200 font-bold text-lg px-10 mb-4"
           >
-            Ver Credenciales de Acceso
+            Ver Credencial
           </Button>
-        ) : (
-          <div className="w-full max-w-md animate-in fade-in zoom-in duration-300 bg-black/40 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">
+        )}
+
+        {isBusiness && (
+           <div className="w-full bg-violet-500/5 border border-violet-500/20 rounded-2xl p-6 text-left mb-4">
+             <div className="flex items-center gap-3 mb-2">
+               <ShieldCheck className="w-5 h-5 text-violet-400" />
+               <h4 className="font-bold text-violet-100">Dinero Protegido 100%</h4>
+             </div>
+             <p className="text-sm text-violet-200/70">
+               Tu pago está en <strong>Escrow</strong>. Si el organizador no te envía la invitación oficial en 24 horas, puedes cancelar esta suscripción y recibirás un reembolso automático e inmediato.
+             </p>
+           </div>
+        )}
+
+        {(!isBusiness && showCredentials) && (
+          <div className="w-full animate-in fade-in zoom-in duration-300 bg-black/20 border border-white/5 rounded-2xl p-6 text-left mb-4">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
                 <KeyRound size={14} />
-                Credencial de acceso
+                Token temporal
               </div>
-              <div className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider", stateStyles[accessState])}>
-                <ShieldCheck size={12} />
-                Activo
+              <div className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-wider", stateStyles[accessState])}>
+                <ShieldCheck size={14} />
+                {accessState === "current" ? "Al día" : accessState === "overdue" ? "En gracia" : "Bloqueado"}
               </div>
             </div>
             
-            <div className="flex items-center justify-between gap-4 bg-black/50 border border-white/5 rounded-xl p-4">
-              <code className="font-mono text-lg text-zinc-50">{accessToken}</code>
+            <div className="flex items-center justify-between gap-4 bg-black/40 border border-white/5 rounded-2xl p-4 mb-5">
+              <code className="font-mono text-lg text-zinc-300">{accessToken}</code>
               <Button 
                 variant="ghost" 
                 size="icon"
                 onClick={handleCopy}
-                className="text-slate-400 hover:text-white hover:bg-white/10"
+                className="text-zinc-400 hover:text-white hover:bg-white/10 h-10 w-10 rounded-xl"
               >
                 <Copy className="w-5 h-5" />
               </Button>
             </div>
-            <p className="text-xs text-slate-400 mt-4">
-              No compartas esta credencial. Es personal para tu usuario.
-            </p>
           </div>
         )}
+
+        {/* Acciones del Miembro (Cancelar/Reportar) */}
+        <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-4 border-t border-white/5">
+          <Button variant="ghost" className="text-zinc-500 hover:text-zinc-300">
+            <XCircle className="w-4 h-4 mr-2" />
+            Cancelar Suscripción
+          </Button>
+          {seatId && <ReportIssueButton seatId={seatId} />}
+        </div>
       </div>
     </section>
   )
