@@ -67,21 +67,21 @@ export function SummaryCards({ snapshot, isOrganizer = true }: { snapshot: Dashb
     {
       title: 'Tus Licencias',
       value: `${activeLicenses}`,
-      sub: 'Herramientas listas para usar.',
+      sub: 'Listas para usar',
       icon: Layers,
       color: 'cyan',
     },
     {
       title: 'Ahorro Mensual',
       value: `$${totalSavings.toFixed(2)}`,
-      sub: 'Lo que no estás pagándole a corporaciones.',
+      sub: 'vs Precio oficial',
       icon: DollarSign,
       color: 'emerald',
     },
     {
       title: 'Próximo Vencimiento',
-      value: 'En 14 días', // Mock B2C
-      sub: 'Renovación automática segura.',
+      value: 'En 14 días',
+      sub: 'Renovación automática',
       icon: CalendarClock,
       color: 'indigo',
     }
@@ -91,41 +91,30 @@ export function SummaryCards({ snapshot, isOrganizer = true }: { snapshot: Dashb
     {
       title: 'Gasto operativo',
       value: `$${paidAmount.toFixed(2)}`,
-      sub: 'Suma de pagos del grupo activo.',
+      sub: 'Mensual estimado',
       icon: DollarSign,
       color: 'cyan',
     },
     {
-      title: 'Cupos ocupados',
-      value:
-        seats.length === 0
-          ? '0/0'
-          : seats.length === 1
-            ? occupiedSeats === 1
-              ? 'Completo'
-              : 'Disponible'
-            : `${occupiedSeats}/${seats.length}`,
-      sub: 'Estado real de ocupación por herramienta.',
+      title: 'Cupos Activos',
+      value: `${occupiedSeats}`,
+      sub: `De ${seats.length} cupos totales en el espacio`,
       icon: Layers,
       color: 'indigo',
-      extra: seats.length > 0 ? { used: occupiedSeats, total: seats.length } : undefined,
-      footnote: seats.length ? `${occupiedSeats} ocupados de ${seats.length}` : 'No hay cupos cargados',
     },
     {
       title: 'Miembros activos',
       value: `${members.length}`,
-      sub: 'Usuarios vinculados al grupo activo.',
+      sub: 'Usuarios verificados',
       icon: Users,
       color: 'emerald',
     },
     {
       title: 'Pagos en mora',
       value: `${overduePayments}`,
-      sub: 'Alertas que disparan el banner de riesgo.',
+      sub: overduePayments > 0 ? 'Requieren atención' : 'Al día',
       icon: CalendarClock,
       color: overduePayments > 0 ? 'amber' : 'cyan',
-      extra: overduePayments > 0 ? { used: overduePayments, total: payments.length || 1 } : undefined,
-      footnote: overduePayments > 0 ? 'Necesita seguimiento inmediato' : `${activeTools} herramientas activas`,
     },
   ]
 
@@ -138,35 +127,21 @@ export function SummaryCards({ snapshot, isOrganizer = true }: { snapshot: Dashb
         return (
           <div
             key={card.title}
-            className="rounded-2xl border border-white/5 bg-white/[0.03] p-5 shadow-[0_1px_0_rgba(255,255,255,0.03)_inset] transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-400/15 hover:bg-white/[0.045]"
+            className="flex flex-col justify-between rounded-[24px] bg-transparent border-l-4 border-white/10 pl-6 py-3 hover:border-cyan-500/50 transition-colors"
           >
-            <div className="mb-4 flex items-start justify-between">
-              <div className={`rounded-xl p-2.5 ${colors.bg}`}>
-                <card.icon className={`h-5 w-5 ${colors.icon}`} />
-              </div>
+            <div className="flex items-center gap-3 mb-3">
+              <card.icon className={`h-5 w-5 ${colors.icon}`} />
+              <p className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">{card.title}</p>
               {card.title === 'Pagos en mora' && overduePayments > 0 && (
-                <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-100">
+                <span className="ml-auto rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-400">
                   Riesgo
                 </span>
               )}
             </div>
-            <p className="mb-1 text-xs font-medium text-cyan-100/65">{card.title}</p>
-            <p className={`text-2xl font-bold leading-tight ${colors.value}`}>{card.value}</p>
-            <p className="mt-1 text-xs text-slate-400">{card.sub}</p>
-
-            {card.extra && (
-              <div className="mt-3">
-                <div className={`h-1.5 w-full rounded-full ${colors.track}`}>
-                  <div
-                    className={`h-1.5 rounded-full ${colors.bar} transition-all duration-500`}
-                    style={{ width: `${(card.extra.used / card.extra.total) * 100}%` }}
-                  />
-                </div>
-                <p className="mt-1.5 text-[10px] text-slate-400">
-                  {card.footnote ?? `${card.extra.total - card.extra.used} libres de ${card.extra.total}`}
-                </p>
-              </div>
-            )}
+            <div className="flex items-baseline gap-2">
+              <p className={`text-5xl font-bold tracking-tight ${colors.value}`}>{card.value}</p>
+            </div>
+            <p className="mt-2 text-sm text-zinc-500">{card.sub}</p>
           </div>
         )
       })}
