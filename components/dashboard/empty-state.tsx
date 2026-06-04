@@ -10,7 +10,7 @@ interface EmptyStateProps {
   title: string
   description: string
   variant?: EmptyStateVariant
-  cta?: {
+  actionButton?: {
     label: string
     href: string
   }
@@ -26,7 +26,7 @@ export function EmptyState({
   title,
   description,
   variant = 'default',
-  cta,
+  actionButton,
   secondaryCta,
   className,
 }: EmptyStateProps) {
@@ -38,10 +38,10 @@ export function EmptyState({
       <h3 className="mt-4 text-xl font-bold text-zinc-50">{title}</h3>
       <p className="mx-auto mt-2 max-w-lg text-sm text-zinc-400">{description}</p>
 
-      {variant === 'action' && cta && (
+      {variant === 'action' && actionButton && (
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button asChild className="rounded-xl bg-sky-500 text-white hover:bg-sky-400">
-            <Link href={cta.href}>{cta.label}</Link>
+            <Link href={actionButton.href}>{actionButton.label}</Link>
           </Button>
           {secondaryCta && (
             <Button asChild variant="outline" className="rounded-xl border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50">
