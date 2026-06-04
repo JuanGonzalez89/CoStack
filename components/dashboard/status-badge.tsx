@@ -10,6 +10,8 @@ const statusToTone: Record<StatusBadgeStatus, StatusTone> = {
   overdue: 'danger',
   idle: 'neutral',
   blocked: 'danger',
+  assigned: 'success',
+  free: 'neutral',
 }
 
 const statusLabels: Record<StatusBadgeStatus, string> = {
@@ -18,6 +20,8 @@ const statusLabels: Record<StatusBadgeStatus, string> = {
   overdue: 'Vencido',
   idle: 'Sin actividad',
   blocked: 'Bloqueado',
+  assigned: 'Asignado',
+  free: 'Libre',
 }
 
 const toneStyles: Record<StatusTone, string> = {
