@@ -7,6 +7,7 @@ datasource db {
   provider = "postgresql"
 }
 
+
 enum UserRole {
   member
   organizer
@@ -46,6 +47,7 @@ model User {
   memberships   Membership[]
   posts         CommunityPost[]
   payments      Payment[]
+  payoutRequests PayoutRequest[]
 }
 
 model Group {
@@ -53,6 +55,8 @@ model Group {
   name        String
   inviteCode  String       @unique
   status      GroupStatus  @default(active)
+  automatchEnabled Boolean @default(true)
+  cancellationScheduledFor DateTime?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   members     Membership[]
@@ -60,6 +64,7 @@ model Group {
   payments    Payment[]
   posts       CommunityPost[]
   botEvents   BotEvent[]
+  toolSubscriptions ToolSubscription[]
 }
 
 model Membership {
@@ -82,9 +87,12 @@ model Tool {
   provider    String
   monthlyCost Float
   marketPrice Float?
+  isBusiness  Boolean  @default(false)
+  category    String?
   createdAt   DateTime @default(now())
   seats       Seat[]
   payments    Payment[]
+  toolSubscriptions ToolSubscription[]
 }
 
 model Seat {
@@ -171,4 +179,30 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model ToolSubscription {
+  id                      String   @id @default(cuid())
+  groupId                 String
+  toolId                  String
+  oauthTokenId            String?
+  sharedPasswordEncrypted String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  tool  Tool  @relation(fields: [toolId], references: [id], onDelete: Cascade)
+}
+
+model PayoutRequest {
+  id          String   @id @default(cuid())
+  organizerId String
+  amount      Float
+  provider    String?
+  providerRef String?
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  organizer User @relation(fields: [organizerId], references: [id], onDelete: Cascade)
 }
