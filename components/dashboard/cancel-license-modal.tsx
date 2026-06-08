@@ -39,10 +39,10 @@ export function CancelLicenseModal({ toolName, children }: { toolName: string, c
             Al confirmar esta acción, ocurrirá lo siguiente:
           </p>
           <ul className="list-disc pl-5 space-y-2 text-zinc-400">
-            <li>No se te cobrará el próximo mes.</li>
-            <li>El servicio seguirá activo hasta el final del ciclo de facturación actual.</li>
-            <li>Se notificará automáticamente a todos los miembros de tu grupo.</li>
-            <li>Cualquier fondo pendiente en Escrow por el mes en curso será liberado normalmente.</li>
+            <li>Tu grupo dejará de aceptar nuevos miembros inmediatamente.</li>
+            <li>Dejarás de percibir ingresos por esta herramienta para el próximo ciclo.</li>
+            <li>Los miembros actuales mantendrán su acceso hasta que finalicen los 30 días que ya abonaron.</li>
+            <li>Cualquier pago en "Compra Protegida" de este ciclo será liberado normalmente a tu Billetera.</li>
           </ul>
         </div>
 

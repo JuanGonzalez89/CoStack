@@ -13,8 +13,7 @@ const navItems: { label: NavTab; shortLabel: string; href: string; icon: React.E
   { label: "Dashboard", shortLabel: "Inicio", href: ROUTES.overview, icon: LayoutDashboard },
   { label: "Suscripciones", shortLabel: "Catálogo", href: ROUTES.suscripciones, icon: CreditCard },
   { label: "Gestión de cupos", shortLabel: "Cupos", href: ROUTES.asientos, icon: Armchair, adminOnly: true },
-  { label: "Comunidad Freelance", shortLabel: "Comunidad", href: ROUTES.comunidad, icon: Users },
-  { label: "Billetera", shortLabel: "Billetera", href: ROUTES.billetera, icon: Wallet },
+  { label: "Billetera", shortLabel: "Billetera", href: ROUTES.billetera, icon: Wallet, adminOnly: true },
 ]
 
 export function MobileNav({ 

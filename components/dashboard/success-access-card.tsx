@@ -9,7 +9,6 @@ import { ReportIssueButton } from "./report-issue-button"
 
 const stateStyles = {
   current: "bg-emerald-400/10 text-emerald-200 border-emerald-400/20",
-  overdue: "bg-amber-400/10 text-amber-100 border-amber-400/20",
   blocked: "bg-red-400/10 text-red-100 border-red-400/20",
 }
 
@@ -48,9 +47,10 @@ export function SuccessAccessCard({ seatId, accessState, groupName, accessToken,
         {!isBusiness && !showCredentials && (
           <Button 
             onClick={() => setShowCredentials(true)}
-            className="w-full sm:w-auto rounded-2xl h-14 bg-white text-black hover:bg-zinc-200 font-bold text-lg px-10 mb-4"
+            className="w-full sm:w-auto rounded-2xl h-14 bg-white text-black hover:bg-zinc-200 font-bold text-lg px-10 mb-4 flex items-center justify-center gap-2 transition-all hover:scale-105"
           >
-            Ver Credencial
+            <KeyRound className="w-5 h-5" />
+            Revelar Contraseña
           </Button>
         )}
 
@@ -61,33 +61,33 @@ export function SuccessAccessCard({ seatId, accessState, groupName, accessToken,
                <h4 className="font-bold text-violet-100">Dinero Protegido 100%</h4>
              </div>
              <p className="text-sm text-violet-200/70">
-               Tu pago está en <strong>Escrow</strong>. Si el organizador no te envía la invitación oficial en 24 horas, puedes cancelar esta suscripción y recibirás un reembolso automático e inmediato.
+               Tu <strong>pago está en garantía</strong>. Si el organizador no te envía la invitación oficial en 24 horas, puedes cancelar esta suscripción y recibirás un reembolso automático e inmediato.
              </p>
            </div>
         )}
 
         {(!isBusiness && showCredentials) && (
           <div className="w-full animate-in fade-in zoom-in duration-300 bg-black/20 border border-white/5 rounded-2xl p-6 text-left mb-4">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
+            <div className="flex items-center justify-between mb-5 border-b border-white/5 pb-4">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-400">
                 <KeyRound size={14} />
-                Token temporal
+                Contraseña Compartida
               </div>
               <div className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-wider", stateStyles[accessState])}>
                 <ShieldCheck size={14} />
-                {accessState === "current" ? "Al día" : accessState === "overdue" ? "En gracia" : "Bloqueado"}
+                {accessState === "current" ? "Al día" : "Bloqueado"}
               </div>
             </div>
             
             <div className="flex items-center justify-between gap-4 bg-black/40 border border-white/5 rounded-2xl p-4 mb-5">
               <code className="font-mono text-lg text-zinc-300">{accessToken}</code>
               <Button 
-                variant="ghost" 
-                size="icon"
+                variant="default" 
                 onClick={handleCopy}
-                className="text-zinc-400 hover:text-white hover:bg-white/10 h-10 w-10 rounded-xl"
+                className="bg-white text-black hover:bg-zinc-200 font-bold px-4 h-10 rounded-xl flex items-center gap-2"
               >
-                <Copy className="w-5 h-5" />
+                <Copy className="w-4 h-4" />
+                Copiar
               </Button>
             </div>
           </div>

@@ -23,7 +23,7 @@ export async function resolvePostAuthPath(userEmail: string | null | undefined) 
 
     const isFirstTimeUser = membershipsCount === 0 && paymentsCount === 0
 
-    return isFirstTimeUser ? ROUTES.suscripciones : ROUTES.overview
+    return ROUTES.overview
   } catch {
     // If the database is temporarily unavailable, preserve access to the product.
     return ROUTES.overview

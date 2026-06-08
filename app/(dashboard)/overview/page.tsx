@@ -4,11 +4,9 @@ import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { SummaryCards } from '@/components/dashboard/summary-cards'
 import { ToolCards } from '@/components/dashboard/tool-cards'
-import { BotLog, type LogEntry } from '@/components/dashboard/bot-log'
 import { PaymentTraffic } from '@/components/dashboard/payment-traffic'
 import { SeatAccessCard } from '@/components/dashboard/seat-access-card'
 import { SuccessAccessCard } from '@/components/dashboard/success-access-card'
-import { PaymentRetryBanner } from '@/components/dashboard/payment-retry-banner'
 import { OnboardingPrompt } from '@/components/dashboard/onboarding-prompt'
 import type { ToolCardData } from '@/features/dashboard/contracts'
 import { getDashboardSnapshot } from '@/lib/dashboard-snapshot.server'
@@ -29,11 +27,12 @@ export default async function OverviewPage() {
   }
 
   const user = await prisma.user.findUnique({ where: { email: session?.user?.email ?? '' } })
-  const isOrganizer = user?.role === 'organizer'
+  const organizedGroup = user ? await prisma.membership.findFirst({
+    where: { userId: user.id, role: 'organizer' }
+  }) : null
+  const isOrganizer = !!organizedGroup
 
-  const snapshot = await getDashboardSnapshot()
-  const botEntries = formatBotEntries(snapshot)
-  const overduePayments = snapshot.latestGroup?.payments.filter((payment) => payment.status === 'overdue') ?? []
+  const snapshot = await getDashboardSnapshot(session?.user?.email)
   const tools = buildToolCards(snapshot)
   const hasTools = tools.length > 0
 
@@ -67,36 +66,6 @@ export default async function OverviewPage() {
         </div>
       </header>
 
-      {isOrganizer && overduePayments.length > 0 && (
-        <div className="rounded-3xl bg-gradient-to-br from-amber-500/12 to-amber-500/6 p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
-                <AlertTriangle size={18} />
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">Alerta de mora</p>
-                <h2 className="mt-1 text-lg font-semibold text-amber-50">Hay pagos vencidos que necesitan seguimiento</h2>
-                <p className="mt-1 text-sm text-amber-100/80">
-                  {overduePayments.length} {overduePayments.length === 1 ? 'pago está' : 'pagos están'} vencido{overduePayments.length === 1 ? '' : 's'} en el espacio activo.
-                </p>
-              </div>
-            </div>
-            <Link href="/billetera" className="inline-flex rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-amber-400">
-              Revisar billetera
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {!isOrganizer && overduePayments.length > 0 && (
-        <PaymentRetryBanner 
-          title="Tu acceso está suspendido por falta de pago"
-          description="Abona tu cuota mensual para reactivar el acceso inmediatamente."
-          href="/billetera"
-        />
-      )}
-
       {isOrganizer && (
         <section className="space-y-4">
           <div className="flex items-end justify-between gap-3">
@@ -109,59 +78,57 @@ export default async function OverviewPage() {
         </section>
       )}
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.5fr)]">
-        <div className="space-y-6">
-          {hasTools ? (
+      {!hasTools ? (
+        <OnboardingPrompt isOrganizer={isOrganizer} />
+      ) : (
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.5fr)]">
+          <div className="space-y-6">
             <ToolCards tools={tools} isOrganizer={isOrganizer} />
-          ) : (
-            <OnboardingPrompt isOrganizer={isOrganizer} />
-          )}
+            {isOrganizer && <PaymentTraffic />}
+          </div>
 
-          {isOrganizer && <PaymentTraffic />}
-        </div>
-
-        <div className="space-y-6">
-          {isOrganizer ? (
-            <SeatAccessCard 
-              accessState="current" 
-              groupName={snapshot.latestGroup?.name ?? 'CoStack Studio'} 
-              accessToken={snapshot.latestGroup?.inviteCode ?? 'COSTACK-84A2'} 
-            />
-          ) : (
-            <SuccessAccessCard 
-              seatId={snapshot.latestGroup?.seats[0]?.id}
-              accessState="current" 
-              groupName={snapshot.latestGroup?.name ?? 'CoStack Studio'} 
-              accessToken={snapshot.latestGroup?.seats[0]?.accessToken ?? 'COSTACK-84A2-2B22'}
-              isBusiness={snapshot.latestGroup?.seats[0]?.tool?.slug === 'figma'} // Simulamos que figma es business temporalmente hasta tener el backend
-            />
-          )}
-        </div>
-      </section>
-
-      {isOrganizer && (
-        <section className="pt-8">
-          <BotLog entries={botEntries} limit={5} />
+          <div className="space-y-6">
+            {snapshot.activeGroups.map((group) => {
+              // Si el usuario es el organizador de ESTE grupo
+              const isGroupOrganizer = group.members.some(m => m.userId === user?.id && m.role === 'organizer')
+              
+              if (isGroupOrganizer) {
+                return (
+                  <SeatAccessCard 
+                    key={group.id}
+                    accessState="current" 
+                    groupName={group.name} 
+                    accessToken={group.inviteCode} 
+                  />
+                )
+              } else {
+                return (
+                  <SuccessAccessCard 
+                    key={group.id}
+                    seatId={group.seats[0]?.id}
+                    accessState="current" 
+                    groupName={group.name} 
+                    accessToken={group.seats[0]?.accessToken ?? 'COSTACK-84A2-2B22'}
+                    isBusiness={group.seats[0]?.tool?.slug === 'figma'} // Simulamos que figma es business temporalmente hasta tener el backend
+                  />
+                )
+              }
+            })}
+          </div>
         </section>
       )}
     </div>
   )
 }
 
-function formatBotEntries(snapshot: DashboardSnapshot): LogEntry[] {
-  return snapshot.latestGroup?.botEvents?.map((event) => ({
-    time: new Date(event.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
-    message: event.message,
-    type: event.type === 'payment' ? 'success' : event.type === 'error' ? 'action' : 'info',
-  })) ?? []
-}
-
 function buildToolCards(snapshot: DashboardSnapshot): ToolCardData[] {
-  const seats = snapshot.latestGroup?.seats ?? []
-  const payments = snapshot.latestGroup?.payments ?? []
   const grouped = new Map<string, ToolCardData>()
 
-  seats.forEach((seat, index) => {
+  snapshot.activeGroups.forEach(group => {
+    const seats = group.seats ?? []
+    const payments = group.payments ?? []
+
+    seats.forEach((seat, index) => {
     const key = seat.tool.slug
     const current = grouped.get(key)
     const seatStatus = seat.status
@@ -200,6 +167,7 @@ function buildToolCards(snapshot: DashboardSnapshot): ToolCardData[] {
       status: isPaid && seatStatus !== 'pending' ? 'assigned' : 'pending',
     })
   })
+})
 
   return Array.from(grouped.values())
 }

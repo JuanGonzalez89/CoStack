@@ -14,7 +14,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   }
 
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-  const isOrganizer = user?.role === 'organizer'
+  const organizedGroup = user ? await prisma.membership.findFirst({
+    where: { userId: user.id, role: 'organizer' }
+  }) : null
+  const isOrganizer = !!organizedGroup
 
   return (
     <div className="min-h-screen bg-zinc-950 text-slate-100 lg:flex">

@@ -1,4 +1,4 @@
-import { BilleteraPageClient } from '@/components/dashboard/billetera-page-client'
+import { BilleteraView } from '@/components/dashboard/billetera-view'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -10,7 +10,10 @@ export default async function BilleteraPage({
 }) {
   const session = await getServerSession(authOptions)
   const user = session?.user?.email ? await prisma.user.findUnique({ where: { email: session.user.email } }) : null
-  const isOrganizer = user?.role === 'organizer'
+  const organizedGroup = user ? await prisma.membership.findFirst({
+    where: { userId: user.id, role: 'organizer' }
+  }) : null
+  const isOrganizer = !!organizedGroup
 
-  return <BilleteraPageClient isOverdue={searchParams?.status === 'overdue'} isOrganizer={isOrganizer} />
+  return <BilleteraView isOrganizer={isOrganizer} />
 }

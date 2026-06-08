@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { Toaster } from 'sonner'
 import './globals.css'
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -59,6 +60,7 @@ export default function RootLayout({
     <html lang="es" className={`bg-[#07111d] ${plusJakartaSans.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-[#07111d] font-sans antialiased">
         {children}
+        <Toaster richColors position="top-center" theme="dark" />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

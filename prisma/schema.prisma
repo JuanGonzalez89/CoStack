@@ -21,7 +21,6 @@ enum GroupStatus {
 enum PaymentStatus {
   pending
   paid
-  overdue
   failed
 }
 
@@ -29,7 +28,6 @@ enum SeatStatus {
   free
   assigned
   pending
-  overdue
 }
 
 model User {

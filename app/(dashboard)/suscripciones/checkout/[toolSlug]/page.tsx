@@ -16,6 +16,9 @@ export default async function CheckoutPage({ params }: PageProps) {
   const user = session?.user?.email 
     ? await prisma.user.findUnique({ where: { email: session.user.email } })
     : null
+  const organizedGroup = user ? await prisma.membership.findFirst({
+    where: { userId: user.id, role: 'organizer' }
+  }) : null
 
-  return <CheckoutView toolSlug={toolSlug} isOrganizer={user?.role === 'organizer'} />
+  return <CheckoutView toolSlug={toolSlug} isOrganizer={!!organizedGroup} />
 }
