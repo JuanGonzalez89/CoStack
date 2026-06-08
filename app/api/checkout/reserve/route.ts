@@ -34,43 +34,43 @@ export async function POST(request: Request) {
       }
     })
 
-    // Auto-match: find a free seat for this tool
-    // We use a transaction-like approach to prevent race conditions
-    const availableSeats = await prisma.seat.findMany({
-      where: { 
-        toolId: tool.id, 
-        status: 'free' 
-      },
-      take: 5
-    })
+    // Automatch engine: select a free seat from a group that has automatch enabled
+    // We perform a short transaction that locks a candidate seat row using
+    // FOR UPDATE SKIP LOCKED to avoid race conditions between concurrent buyers.
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
 
-    if (availableSeats.length === 0) {
-      return NextResponse.json({ error: "No hay cupos disponibles para esta herramienta." }, { status: 400 })
-    }
+    const reserved = await prisma.$transaction(async (tx) => {
+      // Find a single free seat for the tool where the parent group allows automatch
+      const rows = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM "Seat"
+        WHERE "toolId" = ${tool.id} AND status = 'free'
+          AND "groupId" IN (SELECT id FROM "Group" WHERE "automatchEnabled" = true)
+        LIMIT 1
+        FOR UPDATE SKIP LOCKED
+      `
 
-    // Try to reserve one of the available seats optimistically
-    let reservedSeat = null
-    for (const seat of availableSeats) {
-      const updated = await prisma.seat.updateMany({
-        where: { id: seat.id, status: 'free' },
+      if (!rows || rows.length === 0) return null
+
+      const seatId = rows[0].id
+
+      // Update the seat within the same transaction to mark it as pending
+      const updated = await tx.seat.update({
+        where: { id: seatId },
         data: {
           status: 'pending',
           assigneeId: userId,
-          expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes from now
+          expiresAt
         }
       })
-      if (updated.count > 0) {
-        reservedSeat = seat
-        break
-      }
+
+      return updated
+    })
+
+    if (!reserved) {
+      return NextResponse.json({ error: "No hay cupos disponibles para esta herramienta." }, { status: 400 })
     }
 
-    if (!reservedSeat) {
-      // Someone else took the seats we tried, race condition happened
-      return NextResponse.json({ error: "Los cupos se acaban de ocupar. Intenta de nuevo." }, { status: 409 })
-    }
-
-    return NextResponse.json({ success: true, message: "Cupo reservado temporalmente" }, { status: 200 })
+    return NextResponse.json({ success: true, message: "Cupo reservado temporalmente", seatId: reserved.id }, { status: 200 })
   } catch (error) {
     console.error("Reserve error:", error)
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
