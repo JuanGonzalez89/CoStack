@@ -42,7 +42,14 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ toolSlug })
-      }).catch(console.error)
+      }).then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data.error || 'Error al reservar cupo')
+        }
+      }).catch((err) => {
+        toast.error(err.message || 'No se pudo reservar el cupo. Intentá de nuevo.')
+      })
     }
 
     const timer = setInterval(() => {
@@ -282,7 +289,7 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
                 ) : (
                   <>
                     <CreditCard className="w-4 h-4 shrink-0" />
-                    <span className="truncate">Confirmar Pago &mdash; {isOrganizer ? `$${originalPrice}` : `$${memberPrice}`}</span>
+                    <span className="truncate whitespace-nowrap">Confirmar Pago &mdash; {isOrganizer ? `$${originalPrice}` : `$${memberPrice}`}</span>
                   </>
                 )}
               </Button>
