@@ -33,7 +33,7 @@ export function ConfigCredentialsModal({ toolName, children }: { toolName: strin
           </div>
           <DialogTitle className="text-center text-xl">Configurar Accesos</DialogTitle>
           <DialogDescription className="text-center text-zinc-400">
-            Ingresa las credenciales de <strong className="text-zinc-200">{toolName}</strong> para compartirlas de forma segura con tu grupo.
+            Ingresa las credenciales de <strong className="text-zinc-200">{toolName}</strong> para compartirlas de forma segura con tus compradores.
           </DialogDescription>
         </DialogHeader>
         

@@ -151,12 +151,12 @@ export function SuscripcionesView({ isOrganizer = false }: { isOrganizer?: boole
       {/* Header del Catálogo */}
       <div className="flex flex-col gap-2">
         <h2 className="text-3xl font-bold text-white tracking-tight">
-          {isOrganizer ? 'Compartir Licencia' : 'Grupos Compartidos Disponibles'}
+          {isOrganizer ? 'Compartir Licencia' : 'Cupos Compartidos Disponibles'}
         </h2>
         <p className="text-base text-zinc-400 max-w-2xl leading-relaxed">
           {isOrganizer 
             ? 'Selecciona la herramienta que ya pagas para compartirla con la comunidad. Configura tus credenciales y el sistema llenará tus cupos vacíos para devolverte dinero a tu Billetera.'
-            : 'Encuentra grupos públicos (Automatch) que ya están compartiendo estas herramientas a un menor costo y únete al instante.'}
+            : 'Encuentra cupos disponibles (Automatch) que ya están compartiendo estas herramientas a un menor costo y únete al instante.'}
         </p>
       </div>
 
