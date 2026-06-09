@@ -8,10 +8,7 @@ export default async function SettingsPage() {
   if (!session?.user?.email) redirect('/login')
 
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-  const organizedGroup = user ? await prisma.membership.findFirst({
-    where: { userId: user.id, role: 'organizer' }
-  }) : null
-  if (!organizedGroup) {
+  if (user?.role !== 'organizer') {
     redirect('/overview')
   }
 
