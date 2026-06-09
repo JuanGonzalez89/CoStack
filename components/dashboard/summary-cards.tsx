@@ -43,21 +43,26 @@ const colorMap = {
 }
 
 export function SummaryCards({ snapshot, isOrganizer = true }: { snapshot: DashboardSnapshot, isOrganizer?: boolean }) {
-  const latestGroup = snapshot.latestGroup
-  const payments = latestGroup?.payments ?? []
-  const seats = latestGroup?.seats ?? []
-  const members = latestGroup?.members ?? []
-  
+  const groups = snapshot.activeGroups ?? []
+  const payments = groups.flatMap((g) => g.payments)
+  const seats = groups.flatMap((g) => g.seats)
+  const memberMap = new Map<string, (typeof groups)[number]['members'][number]>()
+  for (const g of groups) {
+    for (const m of g.members) {
+      memberMap.set(m.user.email, m)
+    }
+  }
+  const members = [...memberMap.values()]
+
   const paidAmount = payments.reduce((acc, payment) => acc + Number(payment.amount), 0)
   const occupiedSeats = seats.filter((seat) => seat.status !== 'free').length
   const activeTools = Array.from(new Set(seats.map((seat) => `${seat.tool.name}::${seat.tool.provider}`))).length
 
   // B2C Metrics
-  const activeLicenses = seats.filter((seat) => seat.status === 'assigned').length // Simplificado
-  // Suma del ahorro: marketPrice - monthlyCost para las licencias asignadas (o pendientes/pagadas)
+  const activeLicenses = seats.filter((seat) => seat.status === 'assigned').length
   const totalSavings = seats.reduce((acc, seat) => {
-    if (seat.status !== 'free' && seat.tool.marketPrice) {
-      return acc + (Number(seat.tool.marketPrice) - Number(seat.tool.monthlyCost))
+    if (seat.status !== 'free' && (seat.tool as any).marketPrice) {
+      return acc + (Number((seat.tool as any).marketPrice) - Number(seat.tool.monthlyCost))
     }
     return acc
   }, 0)
