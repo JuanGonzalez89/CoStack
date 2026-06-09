@@ -14,16 +14,11 @@ interface GestionAsientosViewProps {
 }
 
 export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
-  const [automatchEnabled, setAutomatchEnabled] = useState((primaryGroup as any)?.automatchEnabled ?? true)
+  const [automatchEnabled, setAutomatchEnabled] = useState(snapshot.latestGroup?.automatchEnabled ?? true)
   const [isToggling, setIsToggling] = useState(false)
   const isOrganizer = true
-
-  const groups = snapshot.activeGroups ?? []
-  const primaryGroup = groups[0] ?? snapshot.latestGroup
-  const seats = groups.flatMap((g) => g.seats)
-  const payments = groups.flatMap((g) => g.payments)
-  const groupId = (primaryGroup as any)?.id ?? ''
-  const inviteCode = (primaryGroup as any)?.inviteCode ?? 'COSTACK-84A2'
+  const seats = snapshot.latestGroup?.seats ?? []
+  const payments = snapshot.latestGroup?.payments ?? []
 
   // Agrupar asientos por herramienta
   const groupedSeats = seats.reduce((acc, seat) => {
@@ -41,7 +36,7 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
     }
     
     // Buscar pago asociado
-    const payment = payments.find(p => (p as any).toolId === (seat as any).toolId && (p as any).userId === (seat as any).assigneeId)
+    const payment = payments.find(p => p.toolId === seat.toolId && p.userId === seat.assigneeId)
     
     acc[key].seats.push({
       name: seat.status === 'free' ? 'Cupo Disponible' : (payment?.user?.name || payment?.user?.email || 'Usuario asignado'),
@@ -144,7 +139,7 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
               <button 
                 disabled={isToggling}
                 onClick={async () => {
-                  if (!groupId) return;
+                  if (!snapshot.latestGroup?.id) return;
                   setIsToggling(true);
                   const newState = !automatchEnabled;
                   setAutomatchEnabled(newState);
@@ -152,7 +147,7 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
                     const res = await fetch('/api/groups/toggle-automatch', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ groupId, automatchEnabled: newState })
+                      body: JSON.stringify({ groupId: snapshot.latestGroup.id, automatchEnabled: newState })
                     });
                     const data = await res.json();
                     
@@ -201,7 +196,7 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
             
             <div className="bg-black/40 border border-white/5 rounded-2xl p-4 flex items-center justify-center mb-6">
               <span className="font-mono text-3xl font-bold text-cyan-400 tracking-wider">
-                {inviteCode}
+                {snapshot.latestGroup?.inviteCode ?? 'COSTACK-84A2'}
               </span>
             </div>
 
