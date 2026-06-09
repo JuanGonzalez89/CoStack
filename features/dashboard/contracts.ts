@@ -1,6 +1,6 @@
-export type AccessState = 'current' | 'blocked'
+export type AccessState = 'current' | 'overdue' | 'blocked'
 
-export type PaymentStatus = 'paid' | 'pending' | 'failed'
+export type PaymentStatus = 'paid' | 'pending' | 'overdue'
 
 export type SeatStatus = PaymentStatus | 'free' | 'assigned'
 
@@ -73,7 +73,6 @@ export interface DashboardSnapshot {
     botEvents: number
   }
   latestGroup: DashboardGroupSnapshot | null
-  activeGroups: DashboardGroupSnapshot[]
 }
 
 export interface ToolCardData {

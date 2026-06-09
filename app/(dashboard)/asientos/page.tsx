@@ -10,15 +10,11 @@ export default async function AsientosPage() {
   if (!session?.user?.email) redirect('/login')
 
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-  const organizedGroup = user ? await prisma.membership.findFirst({
-    where: { userId: user.id, role: 'organizer' }
-  }) : null
-
-  if (!organizedGroup) {
+  if (user?.role !== 'organizer') {
     redirect('/overview')
   }
 
-  const snapshot = await getDashboardSnapshot(session.user.email)
+  const snapshot = await getDashboardSnapshot()
 
   return <GestionAsientosView snapshot={snapshot} />
 }

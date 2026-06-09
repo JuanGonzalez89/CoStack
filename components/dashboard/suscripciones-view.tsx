@@ -30,7 +30,6 @@ interface ToolCatalogItem {
   iconBg: string
   iconColor: string
   category: "AI" | "Design" | "IDE"
-  isBusiness?: boolean
 }
 
 export const CATALOG_TOOLS: ToolCatalogItem[] = [
@@ -81,7 +80,6 @@ export const CATALOG_TOOLS: ToolCatalogItem[] = [
     iconBg: "bg-violet-500/10",
     iconColor: "text-violet-500",
     category: "Design",
-    isBusiness: true,
   },
   {
     id: "midjourney",
@@ -118,19 +116,6 @@ export const CATALOG_TOOLS: ToolCatalogItem[] = [
     iconBg: "bg-blue-500/10",
     iconColor: "text-blue-500",
     category: "Design",
-    isBusiness: true,
-  },
-  {
-    id: "claude",
-    name: "Claude Pro",
-    provider: "Anthropic",
-    pricePerMonth: 10,
-    originalPrice: 20,
-    availableSeats: 2,
-    icon: MessageSquare,
-    iconBg: "bg-orange-500/10",
-    iconColor: "text-orange-500",
-    category: "AI",
   }
 ]
 
@@ -151,11 +136,11 @@ export function SuscripcionesView({ isOrganizer = false }: { isOrganizer?: boole
       {/* Header del Catálogo */}
       <div className="flex flex-col gap-2">
         <h2 className="text-3xl font-bold text-white tracking-tight">
-          {isOrganizer ? 'Compartir Licencia' : 'Grupos Compartidos Disponibles'}
+          {isOrganizer ? 'Catálogo de herramientas para tu Espacio' : 'Grupos Compartidos Disponibles'}
         </h2>
         <p className="text-base text-zinc-400 max-w-2xl leading-relaxed">
           {isOrganizer 
-            ? 'Selecciona la herramienta que ya pagas para compartirla con la comunidad. Configura tus credenciales y el sistema llenará tus cupos vacíos para devolverte dinero a tu Billetera.'
+            ? 'Encuentra licencias premium a una fracción del costo para compartir con tu equipo. Selecciona la herramienta, confirma el pago y genera el código de invitación.'
             : 'Encuentra grupos públicos (Automatch) que ya están compartiendo estas herramientas a un menor costo y únete al instante.'}
         </p>
       </div>
@@ -227,14 +212,8 @@ export function SuscripcionesView({ isOrganizer = false }: { isOrganizer?: boole
 
               {/* Info de la Herramienta */}
               <div className="flex items-start gap-5 mb-8">
-                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 shadow-sm relative overflow-hidden border border-white/10", tool.iconBg)}>
-                  <img 
-                    src={`/images/${tool.id}.png`} 
-                    alt={tool.name} 
-                    className="absolute inset-0 w-full h-full object-cover" 
-                    onError={(e) => { e.currentTarget.style.display = 'none' }} 
-                  />
-                  <span className="relative z-10 mix-blend-difference text-white font-bold text-xl">{tool.name.substring(0, 2).toUpperCase()}</span>
+                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 shadow-sm", tool.iconBg)}>
+                  <tool.icon className={cn("w-8 h-8", tool.iconColor)} />
                 </div>
                 <div className="pt-2">
                   <p className="text-sm font-semibold text-cyan-400 mb-1">{tool.provider}</p>
@@ -260,16 +239,10 @@ export function SuscripcionesView({ isOrganizer = false }: { isOrganizer?: boole
 
               {/* CTA */}
               <Button 
-                onClick={() => {
-                  if (isOrganizer) {
-                    router.push(`/suscripciones/share/${tool.id}`)
-                  } else {
-                    router.push(`/suscripciones/checkout/${tool.id}`)
-                  }
-                }}
+                onClick={() => router.push(`/suscripciones/checkout/${tool.id}`)}
                 className="w-full rounded-2xl h-14 font-bold text-base transition-all duration-200 bg-white hover:bg-zinc-200 text-black shadow-none"
               >
-                {isOrganizer ? "Compartir esta cuenta" : "Unirse vía Automatch"}
+                {isOrganizer ? "Configurar Grupo y Añadir" : "Unirse vía Automatch"}
               </Button>
             </div>
           )

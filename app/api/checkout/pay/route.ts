@@ -6,38 +6,20 @@ import { authOptions } from "@/lib/auth"
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session || !session.user?.email) {
+    if (!session || !session.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-    
-    const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
-    }
-    const userId = user.id
+    const userId = session.user.id
 
     const { toolSlug } = await request.json()
     if (!toolSlug) {
       return NextResponse.json({ error: "Falta el identificador de la herramienta." }, { status: 400 })
     }
 
-    // Upsert tool: si no está en la BD la crea con datos del catálogo frontend
-    const CATALOG_PRICES: Record<string, { name: string; provider: string; monthlyCost: number }> = {
-      copilot:    { name: 'GitHub Copilot', provider: 'GitHub', monthlyCost: 10 },
-      jetbrains:  { name: 'All Products Pack', provider: 'JetBrains', monthlyCost: 28 },
-      chatgpt:    { name: 'ChatGPT Team', provider: 'OpenAI', monthlyCost: 30 },
-      figma:      { name: 'Figma Org', provider: 'Figma Inc.', monthlyCost: 45 },
-      midjourney: { name: 'Midjourney Pro', provider: 'Midjourney', monthlyCost: 60 },
-      vercel:     { name: 'Vercel Pro', provider: 'Vercel', monthlyCost: 20 },
-      canva:      { name: 'Canva Pro Team', provider: 'Canva', monthlyCost: 30 },
-      claude:     { name: 'Claude Pro', provider: 'Anthropic', monthlyCost: 20 },
+    const tool = await prisma.tool.findUnique({ where: { slug: toolSlug } })
+    if (!tool) {
+      return NextResponse.json({ error: "Herramienta no encontrada." }, { status: 404 })
     }
-    const catalogEntry = CATALOG_PRICES[toolSlug] ?? { name: toolSlug, provider: 'Unknown', monthlyCost: 10 }
-    const tool = await prisma.tool.upsert({
-      where: { slug: toolSlug },
-      create: { slug: toolSlug, ...catalogEntry },
-      update: {},
-    })
 
     // Find the pending seat for this user and tool
     const pendingSeat = await prisma.seat.findFirst({

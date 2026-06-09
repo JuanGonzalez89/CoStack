@@ -19,7 +19,7 @@ export function BillingHeaderCards({ balance, nextCharge, nextChargeDate, isLoad
             <Wallet className="w-5 h-5 text-emerald-500" />
           </div>
           <p className="text-sm font-medium text-zinc-400">
-            {isOrganizer ? "Ganancias en Garantía" : "Estado de cuenta"}
+            {isOrganizer ? "Fondos en retención (Escrow)" : "Estado de cuenta"}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
@@ -28,7 +28,7 @@ export function BillingHeaderCards({ balance, nextCharge, nextChargeDate, isLoad
               {isLoading ? "..." : `$${balance.toFixed(2)}`}
             </p>
             <p className="text-xs text-zinc-500 mt-1">
-              {isOrganizer ? "Ingresos confirmados este ciclo" : "Disponible"}
+              {isOrganizer ? "A liberarse el próximo ciclo" : "Disponible"}
             </p>
           </div>
           {isOrganizer && (
@@ -48,7 +48,7 @@ export function BillingHeaderCards({ balance, nextCharge, nextChargeDate, isLoad
             <CalendarClock className="w-5 h-5 text-amber-500" />
           </div>
           <p className="text-sm font-medium text-zinc-400">
-            {isOrganizer ? "MRR estimado (próximo mes)" : "Próxima cuota"}
+            {isOrganizer ? "Recaudación estimada" : "Próxima cuota"}
           </p>
         </div>
         <div className="flex items-end justify-between">

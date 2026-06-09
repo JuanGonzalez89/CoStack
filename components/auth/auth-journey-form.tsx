@@ -9,13 +9,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ROUTES } from '@/lib/constants/routes'
 
-type JourneyMode = 'login' | 'register'
+type JourneyMode = 'login' | 'register' | 'onboarding'
 
 interface AuthJourneyFormProps {
   mode: JourneyMode
   title: string
   description: string
   submitLabel: string
+  onboardingIntent?: 'create' | 'join'
 }
 
 const loginSchema = z.object({
@@ -27,23 +28,47 @@ const registerSchema = loginSchema.extend({
   name: z.string().trim().min(2, 'Escribí tu nombre'),
 })
 
+const onboardingSchema = z
+  .object({
+    groupName: z.string().trim().optional(),
+    inviteCode: z.string().trim().optional(),
+    role: z.enum(['member', 'organizer']),
+  })
+  .superRefine((data, ctx) => {
+    const hasGroupName = Boolean(data.groupName && data.groupName.length >= 2)
+    const hasInviteCode = Boolean(data.inviteCode && data.inviteCode.length >= 2)
+
+    if (!hasGroupName && !hasInviteCode) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Ingresa un codigo de acceso o define el nombre de tu espacio.',
+      })
+    }
+  })
+
 type AuthFormState = {
   name: string
   email: string
   password: string
+  groupName: string
+  inviteCode: string
+  role: 'member' | 'organizer'
 }
 
 const initialFormState: AuthFormState = {
   name: '',
   email: '',
   password: '',
+  groupName: '',
+  inviteCode: '',
+  role: 'member',
 }
 
 function resolveSuccessPath() {
   return ROUTES.suscripciones
 }
 
-export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJourneyFormProps) {
+export function AuthJourneyForm({ mode, title, description, submitLabel, onboardingIntent }: AuthJourneyFormProps) {
   const router = useRouter()
   const [form, setForm] = useState<AuthFormState>(initialFormState)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -135,8 +160,34 @@ export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJ
         router.replace(resolveSuccessPath())
         router.refresh()
         return
-        // Onboarding form handler removed.
       }
+
+      const parsed = onboardingSchema.safeParse({
+        groupName: form.groupName,
+        inviteCode: form.inviteCode,
+        role: form.role,
+      })
+
+      if (!parsed.success) {
+        setErrorMessage(parsed.error.issues[0]?.message ?? 'Revisá los campos del onboarding.')
+        return
+      }
+
+      const response = await fetch('/api/onboarding/complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(parsed.data),
+      })
+
+      if (!response.ok) {
+        setErrorMessage('No pudimos completar el onboarding.')
+        return
+      }
+
+      router.replace(ROUTES.suscripciones)
+      router.refresh()
     } finally {
       setIsSubmitting(false)
     }
@@ -172,6 +223,36 @@ export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJ
           </>
         )}
 
+        {mode === 'onboarding' && (
+          <>
+            {onboardingIntent !== 'join' && (
+              <div className="space-y-2">
+                <Label htmlFor="groupName">Nombre de tu espacio</Label>
+                <Input id="groupName" value={form.groupName} onChange={(event) => patchForm({ groupName: event.target.value })} placeholder="CoStack Studio" />
+              </div>
+            )}
+
+            {onboardingIntent !== 'create' && (
+              <div className="space-y-2">
+                <Label htmlFor="inviteCode">Codigo de acceso</Label>
+                <Input id="inviteCode" value={form.inviteCode} onChange={(event) => patchForm({ inviteCode: event.target.value })} placeholder="Ejemplo: COSTACK-84A2" />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="role">Rol inicial</Label>
+              <select
+                id="role"
+                value={form.role}
+                onChange={(event) => patchForm({ role: event.target.value as AuthFormState['role'] })}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="member">Miembro</option>
+                <option value="organizer">Administrador</option>
+              </select>
+            </div>
+          </>
+        )}
       </div>
 
       {errorMessage && (

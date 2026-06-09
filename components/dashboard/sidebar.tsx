@@ -17,12 +17,13 @@ import {
 import { cn } from "@/lib/utils"
 import { ROUTES } from "@/lib/constants/routes"
 
-export type NavTab = "Dashboard" | "Suscripciones" | "Gestión de cupos" | "Billetera"
+export type NavTab = "Dashboard" | "Suscripciones" | "Gestión de cupos" | "Comunidad Freelance" | "Billetera"
 
 const navItems: { label: NavTab; href: string; icon: React.ElementType; badge?: string; adminOnly?: boolean; dot?: boolean }[] = [
   { label: "Dashboard", href: ROUTES.overview, icon: LayoutDashboard },
   { label: "Suscripciones", href: ROUTES.suscripciones, icon: CreditCard },
   { label: "Gestión de cupos", href: ROUTES.asientos, icon: Armchair, badge: "8/10", adminOnly: true },
+  { label: "Comunidad Freelance", href: ROUTES.comunidad, icon: Users },
   { label: "Billetera", href: ROUTES.billetera, icon: Wallet },
 ]
 
@@ -78,9 +79,7 @@ export function Sidebar({
                 )}
                 size={18}
               />
-              <span className="flex-1 text-left">
-                {item.label === 'Billetera' && !isOrganizer ? 'Historial de Pagos' : item.label}
-              </span>
+              <span className="flex-1 text-left">{item.label}</span>
 
               {item.badge && (
                 <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-400 leading-none">

@@ -51,14 +51,8 @@ export function ToolCard({ tool, onRequestPay, isOrganizer = false }: { tool: To
       <div>
         <div className="mb-5 flex items-start justify-between gap-3">
           <div className="flex items-center gap-4">
-            <div className={cn('relative flex h-14 w-14 items-center justify-center rounded-2xl text-sm font-bold bg-white/5 overflow-hidden border border-white/10 shadow-sm', accent.iconText)}>
-              <img 
-                src={`/images/${tool.id}.png`} 
-                alt={tool.name} 
-                className="absolute inset-0 w-full h-full object-cover" 
-                onError={(e) => { e.currentTarget.style.display = 'none' }} 
-              />
-              <span className="relative z-10 drop-shadow-md mix-blend-difference text-white">{tool.iconLabel}</span>
+            <div className={cn('flex h-12 w-12 items-center justify-center rounded-2xl text-sm font-bold bg-white/5', accent.iconText)}>
+              {tool.iconLabel}
             </div>
             <div>
               <h3 className="text-base font-semibold text-zinc-50">{tool.name}</h3>

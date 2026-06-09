@@ -1,24 +1,18 @@
 import { prisma } from '@/lib/prisma'
 import type { DashboardSnapshot } from '@/lib/dashboard-snapshot'
 
-export async function getDashboardSnapshot(userEmail?: string | null): Promise<DashboardSnapshot> {
-  if (!userEmail) return { totals: { groups: 0, memberships: 0, payments: 0, seats: 0, posts: 0, botEvents: 0 }, latestGroup: null as any, activeGroups: [] };
-
+export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
   try {
-    const user = await prisma.user.findUnique({ where: { email: userEmail } });
-    if (!user) return { totals: { groups: 0, memberships: 0, payments: 0, seats: 0, posts: 0, botEvents: 0 }, latestGroup: null as any, activeGroups: [] };
-
     const [groups, memberships, payments, seats, posts, botEvents] = await Promise.all([
-      prisma.group.count({ where: { members: { some: { userId: user.id } } } }),
-      prisma.membership.count({ where: { userId: user.id } }),
-      prisma.payment.count({ where: { userId: user.id } }),
-      prisma.seat.count({ where: { group: { members: { some: { userId: user.id } } } } }),
+      prisma.group.count(),
+      prisma.membership.count(),
+      prisma.payment.count(),
+      prisma.seat.count(),
       prisma.communityPost.count(),
-      prisma.botEvent.count({ where: { group: { members: { some: { userId: user.id } } } } }),
+      prisma.botEvent.count(),
     ])
 
-    const activeGroups = await prisma.group.findMany({
-      where: { members: { some: { userId: user.id } } },
+    const latestGroup = await prisma.group.findFirst({
       orderBy: { createdAt: 'desc' },
       include: {
         members: { include: { user: true } },
@@ -28,13 +22,10 @@ export async function getDashboardSnapshot(userEmail?: string | null): Promise<D
         botEvents: { orderBy: { createdAt: 'desc' }, take: 5 },
       },
     })
-    
-    const latestGroup = activeGroups[0] || null
 
     return {
-      totals: { groups, memberships, payments, seats, posts: 0, botEvents },
+      totals: { groups, memberships, payments, seats, posts, botEvents },
       latestGroup,
-      activeGroups,
     }
   } catch (error) {
     console.warn("Database connection failed. Using mock dashboard snapshot data.")

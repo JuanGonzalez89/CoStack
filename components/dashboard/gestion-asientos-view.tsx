@@ -14,8 +14,7 @@ interface GestionAsientosViewProps {
 }
 
 export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
-  const [automatchEnabled, setAutomatchEnabled] = useState(snapshot.latestGroup?.automatchEnabled ?? true)
-  const [isToggling, setIsToggling] = useState(false)
+  const [automatchEnabled, setAutomatchEnabled] = useState(true)
   const isOrganizer = true
   const seats = snapshot.latestGroup?.seats ?? []
   const payments = snapshot.latestGroup?.payments ?? []
@@ -30,7 +29,6 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
         iconLabel: seat.tool.name.substring(0, 3).toUpperCase(),
         iconBg: "bg-cyan-500/10",
         iconText: "text-cyan-500",
-        slug: seat.tool.slug,
         seats: []
       }
     }
@@ -39,7 +37,7 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
     const payment = payments.find(p => p.toolId === seat.toolId && p.userId === seat.assigneeId)
     
     acc[key].seats.push({
-      name: seat.status === 'free' ? 'Cupo Disponible' : (payment?.user?.name || payment?.user?.email || 'Usuario asignado'),
+      name: seat.status === 'free' ? 'Asiento Libre' : (payment?.user?.name || payment?.user?.email || 'Usuario asignado'),
       email: payment?.user?.email || '',
       status: seat.status as StatusBadgeStatus | 'free'
     })
@@ -52,9 +50,9 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
-        <h2 className="text-3xl font-bold text-white tracking-tight">Gestión de Cupos</h2>
+        <h2 className="text-3xl font-bold text-white tracking-tight">Gestión de Asientos</h2>
         <p className="text-base text-zinc-400 mt-2 max-w-2xl leading-relaxed">
-          Administrá el acceso a tus herramientas compartidas. Cada cupo ocupado te acerca a recuperar el 100% de tu inversión en la licencia.
+          Administrá el acceso a tus herramientas. Cada asiento representa un cupo pago. Cuando todos los asientos estén ocupados, recuperarás el monto total invertido en la licencia.
         </p>
       </div>
 
@@ -75,14 +73,8 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
                     {/* Header limpio */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between px-8 py-6 border-b border-white/5 bg-white/[0.01] gap-4">
                       <div className="flex items-center gap-5">
-                        <div className={cn("relative overflow-hidden w-14 h-14 rounded-2xl flex items-center justify-center text-sm font-bold border border-white/10 shadow-sm", tool.iconBg, tool.iconText)}>
-                          <img 
-                            src={`/images/${tool.slug}.png`} 
-                            alt={tool.name} 
-                            className="absolute inset-0 w-full h-full object-cover" 
-                            onError={(e) => { e.currentTarget.style.display = 'none' }} 
-                          />
-                          <span className="relative z-10 mix-blend-difference text-white">{tool.iconLabel}</span>
+                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center text-sm font-bold border border-white/10 shadow-sm", tool.iconBg, tool.iconText)}>
+                          {tool.iconLabel}
                         </div>
                         <div>
                           <p className="text-xl font-bold text-white">{tool.name}</p>
@@ -137,39 +129,10 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
                 Llenado Automático
               </h3>
               <button 
-                disabled={isToggling}
-                onClick={async () => {
-                  if (!snapshot.latestGroup?.id) return;
-                  setIsToggling(true);
-                  const newState = !automatchEnabled;
-                  setAutomatchEnabled(newState);
-                  try {
-                    const res = await fetch('/api/groups/toggle-automatch', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ groupId: snapshot.latestGroup.id, automatchEnabled: newState })
-                    });
-                    const data = await res.json();
-                    
-                    if (!res.ok) {
-                      setAutomatchEnabled(!newState);
-                      if (data.error === 'Faltan_Credenciales') {
-                        alert(data.message);
-                      } else {
-                        alert("Ocurrió un error al actualizar el estado.");
-                      }
-                    }
-                  } catch (e) {
-                    setAutomatchEnabled(!newState); // revert on error
-                    alert("Error de conexión.");
-                  } finally {
-                    setIsToggling(false);
-                  }
-                }}
+                onClick={() => setAutomatchEnabled(!automatchEnabled)}
                 className={cn(
                   "relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-zinc-950",
-                  automatchEnabled ? "bg-cyan-500" : "bg-zinc-700",
-                  isToggling ? "opacity-50 cursor-not-allowed" : ""
+                  automatchEnabled ? "bg-cyan-500" : "bg-zinc-700"
                 )}
               >
                 <span 
@@ -222,20 +185,20 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
             </h3>
             <div className="space-y-4 text-base text-zinc-300 leading-relaxed">
               <p>
-                Como Organizador, no corres riesgos de impagos. Nuestro sistema de Compra Protegida te blinda:
+                Como Organizador, no corres riesgos de impagos. Nuestro sistema Escrow te protege:
               </p>
               <ul className="space-y-3 pt-2">
                 <li className="flex gap-3">
                   <span className="text-emerald-400 font-bold">1.</span>
-                  <span>Los miembros abonan la cuota mensual antes de recibir acceso.</span>
+                  <span>Los invitados nos pagan la cuota a nosotros primero.</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-emerald-400 font-bold">2.</span>
-                  <span>Mantenemos los fondos congelados y asegurados durante 24hs.</span>
+                  <span>Retenemos los fondos de forma segura (Escrow).</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-emerald-400 font-bold">3.</span>
-                  <span>Una vez que les das el acceso, nosotros te transferimos el dinero a tu billetera.</span>
+                  <span>Vos les pasás el acceso y nosotros te liberamos el dinero.</span>
                 </li>
               </ul>
             </div>
