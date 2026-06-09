@@ -5,10 +5,10 @@ CREATE TYPE "UserRole" AS ENUM ('member', 'organizer');
 CREATE TYPE "GroupStatus" AS ENUM ('active', 'paused');
 
 -- CreateEnum
-CREATE TYPE "PaymentStatus" AS ENUM ('pending', 'paid', 'failed');
+CREATE TYPE "PaymentStatus" AS ENUM ('pending', 'paid', 'overdue', 'failed');
 
 -- CreateEnum
-CREATE TYPE "SeatStatus" AS ENUM ('free', 'assigned', 'pending');
+CREATE TYPE "SeatStatus" AS ENUM ('free', 'assigned', 'pending', 'overdue');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -18,6 +18,7 @@ CREATE TABLE "User" (
     "emailVerified" TIMESTAMP(3),
     "image" TEXT,
     "passwordHash" TEXT,
+    "role" "UserRole" NOT NULL DEFAULT 'member',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
