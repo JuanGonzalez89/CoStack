@@ -4,7 +4,7 @@ export const ROUTES = {
   register: '/register',
   overview: '/overview',
   suscripciones: '/suscripciones',
-  asientos: '/asientos',
+  asientos: '/cupos',
   billetera: '/billetera',
   settings: '/settings',
   settingsGroup: '/settings/grupo',
