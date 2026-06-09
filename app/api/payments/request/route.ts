@@ -112,7 +112,7 @@ export async function POST(request: Request) {
       create: {
         userId: user.id,
         groupId: group.id,
-        role: 'member',
+        role: user.role,
         status: 'paid',
       },
     })
