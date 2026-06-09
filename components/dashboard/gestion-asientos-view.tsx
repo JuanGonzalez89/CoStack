@@ -185,14 +185,14 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
             </p>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-black/20 border border-white/5 text-sm font-semibold">
               <span className={automatchEnabled ? "text-cyan-400" : "text-zinc-500"}>
-                {automatchEnabled ? "● Automatch Activado" : "○ Pausado (Solo Invitación)"}
+                {automatchEnabled ? "● Automatch Activado" : "○ Pausado (Grupo Privado)"}
               </span>
             </div>
           </div>
 
           <div className="rounded-[24px] border border-white/5 bg-white/[0.02] p-8 shadow-sm">
             <h3 className="text-xl font-bold text-white mb-2">Código Privado</h3>
-            <p className="text-base text-zinc-400 mb-6">Compartí este código exclusivo con tu equipo para que se unan a tu espacio privado.</p>
+            <p className="text-base text-zinc-400 mb-6">Compartí este código exclusivo con tu equipo para que se unan a tu grupo privado.</p>
             
             <div className="bg-black/40 border border-white/5 rounded-2xl p-4 flex items-center justify-center mb-6">
               <span className="font-mono text-3xl font-bold text-cyan-400 tracking-wider">

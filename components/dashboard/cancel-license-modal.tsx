@@ -39,7 +39,7 @@ export function CancelLicenseModal({ toolName, children }: { toolName: string, c
             Al confirmar esta acción, ocurrirá lo siguiente:
           </p>
           <ul className="list-disc pl-5 space-y-2 text-zinc-400">
-            <li>Tu suscripción dejará de aceptar nuevos miembros inmediatamente.</li>
+            <li>Tu grupo dejará de aceptar nuevos miembros inmediatamente.</li>
             <li>Dejarás de percibir ingresos por esta herramienta para el próximo ciclo.</li>
             <li>Los miembros actuales mantendrán su acceso hasta que finalicen los 30 días que ya abonaron.</li>
             <li>Cualquier pago en "Compra Protegida" de este ciclo será liberado normalmente a tu Billetera.</li>

@@ -18,7 +18,7 @@ export function SeatAccessCard({ accessState, groupName, accessToken }: SeatAcce
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
           <h3 className="text-2xl font-bold text-zinc-50">{groupName}</h3>
-          <p className="mt-1 text-base text-zinc-400">Código de invitación del espacio</p>
+          <p className="mt-1 text-base text-zinc-400">Código de invitación del grupo</p>
         </div>
         <div className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-wider", stateStyles[accessState])}>
           <ShieldCheck size={14} />
@@ -43,7 +43,7 @@ export function SeatAccessCard({ accessState, groupName, accessToken }: SeatAcce
         </div>
 
         <Button asChild className="w-full rounded-2xl h-14 bg-white text-black hover:bg-zinc-200 font-bold text-base">
-          <Link href="/settings/grupo">Administrar Espacio</Link>
+          <Link href="/settings/grupo">Administrar Grupo</Link>
         </Button>
       </div>
     </section>
