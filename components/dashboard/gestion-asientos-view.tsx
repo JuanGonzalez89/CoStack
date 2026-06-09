@@ -25,7 +25,7 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
   const groupId = (primaryGroup as any)?.id ?? ''
   const inviteCode = (primaryGroup as any)?.inviteCode ?? 'COSTACK-84A2'
 
-  // Agrupar cupos por herramienta
+  // Agrupar asientos por herramienta
   const groupedSeats = seats.reduce((acc, seat) => {
     const key = seat.tool.name
     if (!acc[key]) {
