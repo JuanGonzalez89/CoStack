@@ -16,8 +16,9 @@ interface GestionAsientosViewProps {
 export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
   const [automatchEnabled, setAutomatchEnabled] = useState(true)
   const isOrganizer = true
-  const seats = snapshot.latestGroup?.seats ?? []
-  const payments = snapshot.latestGroup?.payments ?? []
+  const groups = snapshot.activeGroups ?? []
+  const seats = groups.flatMap(g => g.seats ?? [])
+  const payments = groups.flatMap(g => g.payments ?? [])
 
   // Agrupar asientos por herramienta
   const groupedSeats = seats.reduce((acc, seat) => {
@@ -159,7 +160,7 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
             
             <div className="bg-black/40 border border-white/5 rounded-2xl p-4 flex items-center justify-center mb-6">
               <span className="font-mono text-3xl font-bold text-cyan-400 tracking-wider">
-                {snapshot.latestGroup?.inviteCode ?? 'COSTACK-84A2'}
+                {snapshot.activeGroups?.[0]?.inviteCode ?? 'COSTACK-84A2'}
               </span>
             </div>
 

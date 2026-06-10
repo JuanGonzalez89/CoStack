@@ -43,10 +43,10 @@ const colorMap = {
 }
 
 export function SummaryCards({ snapshot, isOrganizer = true }: { snapshot: DashboardSnapshot, isOrganizer?: boolean }) {
-  const latestGroup = snapshot.latestGroup
-  const payments = latestGroup?.payments ?? []
-  const seats = latestGroup?.seats ?? []
-  const members = latestGroup?.members ?? []
+  const groups = snapshot.activeGroups ?? []
+  const payments = groups.flatMap(g => g.payments ?? [])
+  const seats = groups.flatMap(g => g.seats ?? [])
+  const members = groups.flatMap(g => g.members ?? [])
   
   const paidAmount = payments.reduce((acc, payment) => acc + Number(payment.amount), 0)
   const occupiedSeats = seats.filter((seat) => seat.status !== 'free').length

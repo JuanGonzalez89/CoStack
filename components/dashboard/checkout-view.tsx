@@ -87,8 +87,9 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
       setTimeout(() => {
         router.push('/overview') // o /billetera dependiendo de donde estemos
       }, 1500)
-    } catch (error) {
-      toast.error("Hubo un problema procesando tu pago.")
+    } catch (error: any) {
+      const msg = error?.message || "Hubo un problema procesando tu pago."
+      toast.error(msg)
       setIsProcessing(false)
     }
   }
@@ -227,17 +228,17 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
               <Button
                 onClick={handlePayment}
                 disabled={isProcessing || timeLeft === 0}
-                className="w-full rounded-xl py-6 font-bold shadow-sm transition-all duration-200 bg-white hover:bg-zinc-200 text-black flex gap-2 items-center justify-center hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] active:scale-[0.98]"
+                className="w-full rounded-xl py-6 text-sm font-bold shadow-sm transition-all duration-200 bg-white hover:bg-zinc-200 text-black flex gap-2 items-center justify-center hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] active:scale-[0.98] overflow-hidden"
               >
                 {isProcessing ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Procesando Pago...
+                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                    <span className="truncate">Procesando Pago...</span>
                   </>
                 ) : (
                   <>
-                    <CreditCard className="w-5 h-5" />
-                    Confirmar Pago de {isOrganizer ? `$${originalPrice}.00` : `$${memberPrice}.00`}
+                    <CreditCard className="w-4 h-4 shrink-0" />
+                    <span className="truncate">Confirmar Pago &mdash; {isOrganizer ? `$${originalPrice}` : `$${memberPrice}`}</span>
                   </>
                 )}
               </Button>

@@ -6,8 +6,9 @@ import { StatusBadge } from '@/components/dashboard/status-badge'
 
 export function PaymentTraffic() {
   const { data } = useDashboardSnapshot()
-  const members = data?.latestGroup?.members ?? []
-  const payments = data?.latestGroup?.payments ?? []
+  const groups = data?.activeGroups ?? []
+  const members = groups.flatMap(g => g.members ?? [])
+  const payments = groups.flatMap(g => g.payments ?? [])
   const tools = Array.from(new Set(payments.map((payment) => payment.tool.name)))
 
   const totalPaid = payments.filter((payment) => payment.status === "paid").length
