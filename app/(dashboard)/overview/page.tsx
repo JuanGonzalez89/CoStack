@@ -1,19 +1,20 @@
 import type { DashboardSnapshot } from '@/lib/dashboard-snapshot'
-import { AlertTriangle, Bell, Bot, Box, ShieldCheck } from 'lucide-react'
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
-import { SummaryCards } from '@/components/dashboard/summary-cards'
 import { ToolCards } from '@/components/dashboard/tool-cards'
-import { OnboardingPrompt } from '@/components/dashboard/onboarding-prompt'
 import type { ToolCardData } from '@/features/dashboard/contracts'
 import { getDashboardSnapshot } from '@/lib/dashboard-snapshot.server'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { ROUTES } from '@/lib/constants/routes'
 import { resolvePostAuthPath } from '@/lib/user-journey.server'
-import Link from 'next/link'
+import { CATALOG } from '@/lib/catalog'
 
-export default async function OverviewPage() {
+
+export default async function OverviewPage(props: { searchParams?: Promise<{ lobbyId?: string }> }) {
+  const searchParams = await props.searchParams
+  const initialLobbyId = searchParams?.lobbyId ?? null
+
   const session = await getServerSession(authOptions)
 
   if (session?.user?.email) {
@@ -25,10 +26,47 @@ export default async function OverviewPage() {
 
   const user = await prisma.user.findUnique({ where: { email: session?.user?.email ?? '' } })
   const isOrganizer = user?.role === 'organizer'
+  const userId = user?.id ?? ''
 
-  const snapshot = await getDashboardSnapshot(session?.user?.email)
-  const tools = buildToolCards(snapshot)
+  const userEmail = session?.user?.email ?? ''
+  let tools: ToolCardData[] = []
+  let snapshot: DashboardSnapshot | null = null
+
+  try {
+    snapshot = await getDashboardSnapshot(userEmail)
+    tools = await buildToolCards(snapshot, userId, userEmail)
+  } catch (e) {
+    console.error("[overview] buildToolCards failed:", e)
+  }
+
   const hasTools = tools.length > 0
+
+  if (!hasTools && !isOrganizer) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-center max-w-md space-y-6">
+          <div className="w-20 h-20 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-center mx-auto">
+            <span className="text-4xl">🔒</span>
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-2">Todavía no tenés licencias</h2>
+            <p className="text-zinc-400 leading-relaxed">
+              Comprá tu primera herramienta en el catálogo para desbloquear esta pantalla.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="/suscripciones" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold transition-colors">
+              Ir al catálogo
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="/welcome" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-white/10 bg-white/[0.02] text-zinc-300 hover:text-white hover:bg-white/5 font-semibold transition-colors">
+              Cambiar de rol
+            </a>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 bg-zinc-950">
@@ -54,119 +92,118 @@ export default async function OverviewPage() {
               {isOrganizer ? 'Sistema activo' : 'Acceso garantizado'}
             </span>
           </div>
-          <button className="flex h-9 w-9 items-center justify-center rounded-full border border-white/5 bg-white/[0.02] text-zinc-400 hover:text-white transition-colors">
-            <Bell size={16} />
-          </button>
         </div>
       </header>
 
-      {isOrganizer && (
-        <section className="space-y-4">
-          <div className="flex items-end justify-between gap-3">
+      {!hasTools && !isOrganizer ? (
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <div className="text-center max-w-md space-y-6">
+            <div className="w-20 h-20 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-center mx-auto">
+              <span className="text-4xl">🔒</span>
+            </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Resumen</p>
-              <h2 className="text-lg font-semibold tracking-tight text-zinc-50">Estado operativo</h2>
+              <h2 className="text-2xl font-bold text-white mb-2">Todavía no tenés licencias</h2>
+              <p className="text-zinc-400 leading-relaxed">
+                Comprá tu primera herramienta en el catálogo para desbloquear esta pantalla.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <a href="/suscripciones" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold transition-colors">
+                Ir al catálogo
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+              <a href="/welcome" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-white/10 bg-white/[0.02] text-zinc-300 hover:text-white hover:bg-white/5 font-semibold transition-colors">
+                Cambiar de rol
+              </a>
             </div>
           </div>
-          <SummaryCards snapshot={snapshot} isOrganizer={isOrganizer} />
-        </section>
-      )}
-
-      {hasTools ? (
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.5fr)]">
-          <div className="space-y-6">
-            <ToolCards tools={tools} isOrganizer={isOrganizer} />
-            {isOrganizer && <PaymentTraffic />}
-          </div>
-
-          <div className="space-y-6">
-            {snapshot.activeGroups?.map((group) => {
-              if (isOrganizer) {
-                return (
-                  <SeatAccessCard 
-                    key={group.id}
-                    accessState="current" 
-                    groupName={group.name} 
-                    accessToken={group.inviteCode ?? 'COSTACK-84A2'} 
-                  />
-                )
-              } else {
-                const mySeat = group.seats.find(s => s.assigneeId === user?.id)
-                return (
-                  <SuccessAccessCard 
-                    key={group.id}
-                    seatId={mySeat?.id}
-                    accessState="current" 
-                    groupName={group.name} 
-                    accessToken={mySeat?.accessToken ?? 'COSTACK-84A2-2B22'}
-                    isBusiness={mySeat?.tool?.slug === 'figma'} // Temporal fallback
-                  />
-                )
-              }
-            })}
-          </div>
-        </section>
+        </div>
       ) : (
-        <OnboardingPrompt isOrganizer={isOrganizer} />
+        <section className="space-y-6">
+          <ToolCards tools={tools} isOrganizer={isOrganizer} initialLobbyId={initialLobbyId} />
+        </section>
       )}
     </div>
   )
 }
 
-function buildToolCards(snapshot: DashboardSnapshot): ToolCardData[] {
-  const groups = snapshot.activeGroups ?? []
+async function buildToolCards(snapshot: DashboardSnapshot, userId: string, userEmail: string): Promise<ToolCardData[]> {
+  const groups = snapshot.activeGroups
   const seats = groups.flatMap(g => g.seats ?? [])
   const payments = groups.flatMap(g => g.payments ?? [])
+  const userPayments = payments.filter(p => p.user.email === userEmail)
   const grouped = new Map<string, ToolCardData>()
 
+  // Process seats first (old system)
   seats.forEach((seat, index) => {
     const key = seat.tool.slug
     const current = grouped.get(key)
     const seatStatus = seat.status
-    const paymentForTool = payments.find((payment) => payment.tool.slug === seat.tool.slug)
-    const monthlyCost = Number(seat.tool.monthlyCost ?? paymentForTool?.amount ?? 0)
+    const paymentForTool = userPayments.find((payment) => payment.tool.slug === seat.tool.slug)
+    const monthlyCost = Number(paymentForTool?.amount ?? seat.tool.monthlyCost ?? 0)
+    const catalogEntry = CATALOG.find((c) => c.id === key)
 
     if (!current) {
       grouped.set(key, {
         id: seat.tool.slug,
         name: seat.tool.name,
         provider: seat.tool.provider,
+        providerUrl: catalogEntry?.providerUrl,
         monthlyCost,
         seatsUsed: seatStatus === 'free' ? 0 : 1,
         seatsTotal: 1,
         status: paymentForTool?.status === 'paid' && seatStatus !== 'pending' ? 'assigned' : 'pending',
         accent: ['cyan', 'violet', 'orange'][index % 3] as ToolCardData['accent'],
-        iconLabel: seat.tool.name
-          .split(' ')
-          .slice(0, 2)
-          .map((part) => part[0]?.toUpperCase() ?? '')
-          .join('')
-          .slice(0, 3),
+        iconLabel: seat.tool.name.split(' ').slice(0, 2).map(p => p[0]?.toUpperCase() ?? '').join('').slice(0, 3),
+        accessToken: seat.accessToken,
       })
       return
     }
 
     const nextSeatsUsed = seatStatus === 'free' ? current.seatsUsed : current.seatsUsed + 1
     const nextSeatsTotal = current.seatsTotal + 1
-    const isPaid = payments.some((payment) => payment.tool.slug === seat.tool.slug && payment.status === 'paid')
+    const isPaid = paymentForTool?.status === 'paid' && seatStatus !== 'pending'
 
     grouped.set(key, {
       ...current,
       monthlyCost: monthlyCost || current.monthlyCost,
       seatsUsed: nextSeatsUsed,
       seatsTotal: nextSeatsTotal,
-      status: isPaid && seatStatus !== 'pending' ? 'assigned' : 'pending',
+      status: isPaid ? 'assigned' : 'pending',
+      accessToken: current.accessToken || seat.accessToken,
     })
   })
 
-  return Array.from(grouped.values())
-}
+  // Then process lobbies (new system — overrides seats for the same tool)
+  try {
+    const userLobbies = await prisma.lobby.findMany({
+      where: { members: { some: { userId } } },
+      include: { members: { where: { userId }, take: 1 } },
+    })
 
-function MiniStat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-2xl border border-cyan-500/10 bg-slate-900/70 px-4 py-3">
-      <p className="text-xs font-medium text-cyan-100/70">{label}</p>
-      <p className="mt-1 text-2xl font-bold tracking-tight text-zinc-50">{value}</p>
-    </div>
-  )
+    for (const lobby of userLobbies) {
+      const catalogEntry = CATALOG.find((c) => c.id === lobby.toolSlug)
+      let memberCount = 0
+      try { memberCount = await prisma.lobbyMember.count({ where: { lobbyId: lobby.id } }) } catch { /* */ }
+
+      grouped.set(lobby.toolSlug, {
+        id: lobby.toolSlug,
+        name: lobby.toolName,
+        provider: lobby.provider,
+        monthlyCost: Number(lobby.pricePerSeat),
+        seatsUsed: 1,
+        seatsTotal: lobby.totalSeats,
+        status: lobby.status === 'completed' ? 'assigned' : lobby.status === 'expired' ? 'pending' : 'lobby',
+        accent: ['cyan', 'violet', 'orange'][grouped.size % 3] as ToolCardData['accent'],
+        iconLabel: lobby.toolName.split(' ').slice(0, 2).map(p => p[0]?.toUpperCase() ?? '').join('').slice(0, 3),
+        accessToken: lobby.accessToken,
+        providerUrl: catalogEntry?.providerUrl,
+        lobbyId: lobby.status === 'waiting' ? lobby.id : undefined,
+        lobbyFilled: lobby.status === 'waiting' ? memberCount : undefined,
+        lobbyTotal: lobby.totalSeats,
+      })
+    }
+  } catch { /* lobby table may not exist */ }
+
+  return Array.from(grouped.values())
 }

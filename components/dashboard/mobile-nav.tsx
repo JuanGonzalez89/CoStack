@@ -4,27 +4,30 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
-import { Armchair, CreditCard, LayoutDashboard, Users, Wallet, LogOut } from "lucide-react"
+import { CreditCard, LayoutDashboard, Settings, Wallet, LogOut, HelpCircle } from "lucide-react"
 import { ROUTES } from "@/lib/constants/routes"
+import { NotificationBell } from "./notification-bell"
 import { cn } from "@/lib/utils"
 import type { NavTab } from "./sidebar"
 
-const navItems: { label: NavTab; shortLabel: string; href: string; icon: React.ElementType; adminOnly?: boolean }[] = [
-  { label: "Dashboard", shortLabel: "Inicio", href: ROUTES.overview, icon: LayoutDashboard },
-  { label: "Suscripciones", shortLabel: "Catálogo", href: ROUTES.suscripciones, icon: CreditCard },
-  { label: "Gestión de cupos", shortLabel: "Cupos", href: ROUTES.asientos, icon: Armchair, adminOnly: true },
-  { label: "Comunidad Freelance", shortLabel: "Comunidad", href: ROUTES.comunidad, icon: Users },
-  { label: "Billetera", shortLabel: "Billetera", href: ROUTES.billetera, icon: Wallet },
-]
-
 export function MobileNav({ 
   isOrganizer = false,
+  activeSubscriptionsCount = 0,
   user
 }: { 
   isOrganizer?: boolean
+  activeSubscriptionsCount?: number
   user?: { name: string; email: string }
 }) {
   const pathname = usePathname()
+
+  const navItems: { label: NavTab; shortLabel: string; href: string; icon: React.ElementType; adminOnly?: boolean }[] = [
+    { label: "Dashboard", shortLabel: "Inicio", href: ROUTES.overview, icon: LayoutDashboard },
+    { label: "Suscripciones", shortLabel: `Subs ${activeSubscriptionsCount}`, href: ROUTES.suscripciones, icon: CreditCard },
+    { label: "Billetera", shortLabel: "Billetera", href: ROUTES.billetera, icon: Wallet },
+    { label: "Ayuda", shortLabel: "Ayuda", href: ROUTES.ayuda, icon: HelpCircle },
+    { label: "Ajustes", shortLabel: "Ajustes", href: ROUTES.settings, icon: Settings },
+  ]
 
   return (
     <>
@@ -48,6 +51,7 @@ export function MobileNav({
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-[11px] font-medium text-emerald-400">Sistema activo</span>
           </div>
+          <NotificationBell />
           <button 
             onClick={() => signOut({ callbackUrl: '/login' })}
             className="flex items-center justify-center h-8 w-8 rounded-full bg-cyan-500/20 hover:bg-rose-500/20 text-cyan-400 hover:text-rose-400 transition-colors group"

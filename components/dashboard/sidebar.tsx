@@ -7,33 +7,35 @@ import Image from "next/image"
 import {
   LayoutDashboard,
   CreditCard,
-  Armchair,
-  Users,
   Wallet,
   ChevronRight,
   Settings,
   LogOut,
+  HelpCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ROUTES } from "@/lib/constants/routes"
+import { NotificationBell } from "./notification-bell"
 
-export type NavTab = "Dashboard" | "Suscripciones" | "Gestión de cupos" | "Comunidad Freelance" | "Billetera"
-
-const navItems: { label: NavTab; href: string; icon: React.ElementType; badge?: string; adminOnly?: boolean; dot?: boolean }[] = [
-  { label: "Dashboard", href: ROUTES.overview, icon: LayoutDashboard },
-  { label: "Suscripciones", href: ROUTES.suscripciones, icon: CreditCard },
-  { label: "Gestión de cupos", href: ROUTES.asientos, icon: Armchair, badge: "8/10", adminOnly: true },
-  { label: "Comunidad Freelance", href: ROUTES.comunidad, icon: Users },
-  { label: "Billetera", href: ROUTES.billetera, icon: Wallet },
-]
+export type NavTab = "Dashboard" | "Suscripciones" | "Comunidad Freelance" | "Billetera" | "Ayuda"
 
 export function Sidebar({ 
   isOrganizer = false,
+  activeSubscriptionsCount = 0,
+  nextRenewalLabel = null,
   user 
 }: { 
   isOrganizer?: boolean
+  activeSubscriptionsCount?: number
+  nextRenewalLabel?: string | null
   user?: { name: string; email: string }
 }) {
+  const navItems: { label: NavTab; href: string; icon: React.ElementType; badge?: string; adminOnly?: boolean; dot?: boolean }[] = [
+    { label: "Dashboard", href: ROUTES.overview, icon: LayoutDashboard },
+    { label: "Suscripciones", href: ROUTES.suscripciones, icon: CreditCard, badge: String(activeSubscriptionsCount) },
+    { label: "Billetera", href: ROUTES.billetera, icon: Wallet },
+    { label: "Ayuda", href: ROUTES.ayuda, icon: HelpCircle },
+  ]
   const pathname = usePathname()
 
   return (
@@ -52,6 +54,9 @@ export function Sidebar({
           <span className="text-white">Co</span>
           <span className="text-cyan-400">Stack</span>
         </span>
+        <div className="ml-auto">
+          <NotificationBell align="left" />
+        </div>
       </div>
 
       {/* Nav */}
@@ -82,8 +87,11 @@ export function Sidebar({
               <span className="flex-1 text-left">{item.label}</span>
 
               {item.badge && (
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-400 leading-none">
-                  {item.badge}
+                <span className="flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-400 leading-none whitespace-nowrap">
+                  <span>{item.badge}</span>
+                  {nextRenewalLabel && item.label === 'Suscripciones' && (
+                    <span className="text-[9px] text-cyan-400/60 font-normal">· renueva {nextRenewalLabel}</span>
+                  )}
                 </span>
               )}
               {item.dot && !isActive && (
@@ -98,10 +106,10 @@ export function Sidebar({
           <p className="px-3 mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
             Configuración
           </p>
-          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all">
+          <Link href={ROUTES.settings} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all">
             <Settings size={18} className="text-slate-500" />
             <span>Ajustes</span>
-          </button>
+          </Link>
         </div>
       </nav>
 
