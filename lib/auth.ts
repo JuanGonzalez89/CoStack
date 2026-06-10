@@ -34,9 +34,16 @@ export const authOptions = {
           return null
         }
 
-        const existingUser = await prisma.user.findUnique({
-          where: { email: parsed.data.email },
-        })
+        let existingUser
+        try {
+          existingUser = await prisma.user.findUnique({
+            where: { email: parsed.data.email },
+          })
+        } catch (dbError) {
+          // eslint-disable-next-line no-console
+          console.error('[auth] database error during login:', dbError)
+          return null
+        }
 
         if (existingUser?.passwordHash) {
           const passwordMatches = await compare(parsed.data.password, existingUser.passwordHash)
