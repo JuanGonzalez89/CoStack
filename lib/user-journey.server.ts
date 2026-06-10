@@ -16,14 +16,15 @@ export async function resolvePostAuthPath(userEmail: string | null | undefined) 
       return ROUTES.suscripciones
     }
 
-    const [membershipsCount, paymentsCount] = await Promise.all([
+    const [membershipsCount, paymentsCount, lobbyMembersCount] = await Promise.all([
       prisma.membership.count({ where: { userId: user.id } }),
       prisma.payment.count({ where: { userId: user.id } }),
+      prisma.lobbyMember.count({ where: { userId: user.id } })
     ])
 
-    const isFirstTimeUser = membershipsCount === 0 && paymentsCount === 0
+    const isFirstTimeUser = membershipsCount === 0 && paymentsCount === 0 && lobbyMembersCount === 0
 
-    return isFirstTimeUser ? ROUTES.suscripciones : ROUTES.overview
+    return isFirstTimeUser ? ROUTES.welcome : ROUTES.overview
   } catch {
     // If the database is temporarily unavailable, preserve access to the product.
     return ROUTES.overview

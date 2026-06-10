@@ -1,174 +1,89 @@
 "use client"
 
-import { useEffect, useState } from 'react'
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from 'react'
 import Link from "next/link"
-import { CreditCard, Loader2 } from 'lucide-react'
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog"
 import { ToolCard } from '@/components/dashboard/tool-card'
 import type { ToolCardData } from '@/features/dashboard/contracts'
 import { EmptyState } from '@/components/dashboard/empty-state'
 import { PackageOpen } from 'lucide-react'
+import { SubscriptionDetailModal } from '@/components/suscripciones/subscription-detail-modal'
+import { LobbyView } from '@/components/dashboard/lobby-view'
+import { SalaEsperaIntro } from '@/components/dashboard/sala-espera-intro'
 
-const initialTools: ToolCardData[] = [
-  {
-    id: 'chatgpt',
-    name: 'ChatGPT Team Workspace',
-    provider: 'OpenAI',
-    monthlyCost: 30,
-    seatsUsed: 4,
-    seatsTotal: 5,
-    status: 'pending',
-    accent: 'orange',
-    iconLabel: 'GPT',
-  },
-  {
-    id: 'figma',
-    name: 'Figma Organization',
-    provider: 'Figma Inc.',
-    monthlyCost: 45,
-    seatsUsed: 8,
-    seatsTotal: 10,
-    status: 'assigned',
-    accent: 'violet',
-    iconLabel: 'FIG',
-  },
-]
-
-export function ToolCards({ tools: toolsProp, isOrganizer = false }: { tools?: ToolCardData[], isOrganizer?: boolean }) {
+export function ToolCards({ tools, isOrganizer = false, initialLobbyId = null }: { tools: ToolCardData[], isOrganizer?: boolean, initialLobbyId?: string | null }) {
   const router = useRouter()
-  const [tools, setTools] = useState(toolsProp ?? initialTools)
-  const [pendingPayId, setPendingPayId] = useState<string | null>(null)
-  const [isConfirming, setIsConfirming] = useState(false)
-  const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [selectedTool, setSelectedTool] = useState<ToolCardData | null>(null)
+  const [introTool, setIntroTool] = useState<ToolCardData | null>(null)
+  const [lobbyTool, setLobbyTool] = useState<ToolCardData | null>(null)
 
   useEffect(() => {
-    if (toolsProp) {
-      setTools(toolsProp)
+    if (initialLobbyId) {
+      const match = tools.find(t => t.lobbyId === initialLobbyId)
+      if (match) setIntroTool(match)
     }
-  }, [toolsProp])
+  }, [initialLobbyId, tools])
 
-  const pendingTool = tools.find((t) => t.id === pendingPayId)
-
-  const handleRequestPay = (id: string) => {
-    setPendingPayId(id)
-    setStatusMessage(null)
+  const handleSelect = (tool: ToolCardData) => {
+    if (tool.status === 'lobby') {
+      setIntroTool(tool)
+    } else {
+      setSelectedTool(tool)
+    }
   }
 
-  const handleConfirmPay = async () => {
-    if (!pendingPayId) return
-
-    const id = pendingPayId
-    setIsConfirming(true)
-    setStatusMessage(null)
-
-    try {
-      const response = await fetch('/api/payments/request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ toolSlug: id }),
-      })
-
-      const payload = (await response.json().catch(() => null)) as { error?: string; message?: string } | null
-
-      if (!response.ok) {
-        setStatusMessage(payload?.error ?? 'No pudimos procesar el pago demo.')
-        return
-      }
-
-      setTools((prev) =>
-        prev.map((tool) =>
-          tool.id === id ? { ...tool, status: 'assigned', seatsUsed: Math.min(tool.seatsTotal, tool.seatsUsed + 1) } : tool,
-        ),
-      )
-      setPendingPayId(null)
-      setStatusMessage(payload?.message ?? 'Pago registrado y correo demo enviado.')
-      router.refresh()
-    } finally {
-      setIsConfirming(false)
+  const handleOpenLobby = (tool: ToolCardData) => {
+    if (isOrganizer && tool.lobbyId) {
+      router.push(`/lobby/${tool.lobbyId}`)
+    } else {
+      setIntroTool(tool)
     }
+  }
+
+  const handleIntroConfirm = () => {
+    const tool = introTool
+    setIntroTool(null)
+    if (tool) setLobbyTool(tool)
   }
 
   return (
     <>
-      {/* Payment confirmation dialog */}
-      <Dialog open={!!pendingPayId} onOpenChange={(open) => { if (!open && !isConfirming) setPendingPayId(null) }}>
-        <DialogContent className="sm:max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-base">Confirmar Pago</DialogTitle>
-            <DialogDescription className="text-sm">
-              {pendingTool && (
-                <>
-                  Estás a punto de pagar{" "}
-                  <span className="font-semibold text-foreground">${pendingTool.monthlyCost}.00</span>{" "}
-                  para reservar cupo en{" "}
-                  <span className="font-semibold text-foreground">{pendingTool.name}</span>.
-                    Vamos a registrar el pago demo y dejar un correo con el acceso listo.
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex gap-2 sm:gap-2 mt-2">
-            <Button
-              variant="outline"
-              className="flex-1 rounded-xl"
-              onClick={() => setPendingPayId(null)}
-              disabled={isConfirming}
-            >
-              Cancelar
-            </Button>
-            <Button
-              className="flex-1 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white font-semibold gap-2"
-              onClick={handleConfirmPay}
-              disabled={isConfirming}
-            >
-              {isConfirming ? (
-                <>
-                  <Loader2 size={14} className="animate-spin" />
-                  Procesando...
-                </>
-              ) : (
-                <>
-                  <CreditCard size={14} />
-                  Confirmar Pago
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SubscriptionDetailModal
+        tool={selectedTool}
+        accessToken={selectedTool?.accessToken}
+        open={!!selectedTool}
+        onOpenChange={(open) => { if (!open) setSelectedTool(null) }}
+      />
+
+      <SalaEsperaIntro
+        tool={introTool!}
+        open={!!introTool}
+        onConfirm={handleIntroConfirm}
+        onClose={() => setIntroTool(null)}
+      />
+
+      <LobbyView
+        tool={lobbyTool!}
+        open={!!lobbyTool}
+        onOpenChange={(open) => { if (!open) setLobbyTool(null) }}
+      />
 
       <section>
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold tracking-tight text-white">Suscripciones Activas</h2>
-            <p className="mt-1 text-sm text-zinc-400">Gestioná tus herramientas y cupos</p>
+            <p className="mt-1 text-sm text-zinc-400">Hacé clic en una suscripción para ver los detalles</p>
           </div>
           <Button asChild className="rounded-xl h-12 bg-white text-black hover:bg-zinc-200 font-bold text-sm px-6 shadow-none">
             <Link href="/suscripciones">+ Nueva Suscripción</Link>
           </Button>
         </div>
 
-        {statusMessage && (
-          <div className="mb-4 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-50">
-            {statusMessage}
-          </div>
-        )}
-
         {tools.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-[repeat(auto-fit,minmax(340px,1fr))]">
             {tools.map((tool) => (
-              <ToolCard key={tool.id} tool={tool} onRequestPay={handleRequestPay} isOrganizer={isOrganizer} />
+              <ToolCard key={tool.id} tool={tool} onSelect={handleSelect} onOpenLobby={handleOpenLobby} isOrganizer={isOrganizer} />
             ))}
           </div>
         ) : (

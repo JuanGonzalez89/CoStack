@@ -17,6 +17,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null)
   const groupName = typeof body?.groupName === 'string' ? body.groupName.trim() : ''
   const inviteCode = typeof body?.inviteCode === 'string' ? body.inviteCode.trim() : ''
+  const skipGroup = body?.skipGroup === true
   const role = body?.role === 'organizer' ? 'organizer' : 'member'
 
   const user = await prisma.user.findUnique({
@@ -27,27 +28,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
   }
 
-  const existingGroup = inviteCode
-    ? await prisma.group.findUnique({ where: { inviteCode } })
-    : null
-
-  const group = existingGroup ?? (groupName
-    ? await prisma.group.create({
-        data: {
-          name: groupName,
-          inviteCode: createInviteCode(),
-        },
-      })
-    : null)
-
-  if (!group) {
-    return NextResponse.json({ error: 'Missing group data' }, { status: 400 })
-  }
-
   await prisma.user.update({
     where: { id: user.id },
     data: { role },
   })
+
+  const group = skipGroup
+    ? await prisma.group.create({
+        data: {
+          name: "Personal",
+          inviteCode: createInviteCode(),
+        },
+      })
+    : inviteCode
+      ? await prisma.group.findUnique({ where: { inviteCode } })
+      : groupName
+        ? await prisma.group.create({
+            data: {
+              name: groupName,
+              inviteCode: createInviteCode(),
+            },
+          })
+        : null
+
+  if (!group) {
+    return NextResponse.json({ error: 'Missing group data' }, { status: 400 })
+  }
 
   await prisma.membership.upsert({
     where: {

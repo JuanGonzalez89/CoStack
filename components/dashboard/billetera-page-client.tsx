@@ -6,12 +6,24 @@ import { BilleteraView } from "@/components/dashboard/billetera-view"
 import { PaymentFailureModal } from "@/components/dashboard/payment-failure-modal"
 import { PaymentRetryBanner } from "@/components/dashboard/payment-retry-banner"
 
+interface PaymentData {
+  id: string
+  amount: number
+  status: string
+  createdAt: string
+  description: string
+  toolName: string
+}
+
 interface BilleteraPageClientProps {
   isOverdue: boolean
   isOrganizer: boolean
+  initialPayments: PaymentData[]
+  balance: number
+  nextCharge: number
 }
 
-export function BilleteraPageClient({ isOverdue, isOrganizer }: BilleteraPageClientProps) {
+export function BilleteraPageClient({ isOverdue, isOrganizer, initialPayments, balance, nextCharge }: BilleteraPageClientProps) {
   const [failureOpen, setFailureOpen] = useState(isOverdue)
 
   if (isOverdue) {
@@ -34,5 +46,5 @@ export function BilleteraPageClient({ isOverdue, isOrganizer }: BilleteraPageCli
     )
   }
 
-  return <BilleteraView isOrganizer={isOrganizer} />
+  return <BilleteraView isOrganizer={isOrganizer} initialPayments={initialPayments} balance={balance} nextCharge={nextCharge} />
 }

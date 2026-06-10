@@ -126,7 +126,7 @@ export function HeroRobotScene() {
       data-head-target={headName || undefined}
       className="relative overflow-hidden border-b border-white/5"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(6,182,212,0.12),transparent_28%),radial-gradient(circle_at_82%_40%,rgba(6,182,212,0.1),transparent_24%),linear-gradient(180deg,rgba(10,15,30,0.1)_0%,rgba(10,15,30,0.68)_58%,rgba(10,15,30,1)_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(6,182,212,0.12),transparent_28%),radial-gradient(circle_at_82%_40%,rgba(6,182,212,0.1),transparent_24%),linear-gradient(180deg,rgba(9,9,11,0.1)_0%,rgba(9,9,11,0.68)_58%,rgba(9,9,11,1)_100%)]" />
 
       <div className="absolute inset-y-0 right-0 w-full md:w-[58%] pointer-events-none">
         <SplineScene
@@ -137,7 +137,7 @@ export function HeroRobotScene() {
         />
       </div>
 
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-[#0a0f1e] via-[#0a0f1e]/86 to-transparent md:via-[#0a0f1e]/72" />
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-zinc-950 via-zinc-950/86 to-transparent md:via-zinc-950/72" />
       <div className="absolute inset-y-0 right-0 w-1/2 pointer-events-none opacity-60" style={heroGlowStyle} />
       <div
         aria-hidden="true"
@@ -163,7 +163,7 @@ export function HeroRobotScene() {
             'radial-gradient(circle 68px at 76% 24%, rgba(34,211,238,0.05), transparent 60%), radial-gradient(circle 42px at 76% 25%, rgba(255,255,255,0.03), transparent 72%)',
         }}
       />
-      <div className="absolute inset-x-0 bottom-0 pointer-events-none h-32 bg-gradient-to-t from-[#0a0f1e] to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 pointer-events-none h-32 bg-gradient-to-t from-zinc-950 to-transparent" />
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-73px)] max-w-7xl items-center px-6 py-16 md:px-12 lg:px-12 xl:px-14">
         <div className="max-w-[34rem] text-left lg:-translate-x-6 xl:-translate-x-10">
@@ -184,7 +184,7 @@ export function HeroRobotScene() {
           <p className="relative mt-6 max-w-lg text-[1.05rem] leading-relaxed text-slate-300 text-pretty md:text-[1.1rem]">
             Un bot que comparte licencias, coordina pagos y activa accesos sin fricción.
             <br className="hidden sm:block" />
-            Fondo oscuro, acentos cyan y una escena 3D que le da presencia a la landing.
+            Elegí una herramienta, pagá tu cupo y cuando se complete la sala, tu licencia está lista.
           </p>
 
           <div className="relative mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">

@@ -1,6 +1,6 @@
 "use client"
 
-import { Bot, CreditCard, Loader2, Lock, MessageSquare, Users } from 'lucide-react'
+import { CreditCard, Loader2, Lock, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StatusBadge, type StatusTone } from '@/components/dashboard/status-badge'
 import type { ToolCardData, ToolCardState } from '@/features/dashboard/contracts'
@@ -11,6 +11,7 @@ const statusLabels: Record<ToolCardState, { label: string; tone: StatusTone }> =
   paying: { label: 'Procesando Pago...', tone: 'neutral' },
   assigning: { label: 'Reservando Cupo...', tone: 'neutral' },
   assigned: { label: 'Cupo Confirmado', tone: 'success' },
+  lobby: { label: 'Sala de espera', tone: 'neutral' },
 }
 
 const accentStyles: Record<ToolCardData['accent'], { stripe: string; iconBg: string; iconText: string }> = {
@@ -35,18 +36,26 @@ function SeatDots({ used, total }: { used: number; total: number }) {
   )
 }
 
-export function ToolCard({ tool, onRequestPay, isOrganizer = false }: { tool: ToolCardData; onRequestPay: (id: string) => void; isOrganizer?: boolean }) {
+export function ToolCard({ tool, onRequestPay, onSelect, onOpenLobby, isOrganizer = false }: { tool: ToolCardData; onRequestPay?: (id: string) => void; onSelect?: (tool: ToolCardData) => void; onOpenLobby?: (tool: ToolCardData) => void; isOrganizer?: boolean }) {
   const isPending = tool.status === 'pending'
   const isPaying = tool.status === 'paying'
   const isAssigning = tool.status === 'assigning'
   const isAssigned = tool.status === 'assigned'
+  const isLobby = tool.status === 'lobby'
   const isLoading = isPaying || isAssigning
   const badge = statusLabels[tool.status]
   const accent = accentStyles[tool.accent]
 
   return (
     <article
-      className="flex flex-col justify-between overflow-hidden rounded-[24px] border border-white/5 bg-white/[0.02] p-6 lg:p-7 transition-all hover:bg-white/[0.04]"
+      onClick={() => {
+        if (isAssigned && onSelect) onSelect(tool)
+        if (isLobby && onOpenLobby) onOpenLobby(tool)
+      }}
+      className={cn(
+        "flex flex-col justify-between overflow-hidden rounded-[24px] border border-white/5 bg-white/[0.02] p-6 lg:p-7 transition-all",
+        (isAssigned || isLobby) ? "cursor-pointer hover:bg-white/[0.04] hover:border-cyan-500/30" : "hover:bg-white/[0.04]"
+      )}
     >
       <div>
         <div className="mb-5 flex items-start justify-between gap-3">
@@ -73,7 +82,7 @@ export function ToolCard({ tool, onRequestPay, isOrganizer = false }: { tool: To
 
       <div className="pt-2">
         {isPending && (
-          <Button onClick={() => onRequestPay(tool.id)} className="w-full h-12 rounded-xl bg-white text-black hover:bg-zinc-200 font-bold text-sm" size="lg">
+          <Button onClick={() => onRequestPay?.(tool.id)} className="w-full h-12 rounded-xl bg-white text-black hover:bg-zinc-200 font-bold text-sm" size="lg">
             <CreditCard size={18} className="mr-2" />
             {isOrganizer ? "Completar Pago Inicial" : "Pagar Licencia"}
           </Button>
@@ -86,10 +95,17 @@ export function ToolCard({ tool, onRequestPay, isOrganizer = false }: { tool: To
           </Button>
         )}
 
+        {isLobby && (
+          <Button onClick={() => onOpenLobby?.(tool)} className="w-full h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-semibold text-sm hover:bg-amber-500/20" size="lg">
+            <Users className="w-4 h-4 mr-2" />
+            {isOrganizer ? `Esperando miembros (${tool.lobbyFilled ?? 0}/${tool.lobbyTotal ?? 10})` : `Ver sala de espera (${tool.lobbyFilled ?? 0}/${tool.lobbyTotal ?? 10})`}
+          </Button>
+        )}
+
         {isAssigned && (
-          <Button disabled variant="outline" className="w-full h-12 rounded-xl border-white/5 bg-white/5 text-zinc-300 font-semibold text-sm" size="lg">
+          <Button variant="outline" className="w-full h-12 rounded-xl border-emerald-500/20 bg-emerald-500/5 text-emerald-400 font-semibold text-sm hover:bg-emerald-500/10" size="lg">
             <Lock size={18} className="mr-2" />
-            Suscripción Activa
+            Ver detalle
           </Button>
         )}
       </div>

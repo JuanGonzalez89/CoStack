@@ -1,6 +1,6 @@
 import Credentials from 'next-auth/providers/credentials'
 import type { AuthOptions } from 'next-auth'
-import { compare, hash } from 'bcryptjs'
+import { compare } from 'bcryptjs'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 
@@ -21,51 +21,53 @@ export const authOptions = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
-        name: { label: 'Name', type: 'text' },
       },
       async authorize(rawCredentials) {
         const parsed = credentialsSchema.safeParse(rawCredentials)
 
         if (!parsed.success) {
-          if (process.env.NODE_ENV !== 'production') {
-            // eslint-disable-next-line no-console
-            console.warn('[auth] credentials parse failed:', rawCredentials)
-          }
           return null
         }
 
-        let existingUser
         try {
-          existingUser = await prisma.user.findUnique({
+          const existingUser = await prisma.user.findUnique({
             where: { email: parsed.data.email },
+            select: { id: true, email: true, name: true, passwordHash: true, role: true },
           })
-        } catch (dbError) {
-          // eslint-disable-next-line no-console
-          console.error('[auth] database error during login:', dbError)
-          return null
-        }
 
-        if (existingUser?.passwordHash) {
-          const passwordMatches = await compare(parsed.data.password, existingUser.passwordHash)
-
-          if (!passwordMatches) {
-            if (process.env.NODE_ENV !== 'production') {
-              // eslint-disable-next-line no-console
-              console.warn('[auth] password mismatch for', parsed.data.email)
-            }
+          if (!existingUser || !existingUser.passwordHash) {
             return null
           }
 
-          return existingUser
-        }
+          const passwordMatches = await compare(parsed.data.password, existingUser.passwordHash)
 
-        if (process.env.NODE_ENV !== 'production') {
-          // eslint-disable-next-line no-console
-          console.warn('[auth] no matching user for', parsed.data.email)
-        }
+          if (!passwordMatches) {
+            return null
+          }
 
-        return null
+          return {
+            id: existingUser.id,
+            email: existingUser.email,
+            name: existingUser.name,
+          }
+        } catch {
+          return null
+        }
       },
     }),
   ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (session.user && token.id) {
+        (session.user as any).id = token.id as string
+      }
+      return session
+    },
+  },
 } satisfies AuthOptions

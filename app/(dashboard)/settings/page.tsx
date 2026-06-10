@@ -2,27 +2,44 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
+import { SettingsPageClient } from '@/components/dashboard/settings-page-client'
 
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions)
   if (!session?.user?.email) redirect('/login')
 
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-  if (user?.role !== 'organizer') {
-    redirect('/overview')
-  }
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: {
+      payments: {
+        where: { status: 'paid' },
+        include: { tool: true },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      },
+    },
+  })
+
+  if (!user) redirect('/login')
+
+  const subscriptions = user.payments.map(p => {
+    const renewDate = new Date(p.createdAt)
+    renewDate.setDate(renewDate.getDate() + 30)
+    return {
+      toolName: p.tool.name,
+      amount: Number(p.amount),
+      date: p.createdAt.toISOString(),
+      renewDate: renewDate.toISOString(),
+    }
+  })
 
   return (
-    <section className="space-y-4">
-      <div>
-        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-600">Settings</p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground">Configuración general</h1>
-        <p className="text-sm text-muted-foreground">Pantalla base para administración de cuenta y espacio.</p>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
-        Esta sección queda lista para el Sprint 2, cuando se agregue la gestión real de miembros, roles y herramientas.
-      </div>
-    </section>
+    <SettingsPageClient
+      userName={user.name ?? 'Usuario'}
+      userEmail={user.email}
+      userRole={user.role}
+      subscriptionsCount={subscriptions.length}
+      activeSubscriptions={subscriptions}
+    />
   )
 }

@@ -65,7 +65,7 @@ const initialFormState: AuthFormState = {
 }
 
 function resolveSuccessPath() {
-  return ROUTES.suscripciones
+  return ROUTES.welcome
 }
 
 export function AuthJourneyForm({ mode, title, description, submitLabel, onboardingIntent }: AuthJourneyFormProps) {

@@ -6,7 +6,7 @@ export type SeatStatus = PaymentStatus | 'free' | 'assigned'
 
 export type StatusBadgeStatus = PaymentStatus | 'idle' | 'blocked' | 'free' | 'assigned'
 
-export type ToolCardState = 'pending' | 'paying' | 'assigning' | 'assigned'
+export type ToolCardState = 'pending' | 'paying' | 'assigning' | 'assigned' | 'lobby'
 
 export type ToolAccent = 'orange' | 'violet' | 'cyan'
 
@@ -73,6 +73,7 @@ export interface DashboardSnapshot {
     botEvents: number
   }
   latestGroup: DashboardGroupSnapshot | null
+  activeGroups: DashboardGroupSnapshot[]
 }
 
 export interface ToolCardData {
@@ -85,6 +86,11 @@ export interface ToolCardData {
   status: ToolCardState
   accent: ToolAccent
   iconLabel: string
+  accessToken?: string | null
+  providerUrl?: string
+  lobbyId?: string
+  lobbyFilled?: number
+  lobbyTotal?: number
 }
 
 export interface SeatAccessCardData {

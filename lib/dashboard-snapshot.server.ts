@@ -93,5 +93,6 @@ export async function getDashboardSnapshot(userEmail?: string | null): Promise<D
           botEvents: [],
         } as any
       ]
+    }
   }
 }

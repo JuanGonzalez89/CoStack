@@ -3,128 +3,21 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import {
-  MessageSquare,
-  Pen,
-  GitBranch,
-  Search,
-  Code,
-  Clock,
-  Flame,
-  ShieldCheck,
-  Users,
-  Wallet
+  Search, Flame, ShieldCheck, Users
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-
-// Modelo de datos B2C (Herramientas, no Grupos)
-interface ToolCatalogItem {
-  id: string
-  name: string
-  provider: string
-  pricePerMonth: number
-  originalPrice: number
-  availableSeats: number
-  icon: React.ElementType
-  iconBg: string
-  iconColor: string
-  category: "AI" | "Design" | "IDE"
-}
-
-export const CATALOG_TOOLS: ToolCatalogItem[] = [
-  {
-    id: "copilot",
-    name: "GitHub Copilot",
-    provider: "GitHub",
-    pricePerMonth: 5,
-    originalPrice: 10,
-    availableSeats: 2,
-    icon: GitBranch,
-    iconBg: "bg-slate-200/50",
-    iconColor: "text-slate-700",
-    category: "AI",
-  },
-  {
-    id: "jetbrains",
-    name: "All Products Pack",
-    provider: "JetBrains",
-    pricePerMonth: 8,
-    originalPrice: 28,
-    availableSeats: 1,
-    icon: Code,
-    iconBg: "bg-rose-500/10",
-    iconColor: "text-rose-500",
-    category: "IDE",
-  },
-  {
-    id: "chatgpt",
-    name: "ChatGPT Team",
-    provider: "OpenAI",
-    pricePerMonth: 15,
-    originalPrice: 30,
-    availableSeats: 4,
-    icon: MessageSquare,
-    iconBg: "bg-emerald-500/10",
-    iconColor: "text-emerald-500",
-    category: "AI",
-  },
-  {
-    id: "figma",
-    name: "Figma Org",
-    provider: "Figma Inc.",
-    pricePerMonth: 12,
-    originalPrice: 45,
-    availableSeats: 5,
-    icon: Pen,
-    iconBg: "bg-violet-500/10",
-    iconColor: "text-violet-500",
-    category: "Design",
-  },
-  {
-    id: "midjourney",
-    name: "Midjourney Pro",
-    provider: "Midjourney",
-    pricePerMonth: 15,
-    originalPrice: 60,
-    availableSeats: 4,
-    icon: Pen,
-    iconBg: "bg-fuchsia-500/10",
-    iconColor: "text-fuchsia-500",
-    category: "AI",
-  },
-  {
-    id: "vercel",
-    name: "Vercel Pro",
-    provider: "Vercel",
-    pricePerMonth: 5,
-    originalPrice: 20,
-    availableSeats: 4,
-    icon: Code,
-    iconBg: "bg-slate-100/10",
-    iconColor: "text-slate-100",
-    category: "IDE",
-  },
-  {
-    id: "canva",
-    name: "Canva Pro Team",
-    provider: "Canva",
-    pricePerMonth: 6,
-    originalPrice: 30,
-    availableSeats: 5,
-    icon: Pen,
-    iconBg: "bg-blue-500/10",
-    iconColor: "text-blue-500",
-    category: "Design",
-  }
-]
+import { LicenseDetailModal } from "@/components/suscripciones/license-detail-modal"
+import { CATALOG } from "@/lib/catalog"
 
 export function SuscripcionesView({ isOrganizer = false }: { isOrganizer?: boolean }) {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
   const [activeCategory, setActiveCategory] = useState<"All" | "AI" | "Design" | "IDE">("All")
+  const [selectedTool, setSelectedTool] = useState<string | null>(null)
 
-  const filteredTools = CATALOG_TOOLS.filter(tool => {
+  const filteredTools = CATALOG.filter(tool => {
     const matchesSearch = tool.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           tool.provider.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = activeCategory === "All" || tool.category === activeCategory
@@ -148,15 +41,11 @@ export function SuscripcionesView({ isOrganizer = false }: { isOrganizer?: boole
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400">
           <ShieldCheck size={14} />
-          {isOrganizer ? "Dinero Garantizado 100%" : "Compra Segura con Devolución"}
+          Compra Segura — Pago Protegido
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-400">
           <Users size={14} />
-          {isOrganizer ? "Relleno Automático de Cupos" : "Match Automático Inmediato"}
-        </div>
-        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-zinc-300">
-          <Wallet size={14} />
-          {isOrganizer ? "Retiros a MercadoPago / Crypto" : "Sin tarjetas de crédito bloqueadas"}
+          Sala de espera en tiempo real
         </div>
       </div>
 
@@ -239,7 +128,7 @@ export function SuscripcionesView({ isOrganizer = false }: { isOrganizer?: boole
 
               {/* CTA */}
               <Button 
-                onClick={() => router.push(`/suscripciones/checkout/${tool.id}`)}
+                onClick={() => setSelectedTool(tool.id)}
                 className="w-full rounded-2xl h-14 font-bold text-base transition-all duration-200 bg-white hover:bg-zinc-200 text-black shadow-none"
               >
                 {isOrganizer ? "Configurar Grupo y Añadir" : "Unirse vía Automatch"}
@@ -254,6 +143,12 @@ export function SuscripcionesView({ isOrganizer = false }: { isOrganizer?: boole
           </div>
         )}
       </div>
+
+      <LicenseDetailModal
+        toolSlug={selectedTool}
+        isOrganizer={isOrganizer}
+        onClose={() => setSelectedTool(null)}
+      />
     </div>
   )
 }

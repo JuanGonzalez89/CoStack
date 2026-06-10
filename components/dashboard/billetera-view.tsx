@@ -1,7 +1,6 @@
 "use client"
 import { useState } from "react"
 
-import { useDashboardSnapshot } from "@/components/dashboard/use-dashboard-snapshot"
 import { BillingHeaderCards } from "./billing-header-cards"
 import { HistoryTransactionRow } from "./history-transaction-row"
 import { EmptyState } from "./empty-state"
@@ -9,31 +8,24 @@ import { Wallet } from "lucide-react"
 import { PaymentRetryBanner } from "./payment-retry-banner"
 import type { StatusBadgeStatus } from "@/features/dashboard/contracts"
 
-export function BilleteraView({ isOrganizer }: { isOrganizer?: boolean }) {
-  const { data, isLoading } = useDashboardSnapshot()
+interface PaymentData {
+  id: string
+  amount: number
+  status: string
+  createdAt: string
+  description: string
+  toolName: string
+}
+
+export function BilleteraView({ isOrganizer, initialPayments, balance, nextCharge }: { isOrganizer?: boolean; initialPayments: PaymentData[]; balance: number; nextCharge: number }) {
   const [activeTab, setActiveTab] = useState<"all" | "incomes" | "expenses">("all")
-  
-  const payments = data?.latestGroup?.payments ?? []
-  
-  // En un caso real, el balance viene del backend
-  const balance = 0.00
-  const nextCharge = payments.filter((payment) => payment.status !== "paid").reduce((acc, payment) => acc + Number(payment.amount), 0)
 
-  const hasOverdue = payments.some(p => p.status === "overdue")
+  const hasOverdue = initialPayments.some(p => p.status === "overdue")
 
-  const processedPayments = payments.map(payment => {
-    // Si el organizador está viendo esto y el pago NO es de él mismo, es un INGRESO (miembro pagó cuota)
-    const isIncome = isOrganizer && payment.user.email !== data?.latestGroup?.members.find(m => m.role === 'organizer')?.user.email
-    return {
-      ...payment,
-      type: isIncome ? "income" : "expense"
-    }
-  })
-
-  const filteredPayments = processedPayments.filter(payment => {
+  const filteredPayments = initialPayments.filter(payment => {
     if (activeTab === "all") return true
-    if (activeTab === "incomes") return payment.type === "income"
-    if (activeTab === "expenses") return payment.type === "expense"
+    if (activeTab === "incomes") return payment.status === "paid"
+    if (activeTab === "expenses") return payment.status !== "paid"
     return true
   })
 
@@ -41,19 +33,18 @@ export function BilleteraView({ isOrganizer }: { isOrganizer?: boolean }) {
     <div className="space-y-6">
       {hasOverdue && <PaymentRetryBanner href="/suscripciones" />}
 
-      <BillingHeaderCards 
+      <BillingHeaderCards
         isOrganizer={isOrganizer}
-        balance={balance} 
-        nextCharge={nextCharge} 
-        nextChargeDate="30/06/2026"
-        isLoading={isLoading} 
+        balance={balance}
+        nextCharge={nextCharge}
+        nextChargeDate="30 días"
+        isLoading={false}
       />
 
-      {/* Transaction history */}
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
           <h2 className="text-xl font-bold text-white">Historial de Movimientos</h2>
-          
+
           {isOrganizer && (
             <div className="flex items-center gap-1 rounded-xl bg-white/[0.02] border border-white/5 p-1">
               {(["all", "incomes", "expenses"] as const).map((tab) => (
@@ -66,7 +57,7 @@ export function BilleteraView({ isOrganizer }: { isOrganizer?: boolean }) {
                       : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]"
                   }`}
                 >
-                  {tab === "all" ? "Todos" : tab === "incomes" ? "Ingresos" : "Gastos"}
+                  {tab === "all" ? "Todos" : tab === "incomes" ? "Pagados" : "Pendientes"}
                 </button>
               ))}
             </div>
@@ -81,21 +72,21 @@ export function BilleteraView({ isOrganizer }: { isOrganizer?: boolean }) {
             <p className="w-24 text-xs font-medium text-zinc-500 uppercase tracking-wide text-right">Fecha</p>
             <p className="w-24 text-xs font-medium text-zinc-500 uppercase tracking-wide text-right">Monto</p>
           </div>
-          
+
           <div className="divide-y divide-zinc-800/50">
             {filteredPayments.map((payment) => (
               <HistoryTransactionRow
                 key={payment.id}
                 id={payment.id}
-                description={`${payment.user.name ?? payment.user.email} · ${payment.tool.name}`}
+                description={payment.description}
                 date={new Date(payment.createdAt).toLocaleDateString("es-AR")}
-                amount={Number(payment.amount)}
+                amount={payment.amount}
                 status={payment.status as StatusBadgeStatus}
-                type={payment.type as "income" | "expense"}
+                type="expense"
               />
             ))}
-            
-            {!filteredPayments.length && !isLoading && (
+
+            {!filteredPayments.length && (
               <div className="p-8">
                 <EmptyState
                   icon={Wallet}
