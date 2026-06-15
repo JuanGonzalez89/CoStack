@@ -8,16 +8,23 @@ function readDatabaseUrlFromEnvFile(filePath: string) {
   }
 
   const contents = readFileSync(filePath, 'utf8')
-  const match = contents.match(/^DATABASE_URL=(.*)$/m)
+  const directMatch = contents.match(/^DIRECT_URL=(.*)$/m)
+  if (directMatch?.[1]) {
+    return directMatch[1].replace(/^['"]|['"]$/g, '')
+  }
 
-  if (!match?.[1]) {
+  const dbMatch = contents.match(/^DATABASE_URL=(.*)$/m)
+  if (!dbMatch?.[1]) {
     return null
   }
 
-  return match[1].replace(/^['"]|['"]$/g, '')
+  return dbMatch[1].replace(/^['"]|['"]$/g, '')
 }
 
 function resolveDatabaseUrl() {
+  if (process.env.DIRECT_URL) {
+    return process.env.DIRECT_URL
+  }
   if (process.env.DATABASE_URL) {
     return process.env.DATABASE_URL
   }

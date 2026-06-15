@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     }
     const userId = user.id
 
-    const { toolSlug } = await request.json()
+    const { toolSlug, accessMethod = "INVITATION_LINK" } = await request.json()
     if (!toolSlug) {
       return NextResponse.json({ error: "Falta el identificador de la herramienta." }, { status: 400 })
     }
@@ -55,9 +55,9 @@ export async function POST(request: Request) {
           orderBy: { createdAt: "desc" },
         })
       } else {
-        // Try to find a waiting lobby that isn't full of real members
+        // Try to find a waiting lobby that isn't full of real members and matches the access method
         const waitingLobbies = await prisma.lobby.findMany({
-          where: { toolSlug, status: "waiting", expiresAt: { gt: now } },
+          where: { toolSlug, accessMethod, status: "waiting", expiresAt: { gt: now } },
           orderBy: { createdAt: "desc" },
           include: { _count: { select: { members: true } } }
         })
@@ -87,6 +87,7 @@ export async function POST(request: Request) {
             pricePerSeat: catalogEntry.pricePerMonth,
             fullPrice: catalogEntry.monthlyCost,
             expiresAt,
+            accessMethod,
             creatorId: userId,
           },
         })
@@ -117,21 +118,26 @@ export async function POST(request: Request) {
         nextSeat = Math.max(1, maxSeat._max.seatIndex || 1) + 1
       }
 
+      // Simulamos la lógica de Autorización de Mercado Pago (Congelamiento de Fondos)
+      // Importamos dinámica/conceptualmente de lib/mercadopago.server.ts
+      // const paymentIntent = await authorizePayment(userId, catalogEntry.pricePerMonth, "card_token_xyz")
+      console.log(`[Mercado Pago] Solicitando AUTORIZACIÓN (Retención) por $${catalogEntry.pricePerMonth} USD para el usuario ${userId}`)
       await new Promise((resolve) => setTimeout(resolve, 800))
-
+      
+      // En la DB marcamos status como 'paid' (autorizado para nuestra lógica de lobby)
       await prisma.lobbyMember.create({
         data: {
           lobbyId: lobby.id,
           userId,
           seatIndex: nextSeat,
           amount: catalogEntry.pricePerMonth,
-          status: "paid",
+          status: "paid", // Que para fines de Escrow significa 'fondos retenidos/autorizados'
         },
       })
 
       return NextResponse.json({
         success: true,
-        message: "Te uniste a la sala de espera.",
+        message: "Te uniste a la sala de espera. Tu dinero está protegido.",
         lobbyId: lobby.id,
       }, { status: 200 })
     } catch (lobbyErr: any) {

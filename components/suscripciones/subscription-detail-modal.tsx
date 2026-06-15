@@ -72,38 +72,62 @@ export function SubscriptionDetailModal({ tool, accessToken, open, onOpenChange 
           </div>
 
           {accessToken && (
-            <div className="p-5 rounded-2xl bg-cyan-500/5 border border-cyan-500/20 space-y-3">
-              <div className="flex items-center gap-2">
-                <Key className="w-4 h-4 text-cyan-400" />
-                <h4 className="font-semibold text-white text-sm">Tu credencial de acceso</h4>
-              </div>
-              <div className="flex items-center justify-between gap-3 bg-black/40 border border-white/5 rounded-xl p-3">
-                <code className="font-mono text-sm text-zinc-300 truncate">
-                  {showToken ? accessToken : (accessToken.length > 4 ? `••••••••••••${accessToken.slice(-4)}` : '••••••••')}
-                </code>
-                <div className="flex gap-1 shrink-0">
+            <>
+              {(!tool.category && !['figma', 'canva', 'chatgpt'].includes(tool.provider.toLowerCase()) || tool.category?.toLowerCase() === 'dev' || tool.category?.toLowerCase() === 'development') && (
+                <div className="p-5 rounded-2xl bg-cyan-500/5 border border-cyan-500/20 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Key className="w-4 h-4 text-cyan-400" />
+                    <h4 className="font-semibold text-white text-sm">Tu credencial de acceso (API Key)</h4>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 bg-black/40 border border-white/5 rounded-xl p-3">
+                    <code className="font-mono text-sm text-zinc-300 truncate">
+                      {showToken ? accessToken : (accessToken.length > 4 ? `••••••••••••${accessToken.slice(-4)}` : '••••••••')}
+                    </code>
+                    <div className="flex gap-1 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowToken(!showToken)}
+                        className="h-8 w-8 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10"
+                        title={showToken ? "Ocultar" : "Mostrar"}
+                      >
+                        {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleCopy}
+                        className="h-8 w-8 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10"
+                        title="Copiar credencial"
+                      >
+                        {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-zinc-500">Usá este código para integrar {tool.provider} en tu código. Vence junto con tu licencia.</p>
+                </div>
+              )}
+
+              {(tool.category?.toLowerCase() === 'design' || tool.category?.toLowerCase() === 'ai' || ['figma', 'canva', 'chatgpt'].includes(tool.provider.toLowerCase())) && (
+                <div className="p-5 rounded-2xl bg-violet-500/5 border border-violet-500/20 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <ExternalLink className="w-4 h-4 text-violet-400" />
+                    <h4 className="font-semibold text-white text-sm">Invitación al Workspace Corporativo</h4>
+                  </div>
+                  <p className="text-xs text-zinc-400">
+                    Tu pago ha sido confirmado. Hemos generado un enlace seguro para que te unas al equipo sin necesidad de compartir contraseñas.
+                  </p>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowToken(!showToken)}
-                    className="h-8 w-8 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10"
-                    title={showToken ? "Ocultar" : "Mostrar"}
+                    className="w-full bg-violet-500 hover:bg-violet-600 text-white font-bold h-11 rounded-xl"
+                    onClick={() => {
+                        window.open(accessToken.startsWith('http') ? accessToken : `https://${tool.provider.toLowerCase()}.com/invite/${accessToken}`, '_blank')
+                    }}
                   >
-                    {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleCopy}
-                    className="h-8 w-8 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10"
-                    title="Copiar credencial"
-                  >
-                    {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    Unirse al equipo en {tool.provider}
                   </Button>
                 </div>
-              </div>
-              <p className="text-xs text-zinc-500">Usá este código para activar tu cuenta en {tool.provider}. Vence junto con tu licencia.</p>
-            </div>
+              )}
+            </>
           )}
 
           <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-3">
@@ -112,18 +136,19 @@ export function SubscriptionDetailModal({ tool, accessToken, open, onOpenChange 
               Cómo usar tu licencia
             </h4>
             <ol className="space-y-2.5 text-sm text-zinc-300">
-              <li className="flex items-start gap-3">
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold shrink-0 mt-0.5">1</span>
-                <span>Copiá tu credencial de acceso cifrada.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold shrink-0 mt-0.5">2</span>
-                <span>Ingresá a <strong className="text-white">{tool.provider}</strong> mediante el enlace directo.</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold shrink-0 mt-0.5">3</span>
-                <span>Pegá tu credencial cuando el sistema de {tool.provider} la solicite para vincular tu licencia de CoStack.</span>
-              </li>
+               {(tool.category?.toLowerCase() === 'design' || tool.category?.toLowerCase() === 'ai' || ['figma', 'canva', 'chatgpt'].includes(tool.provider.toLowerCase())) ? (
+                 <>
+                  <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-500/20 text-violet-400 text-xs font-bold shrink-0 mt-0.5">1</span><span>Haz clic en "Unirse al equipo".</span></li>
+                  <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-500/20 text-violet-400 text-xs font-bold shrink-0 mt-0.5">2</span><span>Inicia sesión con tu cuenta personal de {tool.provider}.</span></li>
+                  <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-500/20 text-violet-400 text-xs font-bold shrink-0 mt-0.5">3</span><span>¡Listo! Disfruta de todos los beneficios premium desde tu propio entorno.</span></li>
+                 </>
+               ) : (
+                 <>
+                  <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold shrink-0 mt-0.5">1</span><span>Copiá tu credencial de acceso (API Key).</span></li>
+                  <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold shrink-0 mt-0.5">2</span><span>Ingresá a <strong className="text-white">{tool.provider}</strong> o configurá tu entorno.</span></li>
+                  <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold shrink-0 mt-0.5">3</span><span>Pegá tu credencial cuando el sistema la solicite para vincular tu licencia.</span></li>
+                 </>
+               )}
             </ol>
           </div>
 

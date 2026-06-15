@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Clock, ShieldCheck, Zap, Users, CreditCard, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { CATALOG } from "@/lib/catalog"
+import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react'
 
 interface CheckoutViewProps {
   toolSlug: string
@@ -16,6 +17,7 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
   const router = useRouter()
   const [timeLeft, setTimeLeft] = useState(600)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [accessMethod, setAccessMethod] = useState<'INVITATION_LINK' | 'API_PROXY'>('INVITATION_LINK')
 
   const tool = CATALOG.find(t => t.id === toolSlug) || CATALOG[0]
   const originalPrice = tool.originalPrice
@@ -23,6 +25,10 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
   const estimatedReturn = originalPrice - memberPrice
 
   useEffect(() => {
+    // Inicializar Mercado Pago del lado del cliente
+    if (process.env.NEXT_PUBLIC_MP_PUBLIC_KEY) {
+      initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY, { locale: 'es-AR' })
+    }
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -51,7 +57,7 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
       const res = await fetch('/api/checkout/pay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ toolSlug })
+        body: JSON.stringify({ toolSlug, accessMethod })
       })
 
       const data = await res.json()
@@ -118,6 +124,32 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
             </div>
           </div>
 
+          <div className="p-6 rounded-2xl border border-white/5 bg-white/[0.02]">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Zap className="w-5 h-5 text-cyan-400" />
+              ¿Cómo querés usar tu licencia?
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+               <Button 
+                  variant={accessMethod === 'INVITATION_LINK' ? 'default' : 'outline'} 
+                  onClick={() => setAccessMethod('INVITATION_LINK')} 
+                  className={`h-12 rounded-xl justify-start px-4 transition-all duration-200 ${accessMethod === 'INVITATION_LINK' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/50 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'bg-transparent border-white/10 text-zinc-400 hover:bg-white/5 hover:text-zinc-300'}`}
+               >
+                 Uso Web (Invitación Oficial)
+               </Button>
+               <Button 
+                  variant={accessMethod === 'API_PROXY' ? 'default' : 'outline'} 
+                  onClick={() => setAccessMethod('API_PROXY')} 
+                  className={`h-12 rounded-xl justify-start px-4 transition-all duration-200 ${accessMethod === 'API_PROXY' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/50 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'bg-transparent border-white/10 text-zinc-400 hover:bg-white/5 hover:text-zinc-300'}`}
+               >
+                 Desarrollo (API Key)
+               </Button>
+            </div>
+            <p className="mt-3 text-xs text-zinc-500">
+              El motor de Auto-Match te agrupará únicamente con usuarios que busquen este mismo método de acceso.
+            </p>
+          </div>
+
           <div className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
             <p className="text-sm text-zinc-300">
@@ -158,23 +190,50 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
                 </div>
               </div>
 
-              <Button
-                onClick={handlePayment}
-                disabled={isProcessing || timeLeft === 0}
-                className="w-full rounded-xl h-12 text-sm font-bold transition-all duration-200 bg-cyan-500 hover:bg-cyan-400 text-black flex gap-2 items-center justify-center active:scale-[0.98]"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Procesando...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="w-4 h-4" />
-                    Confirmar pago · ${memberPrice}
-                  </>
-                )}
-              </Button>
+              {process.env.NEXT_PUBLIC_MP_PUBLIC_KEY ? (
+                <div className="mt-4 bg-white rounded-xl overflow-hidden">
+                  <CardPayment
+                    initialization={{ amount: memberPrice }}
+                    onSubmit={async (param) => {
+                      // param.token es el card_token generado por MP
+                      // se lo enviamos a nuestro backend para hacer la autorizacion
+                      await handlePayment()
+                    }}
+                    customization={{
+                      paymentMethods: {
+                        minInstallments: 1,
+                        maxInstallments: 1,
+                      },
+                      visual: {
+                        style: {
+                          theme: 'dark', // Si tienen un tema oscuro configurado
+                          customVariables: {
+                            textPrimaryColor: '#000000',
+                          }
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              ) : (
+                <Button
+                  onClick={handlePayment}
+                  disabled={isProcessing || timeLeft === 0}
+                  className="w-full rounded-xl h-12 text-sm font-bold transition-all duration-200 bg-cyan-500 hover:bg-cyan-400 text-black flex gap-2 items-center justify-center active:scale-[0.98]"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-4 h-4" />
+                      Confirmar pago · ${memberPrice}
+                    </>
+                  )}
+                </Button>
+              )}
               <p className="text-center text-xs text-zinc-500 mt-3">
                 Podés cancelar en cualquier momento.
               </p>

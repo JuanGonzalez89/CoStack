@@ -84,13 +84,37 @@ export async function GET(
     allMembers.sort((a, b) => a.seatIndex - b.seatIndex)
 
     if (lobby.status === "waiting" && filledSeats >= lobby.totalSeats) {
-      const mockToken = `sk_live_lobby_${Math.random().toString(36).substring(2, 15)}`
+      // 1. Etapa MVP: Mercado Pago - CAPTURA DE FONDOS
+      console.log(`[Escrow] Sala llena. Iniciando CAPTURA de fondos en Mercado Pago para ${allMembers.length} usuarios.`)
+      // En entorno real, llamamos a capturePayment por cada miembro:
+      // import { capturePayment } from "@/lib/mercadopago.server"
+      // for (const member of allMembers) {
+      //   await capturePayment(`pay_intent_${member.seatIndex}`, member.amount)
+      // }
+      console.log(`[Escrow] Fondos capturados correctamente ($${lobby.fullPrice}). Dinero en cuenta de CoStack.`)
+
+      // 2. Ejecutar Automatización (Headless Browser) usando la Tarjeta Virtual de MP
+      // En entorno real, importamos runPurchaseBot de lib/headless.server.ts
+      console.log(`[Bot] Despachando background job a Browserless...`)
+      
+      let generatedToken = ""
+      const delay = (ms: number) => new Promise(res => setTimeout(res, ms))
+      await delay(1500) // Simular latencia del bot en la nube
+      
+      if (lobby.accessMethod === "INVITATION_LINK") {
+        generatedToken = `https://${lobby.provider.toLowerCase()}.com/invite/${Math.random().toString(36).substring(2, 10)}`
+        console.log(`[Bot] Link de invitación obtenido: ${generatedToken}`)
+      } else {
+        generatedToken = `sk_live_lobby_${Math.random().toString(36).substring(2, 15)}`
+        console.log(`[Bot] API Key obtenida: ${generatedToken}`)
+      }
+
       await prisma.lobby.update({
         where: { id },
         data: {
           status: "completed",
           completedAt: now,
-          accessToken: mockToken,
+          accessToken: generatedToken,
         },
       })
 
