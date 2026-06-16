@@ -7,14 +7,14 @@ import { PaymentFailureModal } from "@/components/dashboard/payment-failure-moda
 import { PaymentRetryBanner } from "@/components/dashboard/payment-retry-banner"
 
 interface BilleteraPageClientProps {
-  isOverdue: boolean
+  isFailed: boolean
   isOrganizer: boolean
 }
 
-export function BilleteraPageClient({ isOverdue, isOrganizer }: BilleteraPageClientProps) {
-  const [failureOpen, setFailureOpen] = useState(isOverdue)
+export function BilleteraPageClient({ isFailed, isOrganizer }: BilleteraPageClientProps) {
+  const [failureOpen, setFailureOpen] = useState(isFailed)
 
-  if (isOverdue) {
+  if (isFailed) {
     return (
       <div className="space-y-6">
         <PaymentRetryBanner

@@ -10,7 +10,7 @@ function createStripeClient() {
   }
 
   return new Stripe(secretKey, {
-    apiVersion: '2025-07-30.basil',
+    apiVersion: '2026-04-22.dahlia',
   })
 }
 

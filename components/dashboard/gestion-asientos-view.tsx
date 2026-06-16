@@ -14,11 +14,32 @@ interface GestionAsientosViewProps {
 }
 
 export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
-  const [automatchEnabled, setAutomatchEnabled] = useState(true)
-  const isOrganizer = true
   const groups = snapshot.activeGroups ?? []
+  const initialAutomatch = groups[0]?.automatchEnabled ?? true
+  const [automatchEnabled, setAutomatchEnabled] = useState(initialAutomatch)
+  const [isToggling, setIsToggling] = useState(false)
+  const isOrganizer = true
   const seats = groups.flatMap(g => g.seats ?? [])
   const payments = groups.flatMap(g => g.payments ?? [])
+
+  const handleAutomatchToggle = async () => {
+    if (!groups[0]?.id || isToggling) return
+    const newState = !automatchEnabled
+    setAutomatchEnabled(newState)
+    setIsToggling(true)
+    try {
+      const res = await fetch(`/api/groups/${groups[0].id}/automatch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ automatchEnabled: newState })
+      })
+      if (!res.ok) throw new Error('Failed to toggle')
+    } catch (e) {
+      setAutomatchEnabled(!newState) // Revert
+    } finally {
+      setIsToggling(false)
+    }
+  }
 
   // Agrupar asientos por herramienta
   const groupedSeats = seats.reduce((acc, seat) => {
@@ -35,7 +56,7 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
     }
     
     // Buscar pago asociado
-    const payment = payments.find(p => p.toolId === seat.toolId && p.userId === seat.assigneeId)
+    const payment = payments.find(p => p.tool.id === seat.tool.id && p.user.id === seat.assigneeId)
     
     acc[key].seats.push({
       name: seat.status === 'free' ? 'Asiento Libre' : (payment?.user?.name || payment?.user?.email || 'Usuario asignado'),
@@ -109,7 +130,7 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
                         </button>
                       </ConfigCredentialsModal>
                       
-                      <CancelLicenseModal toolName={tool.name}>
+                      <CancelLicenseModal toolName={tool.name} groupId={groups[0]?.id}>
                         <button className="flex items-center justify-center w-full sm:w-auto px-4 py-2.5 rounded-xl text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors">
                           <span className="mr-2">✕</span> Cancelar Licencia
                         </button>
@@ -130,7 +151,8 @@ export function GestionAsientosView({ snapshot }: GestionAsientosViewProps) {
                 Llenado Automático
               </h3>
               <button 
-                onClick={() => setAutomatchEnabled(!automatchEnabled)}
+                onClick={handleAutomatchToggle}
+                disabled={isToggling}
                 className={cn(
                   "relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-zinc-950",
                   automatchEnabled ? "bg-cyan-500" : "bg-zinc-700"

@@ -9,8 +9,11 @@ export default async function BilleteraPage({
   searchParams?: { status?: string }
 }) {
   const session = await getServerSession(authOptions)
-  const user = session?.user?.email ? await prisma.user.findUnique({ where: { email: session.user.email } }) : null
-  const isOrganizer = user?.role === 'organizer'
+  const user = session?.user?.email ? await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: { memberships: true }
+  }) : null
+  const isOrganizer = user?.memberships.some(m => m.role === 'organizer') ?? false
 
-  return <BilleteraPageClient isOverdue={searchParams?.status === 'overdue'} isOrganizer={isOrganizer} />
+  return <BilleteraPageClient isFailed={searchParams?.status === 'failed'} isOrganizer={isOrganizer} />
 }

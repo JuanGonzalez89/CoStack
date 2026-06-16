@@ -14,8 +14,11 @@ export default async function CheckoutPage({ params }: PageProps) {
   
   const session = await getServerSession(authOptions)
   const user = session?.user?.email 
-    ? await prisma.user.findUnique({ where: { email: session.user.email } })
+    ? await prisma.user.findUnique({
+        where: { email: session.user.email },
+        include: { memberships: true }
+      })
     : null
 
-  return <CheckoutView toolSlug={toolSlug} isOrganizer={user?.role === 'organizer'} />
+  return <CheckoutView toolSlug={toolSlug} isOrganizer={user?.memberships.some(m => m.role === 'organizer') ?? false} />
 }

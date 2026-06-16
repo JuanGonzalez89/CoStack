@@ -6,16 +6,22 @@ import { Button } from "@/components/ui/button"
 import { AlertTriangle, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
-export function CancelLicenseModal({ toolName, children }: { toolName: string, children: React.ReactNode }) {
+export function CancelLicenseModal({ toolName, groupId, children }: { toolName: string, groupId: string, children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   
   const handleCancel = async () => {
     setIsProcessing(true)
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setIsProcessing(false)
-    setIsOpen(false)
-    toast.success(`La licencia de ${toolName} se cancelará al finalizar el ciclo actual.`)
+    try {
+      const res = await fetch(`/api/groups/${groupId}/cancel`, { method: 'POST' })
+      if (!res.ok) throw new Error('Failed to cancel')
+      toast.success(`La licencia de ${toolName} se cancelará al finalizar el ciclo actual.`)
+      setIsOpen(false)
+    } catch (e) {
+      toast.error('Ocurrió un error al cancelar la licencia.')
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   return (

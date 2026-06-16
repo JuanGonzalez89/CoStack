@@ -8,8 +8,7 @@ import { cn } from "@/lib/utils"
 import { ReportIssueButton } from "./report-issue-button"
 
 const stateStyles = {
-  current: "bg-emerald-400/10 text-emerald-200 border-emerald-400/20",
-  overdue: "bg-amber-400/10 text-amber-100 border-amber-400/20",
+  current: "bg-emerald-400/10 text-emerald-100 border-emerald-400/20",
   blocked: "bg-red-400/10 text-red-100 border-red-400/20",
 }
 
@@ -75,7 +74,7 @@ export function SuccessAccessCard({ seatId, accessState, groupName, accessToken,
               </div>
               <div className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-wider", stateStyles[accessState])}>
                 <ShieldCheck size={14} />
-                {accessState === "current" ? "Al día" : accessState === "overdue" ? "En gracia" : "Bloqueado"}
+                {accessState === "current" ? "Al día" : "Bloqueado"}
               </div>
             </div>
             

@@ -5,6 +5,9 @@ import { redirect } from 'next/navigation'
 import { SummaryCards } from '@/components/dashboard/summary-cards'
 import { ToolCards } from '@/components/dashboard/tool-cards'
 import { OnboardingPrompt } from '@/components/dashboard/onboarding-prompt'
+import { PaymentTraffic } from '@/components/dashboard/payment-traffic'
+import { SeatAccessCard } from '@/components/dashboard/seat-access-card'
+import { SuccessAccessCard } from '@/components/dashboard/success-access-card'
 import type { ToolCardData } from '@/features/dashboard/contracts'
 import { getDashboardSnapshot } from '@/lib/dashboard-snapshot.server'
 import { authOptions } from '@/lib/auth'
@@ -23,8 +26,11 @@ export default async function OverviewPage() {
     }
   }
 
-  const user = await prisma.user.findUnique({ where: { email: session?.user?.email ?? '' } })
-  const isOrganizer = user?.role === 'organizer'
+  const user = await prisma.user.findUnique({
+    where: { email: session?.user?.email ?? '' },
+    include: { memberships: true }
+  })
+  const isOrganizer = user?.memberships.some(m => m.role === 'organizer') ?? false
 
   const snapshot = await getDashboardSnapshot(session?.user?.email)
   const tools = buildToolCards(snapshot)
@@ -60,7 +66,7 @@ export default async function OverviewPage() {
         </div>
       </header>
 
-      {isOrganizer && (
+      {isOrganizer && hasTools && (
         <section className="space-y-4">
           <div className="flex items-end justify-between gap-3">
             <div>
@@ -73,41 +79,50 @@ export default async function OverviewPage() {
       )}
 
       {hasTools ? (
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.5fr)]">
-          <div className="space-y-6">
-            <ToolCards tools={tools} isOrganizer={isOrganizer} />
-            {isOrganizer && <PaymentTraffic />}
-          </div>
+        isOrganizer ? (
+          <section className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.5fr)]">
+            <div className="space-y-6">
+              <ToolCards tools={tools} isOrganizer={isOrganizer} />
+              <PaymentTraffic />
+            </div>
 
-          <div className="space-y-6">
-            {snapshot.activeGroups?.map((group) => {
-              if (isOrganizer) {
-                return (
-                  <SeatAccessCard 
-                    key={group.id}
-                    accessState="current" 
-                    groupName={group.name} 
-                    accessToken={group.inviteCode ?? 'COSTACK-84A2'} 
-                  />
-                )
-              } else {
-                const mySeat = group.seats.find(s => s.assigneeId === user?.id)
-                return (
-                  <SuccessAccessCard 
-                    key={group.id}
-                    seatId={mySeat?.id}
-                    accessState="current" 
-                    groupName={group.name} 
-                    accessToken={mySeat?.accessToken ?? 'COSTACK-84A2-2B22'}
-                    isBusiness={mySeat?.tool?.slug === 'figma'} // Temporal fallback
-                  />
-                )
-              }
-            })}
-          </div>
-        </section>
+            <div className="space-y-6">
+              {snapshot.activeGroups?.map((group) => (
+                <SeatAccessCard 
+                  key={group.id}
+                  accessState="current" 
+                  groupName={group.name} 
+                  accessToken={group.inviteCode ?? 'COSTACK-84A2'} 
+                />
+              ))}
+            </div>
+          </section>
+        ) : (
+          <section className="space-y-8">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-white mb-6">Tus Credenciales Activas</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {snapshot.activeGroups?.map((group) => {
+                  const mySeat = group.seats.find(s => s.assigneeId === user?.id)
+                  if (!mySeat) return null
+                  
+                  return (
+                    <SuccessAccessCard 
+                      key={group.id}
+                      seatId={mySeat.id}
+                      accessState="current" 
+                      groupName={group.name} 
+                      accessToken={mySeat.accessToken ?? 'COSTACK-84A2-2B22'}
+                      isBusiness={mySeat.tool?.slug === 'figma'}
+                    />
+                  )
+                })}
+              </div>
+            </div>
+          </section>
+        )
       ) : (
-        <OnboardingPrompt isOrganizer={isOrganizer} />
+        <OnboardingPrompt />
       )}
     </div>
   )

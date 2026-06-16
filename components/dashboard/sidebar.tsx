@@ -19,19 +19,21 @@ import { ROUTES } from "@/lib/constants/routes"
 
 export type NavTab = "Dashboard" | "Suscripciones" | "Gestión de cupos" | "Comunidad Freelance" | "Billetera"
 
-const navItems: { label: NavTab; href: string; icon: React.ElementType; badge?: string; adminOnly?: boolean; dot?: boolean }[] = [
+const navItems: { label: NavTab; href: string; icon: React.ElementType; badge?: string; adminOnly?: boolean; dot?: boolean; requiresGroups?: boolean }[] = [
   { label: "Dashboard", href: ROUTES.overview, icon: LayoutDashboard },
   { label: "Suscripciones", href: ROUTES.suscripciones, icon: CreditCard },
   { label: "Gestión de cupos", href: ROUTES.asientos, icon: Armchair, badge: "8/10", adminOnly: true },
-  { label: "Comunidad Freelance", href: ROUTES.comunidad, icon: Users },
+  { label: "Comunidad Freelance", href: ROUTES.comunidad, icon: Users, requiresGroups: true },
   { label: "Billetera", href: ROUTES.billetera, icon: Wallet },
 ]
 
-export function Sidebar({ 
+export function Sidebar({
   isOrganizer = false,
-  user 
-}: { 
+  hasGroups = false,
+  user
+}: {
   isOrganizer?: boolean
+  hasGroups?: boolean
   user?: { name: string; email: string }
 }) {
   const pathname = usePathname()
@@ -59,55 +61,49 @@ export function Sidebar({
         <p className="px-3 mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
           Principal
         </p>
-        {navItems.filter(item => !item.adminOnly || isOrganizer).map((item) => {
-          const isActive = pathname === item.href || (pathname?.startsWith(`${item.href}/`) ?? false)
-          return (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
-                isActive
-                  ? "bg-cyan-500/10 text-cyan-400"
-                  : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
-              )}
-            >
-              <item.icon
+        {navItems
+          .filter(item => (!item.adminOnly || isOrganizer) && (!item.requiresGroups || hasGroups))
+          .map((item) => {
+            const isActive = pathname === item.href || (pathname?.startsWith(`${item.href}/`) ?? false)
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
                 className={cn(
-                  "shrink-0 transition-colors",
-                  isActive ? "text-cyan-400" : "text-slate-500 group-hover:text-slate-300"
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
+                  isActive
+                    ? "bg-cyan-500/10 text-cyan-400"
+                    : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
                 )}
-                size={18}
-              />
-              <span className="flex-1 text-left">{item.label}</span>
+              >
+                <item.icon
+                  className={cn(
+                    "shrink-0 transition-colors",
+                    isActive ? "text-cyan-400" : "text-slate-500 group-hover:text-slate-300"
+                  )}
+                  size={18}
+                />
+                <span className="flex-1 text-left">{item.label}</span>
 
-              {item.badge && (
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-400 leading-none">
-                  {item.badge}
-                </span>
-              )}
-              {item.dot && !isActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              )}
-              {isActive && <ChevronRight size={14} className="text-cyan-500/60" />}
-            </Link>
-          )
-        })}
+                {item.badge && (
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-400 leading-none">
+                    {item.badge}
+                  </span>
+                )}
+                {item.dot && !isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                )}
+                {isActive && <ChevronRight size={14} className="text-cyan-500/60" />}
+              </Link>
+            )
+          })}
 
-        <div className="pt-4">
-          <p className="px-3 mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
-            Configuración
-          </p>
-          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all">
-            <Settings size={18} className="text-slate-500" />
-            <span>Ajustes</span>
-          </button>
-        </div>
+
       </nav>
 
       {/* User profile */}
       <div className="px-3 pb-5 border-t border-white/5 pt-4">
-        <div 
+        <div
           onClick={() => signOut({ callbackUrl: '/login' })}
           className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/5 transition-all cursor-pointer group"
           title="Cerrar sesión"

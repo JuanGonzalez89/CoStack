@@ -13,18 +13,24 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     redirect('/login')
   }
 
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-  const isOrganizer = user?.role === 'organizer'
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: { memberships: true }
+  })
+  const isOrganizer = user?.memberships.some(m => m.role === 'organizer') ?? false
+  const hasGroups = (user?.memberships?.length ?? 0) > 0
 
   return (
     <div className="min-h-screen bg-zinc-950 text-slate-100 lg:flex">
       <Sidebar 
         isOrganizer={isOrganizer} 
+        hasGroups={hasGroups}
         user={{ name: user?.name || session.user.name || '', email: session.user.email }} 
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileNav 
           isOrganizer={isOrganizer}
+          hasGroups={hasGroups}
           user={{ name: user?.name || session.user.name || '', email: session.user.email }}
         />
         <main className="min-w-0 flex-1 bg-zinc-950 lg:pt-0">

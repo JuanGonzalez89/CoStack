@@ -6,8 +6,11 @@ import { prisma } from '@/lib/prisma'
 export default async function SuscripcionesPage() {
   const session = await getServerSession(authOptions)
   const user = session?.user?.email 
-    ? await prisma.user.findUnique({ where: { email: session.user.email } })
+    ? await prisma.user.findUnique({
+        where: { email: session.user.email },
+        include: { memberships: true }
+      })
     : null
     
-  return <SuscripcionesView isOrganizer={user?.role === 'organizer'} />
+  return <SuscripcionesView isOrganizer={user?.memberships.some(m => m.role === 'organizer') ?? false} />
 }

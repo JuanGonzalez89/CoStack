@@ -1,6 +1,6 @@
-export type AccessState = 'current' | 'overdue' | 'blocked'
+export type AccessState = 'current' | 'blocked'
 
-export type PaymentStatus = 'paid' | 'pending' | 'overdue'
+export type PaymentStatus = 'paid' | 'pending' | 'failed'
 
 export type SeatStatus = PaymentStatus | 'free' | 'assigned'
 
@@ -17,23 +17,24 @@ export type CommunityFilter = 'all' | 'mine' | 'saved'
 export interface DashboardMemberSnapshot {
   role: string
   status: string
-  user: { name: string | null; email: string }
+  user: { id: string; name: string | null; email: string }
 }
 
 export interface DashboardSeatSnapshot {
   id: string
   status: SeatStatus
+  assigneeId?: string | null
   accessToken: string | null
-  tool: { slug: string; name: string; provider: string; monthlyCost: number }
+  tool: { id: string; slug: string; name: string; provider: string; monthlyCost: number; marketPrice?: number | null }
 }
 
 export interface DashboardPaymentSnapshot {
   id: string
   amount: string | number
   status: PaymentStatus
-  createdAt: string
-  user: { name: string | null; email: string }
-  tool: { slug: string; name: string; provider: string; monthlyCost: number }
+  createdAt: Date | string
+  user: { id: string; name: string | null; email: string }
+  tool: { id: string; slug: string; name: string; provider: string; monthlyCost: number }
   providerRef: string | null
 }
 
@@ -42,20 +43,22 @@ export interface DashboardPostSnapshot {
   content: string
   likes: number
   reposts: number
-  createdAt: string
-  user: { name: string | null; email: string }
+  createdAt: Date | string
+  user: { id: string; name: string | null; email: string }
 }
 
 export interface DashboardBotEventSnapshot {
   id: string
   type: string
   message: string
-  createdAt: string
+  createdAt: Date | string
 }
 
 export interface DashboardGroupSnapshot {
+  id: string
   name: string
   inviteCode: string
+  automatchEnabled?: boolean
   members: DashboardMemberSnapshot[]
   seats: DashboardSeatSnapshot[]
   payments: DashboardPaymentSnapshot[]
@@ -73,6 +76,7 @@ export interface DashboardSnapshot {
     botEvents: number
   }
   latestGroup: DashboardGroupSnapshot | null
+  activeGroups?: DashboardGroupSnapshot[]
 }
 
 export interface ToolCardData {

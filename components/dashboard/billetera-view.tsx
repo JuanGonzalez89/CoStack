@@ -19,7 +19,7 @@ export function BilleteraView({ isOrganizer }: { isOrganizer?: boolean }) {
   const balance = 0.00
   const nextCharge = payments.filter((payment) => payment.status !== "paid").reduce((acc, payment) => acc + Number(payment.amount), 0)
 
-  const hasOverdue = payments.some(p => p.status === "overdue")
+  // Removed overdue logic
 
   const processedPayments = payments.map(payment => {
     // Si el organizador está viendo esto y el pago NO es de él mismo, es un INGRESO (miembro pagó cuota)
@@ -39,7 +39,7 @@ export function BilleteraView({ isOrganizer }: { isOrganizer?: boolean }) {
 
   return (
     <div className="space-y-6">
-      {hasOverdue && <PaymentRetryBanner href="/suscripciones" />}
+      {/* Removed PaymentRetryBanner */}
 
       <BillingHeaderCards 
         isOrganizer={isOrganizer}

@@ -13,11 +13,29 @@ export function WithdrawFundsModal({ balance, children }: { balance: number, chi
 
   const handleWithdraw = async () => {
     setIsProcessing(true)
-    // Simulamos la llamada a una API
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setIsProcessing(false)
-    setIsOpen(false)
-    toast.success(`Retiro de $${balance.toFixed(2)} iniciado con éxito a ${method === "mp" ? "MercadoPago" : "Crypto Wallet"}.`)
+    try {
+      const res = await fetch('/api/payments/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: balance,
+          provider: method,
+          providerRef: method === 'mp' ? 'mercadopago_alias_here' : 'crypto_wallet_here'
+        })
+      })
+      
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Error al procesar el retiro')
+      }
+
+      toast.success(`Retiro de $${balance.toFixed(2)} iniciado con éxito a ${method === "mp" ? "MercadoPago" : "Crypto Wallet"}.`)
+      setIsOpen(false)
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   return (

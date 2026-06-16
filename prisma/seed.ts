@@ -31,13 +31,11 @@ async function main() {
     where: { email: 'martin@costack.app' },
     update: {
       name: 'Martín Pérez',
-      role: UserRole.organizer,
     },
     create: {
       name: 'Martín Pérez',
       email: 'martin@costack.app',
       passwordHash,
-      role: UserRole.organizer,
     },
   })
 
@@ -45,13 +43,11 @@ async function main() {
     where: { email: 'santiago@costack.app' },
     update: {
       name: 'Santiago Gómez',
-      role: UserRole.member,
     },
     create: {
       name: 'Santiago Gómez',
       email: 'santiago@costack.app',
       passwordHash,
-      role: UserRole.member,
     },
   })
 

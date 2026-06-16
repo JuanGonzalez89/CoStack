@@ -121,6 +121,23 @@ export async function POST(request: Request) {
       }
     })
 
+    // 3. Ensure Membership exists
+    await prisma.membership.upsert({
+      where: {
+        userId_groupId: {
+          userId,
+          groupId: pendingSeat.groupId
+        }
+      },
+      update: { status: 'paid' },
+      create: {
+        userId,
+        groupId: pendingSeat.groupId,
+        role: 'member',
+        status: 'paid'
+      }
+    })
+
     // Simulate gateway latency
     await new Promise((resolve) => setTimeout(resolve, 1500))
 

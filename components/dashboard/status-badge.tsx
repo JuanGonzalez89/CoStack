@@ -7,9 +7,9 @@ export type StatusTone = 'success' | 'warning' | 'danger' | 'neutral'
 const statusToTone: Record<StatusBadgeStatus, StatusTone> = {
   paid: 'success',
   pending: 'warning',
-  overdue: 'danger',
   idle: 'neutral',
   blocked: 'danger',
+  failed: 'danger',
   assigned: 'success',
   free: 'neutral',
 }
@@ -17,9 +17,9 @@ const statusToTone: Record<StatusBadgeStatus, StatusTone> = {
 const statusLabels: Record<StatusBadgeStatus, string> = {
   paid: 'Pagado',
   pending: 'Pendiente',
-  overdue: 'Vencido',
   idle: 'Sin actividad',
   blocked: 'Bloqueado',
+  failed: 'Fallido',
   assigned: 'Asignado',
   free: 'Libre',
 }

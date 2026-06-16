@@ -50,7 +50,6 @@ export function SummaryCards({ snapshot, isOrganizer = true }: { snapshot: Dashb
   
   const paidAmount = payments.reduce((acc, payment) => acc + Number(payment.amount), 0)
   const occupiedSeats = seats.filter((seat) => seat.status !== 'free').length
-  const overduePayments = payments.filter((payment) => payment.status === 'overdue').length
   const activeTools = Array.from(new Set(seats.map((seat) => `${seat.tool.name}::${seat.tool.provider}`))).length
 
   // B2C Metrics
@@ -110,11 +109,11 @@ export function SummaryCards({ snapshot, isOrganizer = true }: { snapshot: Dashb
       color: 'emerald',
     },
     {
-      title: 'Pagos en mora',
-      value: `${overduePayments}`,
-      sub: overduePayments > 0 ? 'Requieren atención' : 'Al día',
-      icon: CalendarClock,
-      color: overduePayments > 0 ? 'amber' : 'cyan',
+      title: 'Herramientas',
+      value: `${activeTools}`,
+      sub: 'En catálogo',
+      icon: Layers,
+      color: 'amber',
     },
   ]
 
@@ -132,11 +131,7 @@ export function SummaryCards({ snapshot, isOrganizer = true }: { snapshot: Dashb
             <div className="flex items-center gap-3 mb-3">
               <card.icon className={`h-5 w-5 ${colors.icon}`} />
               <p className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">{card.title}</p>
-              {card.title === 'Pagos en mora' && overduePayments > 0 && (
-                <span className="ml-auto rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-400">
-                  Riesgo
-                </span>
-              )}
+              {/* Removed overdue pill */}
             </div>
             <div className="flex items-baseline gap-2">
               <p className={`text-5xl font-bold tracking-tight ${colors.value}`}>{card.value}</p>

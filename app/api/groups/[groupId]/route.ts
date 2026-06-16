@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(_: Request, { params }: { params: { groupId: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ groupId: string }> }) {
+  const { groupId } = await params
   const group = await prisma.group.findUnique({
-    where: { id: params.groupId },
+    where: { id: groupId },
     include: {
       members: {
         include: { user: true },

@@ -27,6 +27,7 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
   const router = useRouter()
   const [timeLeft, setTimeLeft] = useState(600) // 10 minutos en segundos
   const [isProcessing, setIsProcessing] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
 
   const tool = CATALOG_TOOLS.find(t => t.id === toolSlug) || CATALOG_TOOLS[0]
   
@@ -82,11 +83,7 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
         return
       }
 
-      toast.success("¡Pago confirmado! Preparando tu acceso...")
-      // Redirigir al dashboard/billetera (Etapa 4)
-      setTimeout(() => {
-        router.push('/overview') // o /billetera dependiendo de donde estemos
-      }, 1500)
+      setShowSuccess(true)
     } catch (error: any) {
       const msg = error?.message || "Hubo un problema procesando tu pago."
       toast.error(msg)
@@ -111,7 +108,7 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
 
         {/* Columna Izquierda - Detalles y Reglas */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="p-6 rounded-2xl border border-border bg-card">
+          <div className="p-6 rounded-2xl border border-white/10 bg-white/[0.02]">
             {isOrganizer ? (
               <>
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
@@ -186,7 +183,7 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
 
         {/* Columna Derecha - Resumen de Compra */}
         <div className="space-y-6">
-          <div className="p-6 rounded-2xl border border-border bg-card shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10 hover:-translate-y-1 hover:border-cyan-500/30">
+          <div className="p-6 rounded-2xl border border-white/10 bg-white/[0.02] shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10 hover:-translate-y-1 hover:border-cyan-500/30">
             {/* Banner de Urgencia */}
             <div className="absolute top-0 left-0 right-0 bg-rose-500/10 border-b border-rose-500/20 py-2.5 px-4 flex justify-between items-center">
               <span className="text-xs font-bold text-rose-500 uppercase tracking-wide flex items-center gap-1.5">
@@ -249,6 +246,26 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
           </div>
         </div>
       </div>
+
+      {showSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-300">
+          <div className="max-w-md w-full bg-zinc-950 border border-white/10 rounded-3xl p-8 flex flex-col items-center text-center shadow-2xl">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mb-6">
+              <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+            </div>
+            <h3 className="text-2xl font-bold text-white tracking-tight mb-2">¡Reserva Exitosa!</h3>
+            <p className="text-zinc-400 mb-8">
+              Tu pago fue confirmado y hemos asegurado tu lugar. Ya puedes acceder a las credenciales desde tu panel.
+            </p>
+            <Button
+              onClick={() => router.push('/overview')}
+              className="w-full h-12 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-base shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all"
+            >
+              Acceder a mis Suscripciones
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

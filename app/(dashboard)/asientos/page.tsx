@@ -9,8 +9,12 @@ export default async function AsientosPage() {
   const session = await getServerSession(authOptions)
   if (!session?.user?.email) redirect('/login')
 
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-  if (user?.role !== 'organizer') {
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: { memberships: true }
+  })
+  const isOrganizer = user?.memberships.some(m => m.role === 'organizer')
+  if (!isOrganizer) {
     redirect('/overview')
   }
 

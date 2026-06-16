@@ -9,19 +9,21 @@ import { ROUTES } from "@/lib/constants/routes"
 import { cn } from "@/lib/utils"
 import type { NavTab } from "./sidebar"
 
-const navItems: { label: NavTab; shortLabel: string; href: string; icon: React.ElementType; adminOnly?: boolean }[] = [
+const navItems: { label: NavTab; shortLabel: string; href: string; icon: React.ElementType; adminOnly?: boolean; requiresGroups?: boolean }[] = [
   { label: "Dashboard", shortLabel: "Inicio", href: ROUTES.overview, icon: LayoutDashboard },
   { label: "Suscripciones", shortLabel: "Catálogo", href: ROUTES.suscripciones, icon: CreditCard },
   { label: "Gestión de cupos", shortLabel: "Cupos", href: ROUTES.asientos, icon: Armchair, adminOnly: true },
-  { label: "Comunidad Freelance", shortLabel: "Comunidad", href: ROUTES.comunidad, icon: Users },
+  { label: "Comunidad Freelance", shortLabel: "Comunidad", href: ROUTES.comunidad, icon: Users, requiresGroups: true },
   { label: "Billetera", shortLabel: "Billetera", href: ROUTES.billetera, icon: Wallet },
 ]
 
 export function MobileNav({ 
   isOrganizer = false,
+  hasGroups = false,
   user
 }: { 
   isOrganizer?: boolean
+  hasGroups?: boolean
   user?: { name: string; email: string }
 }) {
   const pathname = usePathname()
@@ -62,7 +64,9 @@ export function MobileNav({
       </header>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-white/10 bg-[#0f172a] px-2 py-2 lg:hidden">
-        {navItems.filter(item => !item.adminOnly || isOrganizer).map((item) => {
+        {navItems
+          .filter(item => (!item.adminOnly || isOrganizer) && (!item.requiresGroups || hasGroups))
+          .map((item) => {
           const isActive = pathname === item.href || (pathname?.startsWith(`${item.href}/`) ?? false)
 
           return (

@@ -6,10 +6,18 @@ import { authOptions } from "@/lib/auth"
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session || !session.user?.id) {
+    if (!session || !session.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-    const userId = session.user.id
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    })
+    
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+    const userId = user.id
 
     const { toolSlug } = await request.json()
     if (!toolSlug) {
@@ -68,7 +76,6 @@ export async function POST(request: Request) {
         const mockGroup = await tx.group.create({
           data: {
             name: `${tool.name} (Automatch)`,
-            toolId: tool.id,
             inviteCode: `DEMO-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
             automatchEnabled: true,
             status: 'active',

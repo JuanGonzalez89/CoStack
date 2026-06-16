@@ -17,7 +17,7 @@ async function main() {
     process.exit(1)
   }
 
-  const stripe = new Stripe(stripeKey, { apiVersion: '2025-07-30.basil' })
+  const stripe = new Stripe(stripeKey, { apiVersion: '2026-04-22.dahlia' })
 
   const session = {
     id: `cs_test_${Math.random().toString(36).substring(2, 12)}`,

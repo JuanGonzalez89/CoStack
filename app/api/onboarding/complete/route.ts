@@ -44,10 +44,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing group data' }, { status: 400 })
   }
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { role },
-  })
+  // El rol global ya no existe, sólo se guarda en Membership
 
   await prisma.membership.upsert({
     where: {

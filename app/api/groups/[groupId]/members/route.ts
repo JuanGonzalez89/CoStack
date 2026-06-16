@@ -7,7 +7,11 @@ const memberSchema = z.object({
   role: z.enum(['member', 'organizer']).default('member'),
 })
 
-export async function POST(request: Request, { params }: { params: { groupId: string } }) {
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ groupId: string }> }
+) {
+  const { groupId } = await params
   const body = await request.json().catch(() => null)
   const parsed = memberSchema.safeParse(body)
 
@@ -19,7 +23,7 @@ export async function POST(request: Request, { params }: { params: { groupId: st
     where: {
       userId_groupId: {
         userId: parsed.data.userId,
-        groupId: params.groupId,
+        groupId: groupId,
       },
     },
     update: {
@@ -27,7 +31,7 @@ export async function POST(request: Request, { params }: { params: { groupId: st
     },
     create: {
       userId: parsed.data.userId,
-      groupId: params.groupId,
+      groupId: groupId,
       role: parsed.data.role,
     },
   })
