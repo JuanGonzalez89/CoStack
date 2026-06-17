@@ -67,17 +67,18 @@ export async function POST(request: Request) {
       }
 
       if (!lobby) {
-        if (isOrg) {
-          const since = new Date(Date.now() - 24 * 60 * 60 * 1000)
-          const createdToday = await prisma.lobby.count({
-            where: { creatorId: userId, createdAt: { gte: since } },
-          })
-          if (createdToday >= 2) {
-            return NextResponse.json({
-              error: "Alcanzaste el límite de salas por hoy (máximo 2 cada 24hs).",
-            }, { status: 429 })
-          }
-        }
+        // Rate limit desactivado temporalmente para la presentación
+        // if (isOrg) {
+        //   const since = new Date(Date.now() - 24 * 60 * 60 * 1000)
+        //   const createdToday = await prisma.lobby.count({
+        //     where: { creatorId: userId, createdAt: { gte: since } },
+        //   })
+        //   if (createdToday >= 2) {
+        //     return NextResponse.json({
+        //       error: "Alcanzaste el límite de salas por hoy (máximo 2 cada 24hs).",
+        //     }, { status: 429 })
+        //   }
+        // }
 
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
         lobby = await prisma.lobby.create({
@@ -132,7 +133,7 @@ export async function POST(request: Request) {
           seatIndex: nextSeat,
           amount: catalogEntry.pricePerMonth,
           status: "paid",
-          paymentRef: paymentIntent.id,
+          paymentRef: String(paymentIntent.id),
         },
       })
 

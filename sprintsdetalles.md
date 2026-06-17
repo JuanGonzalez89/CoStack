@@ -204,8 +204,9 @@ Este sprint quedó planteado como segunda parte. Ya no busca redescubrir el prod
 - Sprint 6: se preparó la robustez técnica.
 - Sprint 7: se cerró la experiencia visible principal.
 - Sprint 8: quedó como la segunda parte para producción real y visual final.
+- Sprint 13: se cerró el provisioning automático de Canva (fix selector, sesión renovada) y se desactivó el rate limit de grupos para la presentación.
 
 ## Conclusión actual
 CoStack hoy ya no se está explicando como una app interna. Se está explicando como un producto que ayuda a una persona a descubrir una herramienta, comprar un cupo, ver el acceso y seguir usando la plataforma sin fricción.
 
-Lo más importante ya quedó resuelto en UX y narrativa. Lo que falta es endurecer la parte real de backend y completar el pulido visual final sin volver a meter jerga técnica donde el usuario sólo necesita entender qué hacer.
+Lo más importante ya quedó resuelto en UX y narrativa, y el provisioning automático de Canva ya funciona end-to-end. Lo que falta es endurecer la parte real de backend y completar el pulido visual final sin volver a meter jerga técnica donde el usuario sólo necesita entender qué hacer.

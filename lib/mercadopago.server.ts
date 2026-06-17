@@ -42,7 +42,7 @@ export async function authorizePayment(userId: string, amount: number, cardToken
 
     const data = await response.json()
     if (!response.ok) throw new Error(data.message)
-    return { id: data.id, status: data.status, amount }
+    return { id: String(data.id), status: data.status, amount }
   } catch (error) {
     console.error("[Mercado Pago] Error en autorización:", error)
     throw error
