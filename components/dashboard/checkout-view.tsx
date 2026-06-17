@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Clock, ShieldCheck, Zap, Users, CreditCard, Loader2 } from "lucide-react"
+import { Clock, ShieldCheck, Zap, Users, Lock, Loader2, CreditCard } from "lucide-react"
 import { toast } from "sonner"
 import { CATALOG } from "@/lib/catalog"
-import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react'
 
 interface CheckoutViewProps {
   toolSlug: string
@@ -18,18 +17,44 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
   const [timeLeft, setTimeLeft] = useState(600)
   const [isProcessing, setIsProcessing] = useState(false)
   const [accessMethod, setAccessMethod] = useState<'INVITATION_LINK' | 'API_PROXY'>('INVITATION_LINK')
+  const [mpReady, setMpReady] = useState(false)
+  const [mpInstance, setMpInstance] = useState<any>(null)
+
+  const [cardNumber, setCardNumber] = useState("")
+  const [cardExpiry, setCardExpiry] = useState("")
+  const [cardCvv, setCardCvv] = useState("")
+  const [cardName, setCardName] = useState("")
+  const [docType, setDocType] = useState("DNI")
+  const [docNumber, setDocNumber] = useState("")
 
   const tool = CATALOG.find(t => t.id === toolSlug) || CATALOG[0]
   const originalPrice = tool.originalPrice
   const memberPrice = tool.pricePerMonth
   const estimatedReturn = originalPrice - memberPrice
 
-  useEffect(() => {
-    // Inicializar Mercado Pago del lado del cliente
-    if (process.env.NEXT_PUBLIC_MP_PUBLIC_KEY) {
-      initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY, { locale: 'es-AR' })
-    }
+  const mpPublicKey = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_MP_PUBLIC_KEY : null
 
+  useEffect(() => {
+    if (!mpPublicKey) return
+
+    const script = document.createElement("script")
+    script.src = "https://sdk.mercadopago.com/js/v2"
+    script.async = true
+    script.onload = () => {
+      if (window.MercadoPago) {
+        const mp = new window.MercadoPago(mpPublicKey, { locale: "es-AR" })
+        setMpInstance(mp)
+        setMpReady(true)
+      }
+    }
+    document.body.appendChild(script)
+
+    return () => {
+      document.body.removeChild(script)
+    }
+  }, [mpPublicKey])
+
+  useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -51,35 +76,61 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
   }
 
+  const handleExpiry = (value: string) => {
+    const cleaned = value.replace(/\D/g, "")
+    if (cleaned.length >= 3) {
+      setCardExpiry(`${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}`)
+    } else {
+      setCardExpiry(cleaned)
+    }
+  }
+
+  const handleCardNumber = (value: string) => {
+    const cleaned = value.replace(/\D/g, "")
+    const groups = cleaned.match(/.{1,4}/g)
+    setCardNumber(groups ? groups.join(" ") : cleaned)
+  }
+
+  const tokenizeCard = useCallback(async (): Promise<string> => {
+    if (!mpInstance) throw new Error("Mercado Pago SDK no cargado")
+
+    const [month, year] = cardExpiry.split("/")
+
+    const cardToken = await mpInstance.createCardToken({
+      cardNumber: cardNumber.replace(/\s/g, ""),
+      cardExpirationMonth: month,
+      cardExpirationYear: year.length === 2 ? `20${year}` : year,
+      securityCode: cardCvv,
+      cardholderName: cardName,
+      identificationType: docType,
+      identificationNumber: docNumber,
+    })
+
+    return cardToken.id
+  }, [cardNumber, cardExpiry, cardCvv, cardName, docType, docNumber, mpInstance])
+
   const handlePayment = async () => {
+    if (!cardNumber || !cardExpiry || !cardCvv || !cardName || !docNumber) {
+      toast.error("Completá todos los campos de la tarjeta.")
+      return
+    }
+
     setIsProcessing(true)
     try {
+      const cardTokenId = await tokenizeCard()
+
       const res = await fetch('/api/checkout/pay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ toolSlug, accessMethod })
+        body: JSON.stringify({ toolSlug, accessMethod, cardToken: cardTokenId })
       })
 
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Error al procesar el pago")
 
-      if (!res.ok) throw new Error(data.error || "Error en el pago")
-
-      if (data.url) {
-        window.location.href = data.url
-        return
-      }
-
-      if (data.lobbyId) {
-        toast.success("Te uniste a la sala de espera.")
-        setTimeout(() => {
-          router.push(`/suscripciones/success?tool=${toolSlug}&lobbyId=${data.lobbyId}`)
-        }, 1500)
-        return
-      }
-
-      toast.success("Pago confirmado. Tu licencia está activa.")
+      toast.success("Te uniste a la sala de espera. Tu dinero está protegido.")
       setTimeout(() => {
-        router.push(`/suscripciones/success?tool=${toolSlug}`)
+        router.push(`/suscripciones/success?tool=${toolSlug}&lobbyId=${data.lobbyId}`)
       }, 1500)
     } catch (error: any) {
       const msg = error?.message || "Hubo un problema procesando tu pago."
@@ -89,7 +140,7 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-10">
+    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col gap-1.5">
         <h2 className="text-3xl font-bold text-white tracking-tight">
           {isOrganizer ? "Iniciar compra compartida" : "Finalizar compra"}
@@ -101,8 +152,9 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        {/* Left column — info + card form */}
+        <div className="lg:col-span-3 space-y-6">
           <div className="p-6 rounded-2xl border border-white/5 bg-white/[0.02]">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <Users className="w-5 h-5 text-cyan-400" />
@@ -150,7 +202,94 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
             </p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 flex items-start gap-3">
+          {/* Card form section — más espacio */}
+          <div className="p-8 rounded-2xl border border-white/10 bg-zinc-900/80">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                <CreditCard className="w-5 h-5 text-cyan-400" />
+              </div>
+              Datos de pago
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-zinc-300 mb-1.5 block font-medium">Número de tarjeta</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="1234 5678 9012 3456"
+                  value={cardNumber}
+                  onChange={(e) => handleCardNumber(e.target.value)}
+                  maxLength={19}
+                  className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-3.5 text-white text-base outline-none focus:border-cyan-500/50 transition-colors placeholder:text-zinc-600"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-zinc-300 mb-1.5 block font-medium">Vencimiento</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="MM/AA"
+                    value={cardExpiry}
+                    onChange={(e) => handleExpiry(e.target.value)}
+                    maxLength={5}
+                    className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-3.5 text-white text-base outline-none focus:border-cyan-500/50 transition-colors placeholder:text-zinc-600"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-zinc-300 mb-1.5 block font-medium">CVV</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="123"
+                    value={cardCvv}
+                    onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, ""))}
+                    maxLength={4}
+                    className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-3.5 text-white text-base outline-none focus:border-cyan-500/50 transition-colors placeholder:text-zinc-600"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm text-zinc-300 mb-1.5 block font-medium">Titular de la tarjeta</label>
+                <input
+                  type="text"
+                  placeholder="Como figura en la tarjeta"
+                  value={cardName}
+                  onChange={(e) => setCardName(e.target.value)}
+                  className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-3.5 text-white text-base outline-none focus:border-cyan-500/50 transition-colors placeholder:text-zinc-600"
+                />
+              </div>
+              <div className="grid grid-cols-[120px_1fr] gap-4">
+                <div>
+                  <label className="text-sm text-zinc-300 mb-1.5 block font-medium">Tipo</label>
+                  <select
+                    value={docType}
+                    onChange={(e) => setDocType(e.target.value)}
+                    className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-3.5 text-white text-base outline-none focus:border-cyan-500/50 transition-colors"
+                  >
+                    <option value="DNI">DNI</option>
+                    <option value="CI">CI</option>
+                    <option value="RUT">RUT</option>
+                    <option value="OTHER">Otro</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm text-zinc-300 mb-1.5 block font-medium">Número de documento</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="12345678"
+                    value={docNumber}
+                    onChange={(e) => setDocNumber(e.target.value.replace(/\D/g, ""))}
+                    className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-3.5 text-white text-base outline-none focus:border-cyan-500/50 transition-colors placeholder:text-zinc-600"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
             <p className="text-sm text-zinc-300">
               <strong className="text-white">Pago protegido.</strong> Si la sala no se completa en 24hs, recibís el reembolso automático del 100%.
@@ -158,7 +297,8 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
           </div>
         </div>
 
-        <div className="space-y-6">
+        {/* Right sidebar — timer, summary, pay button */}
+        <div className="lg:col-span-2 space-y-6">
           <div className="p-6 rounded-2xl border border-white/10 bg-zinc-900/80 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 bg-amber-500/5 border-b border-amber-500/10 py-2.5 px-4 flex justify-between items-center">
               <span className="text-xs font-bold text-amber-400 uppercase tracking-wide flex items-center gap-1.5">
@@ -190,52 +330,26 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
                 </div>
               </div>
 
-              {process.env.NEXT_PUBLIC_MP_PUBLIC_KEY ? (
-                <div className="mt-4 bg-white rounded-xl overflow-hidden">
-                  <CardPayment
-                    initialization={{ amount: memberPrice }}
-                    onSubmit={async (param) => {
-                      // param.token es el card_token generado por MP
-                      // se lo enviamos a nuestro backend para hacer la autorizacion
-                      await handlePayment()
-                    }}
-                    customization={{
-                      paymentMethods: {
-                        minInstallments: 1,
-                        maxInstallments: 1,
-                      },
-                      visual: {
-                        style: {
-                          theme: 'dark', // Si tienen un tema oscuro configurado
-                          customVariables: {
-                            textPrimaryColor: '#000000',
-                          }
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              ) : (
-                <Button
-                  onClick={handlePayment}
-                  disabled={isProcessing || timeLeft === 0}
-                  className="w-full rounded-xl h-12 text-sm font-bold transition-all duration-200 bg-cyan-500 hover:bg-cyan-400 text-black flex gap-2 items-center justify-center active:scale-[0.98]"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Procesando...
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="w-4 h-4" />
-                      Confirmar pago · ${memberPrice}
-                    </>
-                  )}
-                </Button>
-              )}
-              <p className="text-center text-xs text-zinc-500 mt-3">
-                Podés cancelar en cualquier momento.
+              <Button
+                onClick={handlePayment}
+                disabled={isProcessing || timeLeft === 0 || !mpReady}
+                className="w-full rounded-xl h-12 text-sm font-bold transition-all duration-200 bg-cyan-500 hover:bg-cyan-400 text-black flex gap-2 items-center justify-center active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Procesando pago...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    Pagar · ${memberPrice}
+                  </>
+                )}
+              </Button>
+              <p className="text-center text-xs text-zinc-500 flex items-center justify-center gap-1 mt-3">
+                <Lock className="w-3 h-3" />
+                Pago seguro procesado por Mercado Pago
               </p>
             </div>
           </div>

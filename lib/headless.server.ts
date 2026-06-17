@@ -1,7 +1,4 @@
-/**
- * Servicio de Automatización (Headless Browser Bot)
- * Simula la delegación de la compra automática a Browserless.io utilizando Playwright.
- */
+import { createTeamForLobby } from "@/lib/github-bot.server"
 
 interface BotTaskConfig {
   toolProvider: string
@@ -11,32 +8,22 @@ interface BotTaskConfig {
 }
 
 export async function runPurchaseBot(config: BotTaskConfig): Promise<string> {
-  console.log(`[Bot Playwright] Lanzando navegador Headless en la nube (Browserless.io)...`)
-  console.log(`[Bot Playwright] Tarea: Comprar suscripción en ${config.toolProvider} para el lobby ${config.lobbyId}`)
-  
-  // Simular los pasos del bot de automatización
-  await new Promise(resolve => setTimeout(resolve, 600))
-  console.log(`[Bot Playwright] Ingresando a la web de ${config.toolProvider}...`)
-  
-  await new Promise(resolve => setTimeout(resolve, 800))
-  console.log(`[Bot Playwright] Creando cuenta con el correo: ${config.corporateEmail}`)
-  
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  console.log(`[Bot Playwright] Inyectando Tarjeta Virtual de Mercado Pago y pagando...`)
-  
-  await new Promise(resolve => setTimeout(resolve, 500))
-  console.log(`[Bot Playwright] ¡Pago Exitoso! Extrayendo credenciales según formato solicitado...`)
+  console.log(`[Bot] Procesando lobby ${config.lobbyId} con método ${config.accessMethod}`)
 
-  // Generamos el entregable
-  let token = ""
   if (config.accessMethod === 'INVITATION_LINK') {
-    token = `https://${config.toolProvider.toLowerCase()}.com/invite/${Math.random().toString(36).substring(2, 10)}`
-    console.log(`[Bot Playwright] Link de invitación generado: ${token}`)
-  } else {
-    token = `sk_live_lobby_${Math.random().toString(36).substring(2, 15)}`
-    console.log(`[Bot Playwright] API Key generada: ${token}`)
+    const result = await createTeamForLobby(config.lobbyId, config.toolProvider)
+
+    if (!result.success || !result.inviteLink) {
+      throw new Error(`[Bot] Falló la creación del team: ${result.error}`)
+    }
+
+    console.log(`[Bot] Team creado exitosamente: ${result.inviteLink}`)
+    return result.inviteLink
   }
 
-  console.log(`[Bot Playwright] Cerrando instancia del navegador. Misión cumplida.`)
+  // API_PROXY — devuelve un token simulado (no hay SaaS real conectado aún)
+  console.log(`[Bot] Generando API Key simulada para ${config.toolProvider}`)
+  const token = `sk_live_lobby_${Math.random().toString(36).substring(2, 15)}`
+  console.log(`[Bot] API Key generada: ${token}`)
   return token
 }

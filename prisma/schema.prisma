@@ -107,15 +107,16 @@ model Lobby {
 }
 
 model LobbyMember {
-  id        String           @id @default(cuid())
-  lobbyId   String
-  userId    String
-  seatIndex Int
-  amount    Float
-  status    MemberLobbyStatus @default(paid)
-  createdAt DateTime         @default(now())
-  lobby     Lobby            @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String           @id @default(cuid())
+  lobbyId    String
+  userId     String
+  seatIndex  Int
+  amount     Float
+  status     MemberLobbyStatus @default(paid)
+  paymentRef String?
+  createdAt  DateTime         @default(now())
+  lobby      Lobby            @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
@@ -244,13 +245,12 @@ model VerificationToken {
 }
 
 model ToolSubscription {
-  id                      String   @id @default(cuid())
-  groupId                 String
-  toolId                  String
-  oauthTokenId            String?
-  sharedPasswordEncrypted String?
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  id           String   @id @default(cuid())
+  groupId      String
+  toolId       String
+  oauthTokenId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
   tool  Tool  @relation(fields: [toolId], references: [id], onDelete: Cascade)

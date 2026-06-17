@@ -5,14 +5,20 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { CATALOG } from "@/lib/catalog"
 import { ROUTES } from "@/lib/constants/routes"
-import { CheckCircle2, LayoutDashboard, CreditCard, Key, HelpCircle } from "lucide-react"
+import { CheckCircle2, LayoutDashboard, CreditCard, Key, HelpCircle, Loader2, XCircle } from "lucide-react"
+import { toast } from "sonner"
 
 export default function SuccessPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const toolSlug = searchParams.get("tool")
   const lobbyId = searchParams.get("lobbyId")
+  const paymentId = searchParams.get("payment_id")
+  const mpStatus = searchParams.get("status")
+  const pending = searchParams.get("pending")
   const [visible, setVisible] = useState(false)
+  const [confirming, setConfirming] = useState(!!(lobbyId && paymentId))
+  const [confirmError, setConfirmError] = useState<string | null>(null)
 
   const tool = toolSlug ? CATALOG.find((t) => t.id === toolSlug) : null
 
@@ -20,6 +26,100 @@ export default function SuccessPage() {
     const t = setTimeout(() => setVisible(true), 300)
     return () => clearTimeout(t)
   }, [])
+
+  useEffect(() => {
+    if (lobbyId && paymentId && mpStatus === "approved") {
+      const confirm = async () => {
+        try {
+          const res = await fetch("/api/checkout/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lobbyId, paymentId }),
+          })
+          const data = await res.json()
+          if (!res.ok) throw new Error(data.error || "Error al confirmar")
+          setConfirming(false)
+          toast.success("¡Pago confirmado! Te uniste a la sala.")
+        } catch (e: any) {
+          setConfirming(false)
+          setConfirmError(e.message)
+          toast.error(e.message)
+        }
+      }
+      confirm()
+    } else if (lobbyId && !paymentId) {
+      setConfirming(false)
+    }
+  }, [lobbyId, paymentId, mpStatus])
+
+  const isPending = mpStatus === "pending" || mpStatus === "in_process" || pending === "1"
+  const isRejected = mpStatus === "failure" || mpStatus === "rejected" || mpStatus === "null"
+
+  if (confirming) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-cyan-400 mx-auto mb-4" />
+          <p className="text-zinc-400">Confirmando tu pago...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (confirmError) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg text-center">
+          <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6">
+            <XCircle className="w-10 h-10 text-red-400" />
+          </div>
+          <h1 className="text-3xl font-extrabold text-white mb-3">Error al confirmar</h1>
+          <p className="text-zinc-400 mb-6">{confirmError}</p>
+          <Button onClick={() => router.push(ROUTES.suscripciones)} className="rounded-xl">
+            Volver a suscripciones
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (isPending) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg text-center">
+          <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-6">
+            <Loader2 className="w-10 h-10 text-amber-400 animate-spin" />
+          </div>
+          <h1 className="text-3xl font-extrabold text-white mb-3">Pago pendiente</h1>
+          <p className="text-zinc-400 mb-6">
+            Tu pago está siendo procesado. Te notificaremos cuando se confirme.
+          </p>
+          <Button onClick={() => router.push(ROUTES.overview)} className="rounded-xl">
+            Ir a mi Dashboard
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (isRejected) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg text-center">
+          <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6">
+            <XCircle className="w-10 h-10 text-red-400" />
+          </div>
+          <h1 className="text-3xl font-extrabold text-white mb-3">Pago rechazado</h1>
+          <p className="text-zinc-400 mb-6">
+            El pago no pudo completarse. Intentá de nuevo con otro medio.
+          </p>
+          <Button onClick={() => router.back()} className="rounded-xl">
+            Intentar de nuevo
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">

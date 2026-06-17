@@ -87,6 +87,7 @@ export interface ToolCardData {
   accent: ToolAccent
   iconLabel: string
   accessToken?: string | null
+  accessMethod?: 'INVITATION_LINK' | 'API_PROXY' | null
   category?: string
   providerUrl?: string
   lobbyId?: string

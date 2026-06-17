@@ -3,8 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { CATALOG } from "@/lib/catalog"
-
-const MOCK_PAYMENT = true
+import { authorizePayment } from "@/lib/mercadopago.server"
 
 export async function POST(request: Request) {
   try {
@@ -19,9 +18,12 @@ export async function POST(request: Request) {
     }
     const userId = user.id
 
-    const { toolSlug, accessMethod = "INVITATION_LINK" } = await request.json()
+    const { toolSlug, accessMethod = "INVITATION_LINK", cardToken } = await request.json()
     if (!toolSlug) {
       return NextResponse.json({ error: "Falta el identificador de la herramienta." }, { status: 400 })
+    }
+    if (!cardToken) {
+      return NextResponse.json({ error: "Falta el token de la tarjeta." }, { status: 400 })
     }
 
     const catalogEntry = CATALOG.find((t) => t.id === toolSlug)
@@ -118,11 +120,9 @@ export async function POST(request: Request) {
         nextSeat = Math.max(1, maxSeat._max.seatIndex || 1) + 1
       }
 
-      // Simulamos la lógica de Autorización de Mercado Pago (Congelamiento de Fondos)
-      // Importamos dinámica/conceptualmente de lib/mercadopago.server.ts
-      // const paymentIntent = await authorizePayment(userId, catalogEntry.pricePerMonth, "card_token_xyz")
+      // Autorización de Mercado Pago (Congelamiento/Fondos en Escrow)
       console.log(`[Mercado Pago] Solicitando AUTORIZACIÓN (Retención) por $${catalogEntry.pricePerMonth} USD para el usuario ${userId}`)
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      const paymentIntent = await authorizePayment(userId, catalogEntry.pricePerMonth, cardToken, user.email ?? undefined)
       
       // En la DB marcamos status como 'paid' (autorizado para nuestra lógica de lobby)
       await prisma.lobbyMember.create({
@@ -131,7 +131,8 @@ export async function POST(request: Request) {
           userId,
           seatIndex: nextSeat,
           amount: catalogEntry.pricePerMonth,
-          status: "paid", // Que para fines de Escrow significa 'fondos retenidos/autorizados'
+          status: "paid",
+          paymentRef: paymentIntent.id,
         },
       })
 

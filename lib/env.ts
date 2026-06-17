@@ -8,6 +8,10 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: z.string().min(10).optional(),
   STRIPE_WEBHOOK_SECRET: z.string().min(10).optional(),
   NEXTAUTH_SECRET: z.string().min(32).optional(),
+  MP_ACCESS_TOKEN: z.string().min(10).optional(),
+  NEXT_PUBLIC_MP_PUBLIC_KEY: z.string().min(10).optional(),
+  GITHUB_BOT_TOKEN: z.string().min(10).optional(),
+  GITHUB_ORG_NAME: z.string().min(1).optional(),
 })
 
 const parsedEnv = envSchema.safeParse(process.env)

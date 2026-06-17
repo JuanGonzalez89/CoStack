@@ -197,6 +197,7 @@ async function buildToolCards(snapshot: DashboardSnapshot, userId: string, userE
         accent: ['cyan', 'violet', 'orange'][grouped.size % 3] as ToolCardData['accent'],
         iconLabel: lobby.toolName.split(' ').slice(0, 2).map(p => p[0]?.toUpperCase() ?? '').join('').slice(0, 3),
         accessToken: lobby.accessToken,
+        accessMethod: lobby.accessMethod,
         providerUrl: catalogEntry?.providerUrl,
         lobbyId: lobby.status === 'waiting' ? lobby.id : undefined,
         lobbyFilled: lobby.status === 'waiting' ? memberCount : undefined,

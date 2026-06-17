@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { getMockState, clearMockState } from "@/lib/lobby-mock-store"
+import { capturePayment, cancelAuthorization } from "@/lib/mercadopago.server"
+import { runPurchaseBot } from "@/lib/headless.server"
 
 export async function GET(
   _request: Request,
@@ -33,6 +35,12 @@ export async function GET(
     const now = new Date()
 
     if (lobby.status === "waiting" && lobby.expiresAt < now) {
+      // Cancelar autorizaciones en MP antes de marcar como expirado
+      const paidMembers = lobby.members.filter(m => m.status === "paid" && m.paymentRef)
+      for (const member of paidMembers) {
+        await cancelAuthorization(member.paymentRef!)
+      }
+
       await prisma.lobby.update({
         where: { id },
         data: { status: "expired" },
@@ -41,7 +49,20 @@ export async function GET(
         where: { lobbyId: id, status: "paid" },
         data: { status: "refunded" },
       })
+
+      // Notificar a todos los miembros
+      for (const member of lobby.members) {
+        await prisma.notification.create({
+          data: {
+            userId: member.userId,
+            lobbyId: lobby.id,
+            message: `${lobby.toolName} — La sala expiró. Tu pago fue liberado.`,
+          },
+        })
+      }
+
       clearMockState(id)
+
       return NextResponse.json({
         id: lobby.id,
         status: "expired",
@@ -62,6 +83,7 @@ export async function GET(
       amount: m.amount,
       isMock: false,
       isSelf: m.user.email === session.user?.email,
+      paymentRef: m.paymentRef,
     }))
 
     const allMembers = [...realMembers]
@@ -75,6 +97,7 @@ export async function GET(
           amount: lobby.pricePerSeat,
           isMock: true,
           isSelf: false,
+          paymentRef: null,
         })
         currentVirtualAdded++
       }
@@ -84,30 +107,23 @@ export async function GET(
     allMembers.sort((a, b) => a.seatIndex - b.seatIndex)
 
     if (lobby.status === "waiting" && filledSeats >= lobby.totalSeats) {
-      // 1. Etapa MVP: Mercado Pago - CAPTURA DE FONDOS
+      // 1. Mercado Pago - CAPTURA DE FONDOS (Escrow)
       console.log(`[Escrow] Sala llena. Iniciando CAPTURA de fondos en Mercado Pago para ${allMembers.length} usuarios.`)
-      // En entorno real, llamamos a capturePayment por cada miembro:
-      // import { capturePayment } from "@/lib/mercadopago.server"
-      // for (const member of allMembers) {
-      //   await capturePayment(`pay_intent_${member.seatIndex}`, member.amount)
-      // }
+      for (const member of allMembers) {
+        if (!member.isMock && member.paymentRef) {
+          await capturePayment(member.paymentRef, member.amount)
+        }
+      }
       console.log(`[Escrow] Fondos capturados correctamente ($${lobby.fullPrice}). Dinero en cuenta de CoStack.`)
 
-      // 2. Ejecutar Automatización (Headless Browser) usando la Tarjeta Virtual de MP
-      // En entorno real, importamos runPurchaseBot de lib/headless.server.ts
+      // 2. Ejecutar Automatización (Headless Browser)
       console.log(`[Bot] Despachando background job a Browserless...`)
-      
-      let generatedToken = ""
-      const delay = (ms: number) => new Promise(res => setTimeout(res, ms))
-      await delay(1500) // Simular latencia del bot en la nube
-      
-      if (lobby.accessMethod === "INVITATION_LINK") {
-        generatedToken = `https://${lobby.provider.toLowerCase()}.com/invite/${Math.random().toString(36).substring(2, 10)}`
-        console.log(`[Bot] Link de invitación obtenido: ${generatedToken}`)
-      } else {
-        generatedToken = `sk_live_lobby_${Math.random().toString(36).substring(2, 15)}`
-        console.log(`[Bot] API Key obtenida: ${generatedToken}`)
-      }
+      const generatedToken = await runPurchaseBot({
+        toolProvider: lobby.provider,
+        accessMethod: lobby.accessMethod,
+        corporateEmail: "admin@costack.la",
+        lobbyId: lobby.id,
+      })
 
       await prisma.lobby.update({
         where: { id },
@@ -137,7 +153,7 @@ export async function GET(
         filledSeats,
         totalSeats: lobby.totalSeats,
         expiresAt: lobby.expiresAt.toISOString(),
-        accessToken: mockToken,
+        accessToken: generatedToken,
         members: allMembers,
         message: "¡Se completaron los cupos! Ya podés acceder a tu licencia.",
       })

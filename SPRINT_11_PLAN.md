@@ -64,9 +64,53 @@ El modelo cambia del "Cobro Directo" a un modelo de "Fideicomiso (Escrow) hasta 
 - [x] Refactorizar la UI del Detalle de Suscripción y Checkout para soportar Mercado Pago CardPayment y Filtros de Método de Acceso.
 - [x] Diagramar el motor FinTech de Escrow (Autorización y Captura) con Mercado Pago (`lib/mercadopago.server.ts`).
 - [x] Integrar el diseño arquitectónico de **Session Hijacking** para el bot de Playwright (basado en `zimbio-automations`).
-- [ ] **(Operativo)** Crear la "Master Account" de administrador (ej. `admin@costack.la`) en OpenAI/Figma y guardar el perfil de Chrome (.auth) para el worker.
-- [ ] **(Integración MP)** Generar credenciales reales en Mercado Pago Developers y actualizar `MP_ACCESS_TOKEN` y `NEXT_PUBLIC_MP_PUBLIC_KEY` en el archivo `.env`.
+- [x] **(Operativo)** Crear la "Master Account" de administrador (ej. `admin@costack.la`) en OpenAI/Figma y guardar el perfil de Chrome (.auth) para el worker.
+- [x] **(Integración MP)** Generar credenciales reales en Mercado Pago Developers y actualizar `MP_ACCESS_TOKEN` y `NEXT_PUBLIC_MP_PUBLIC_KEY` en el archivo `.env`.
+- [x] **(Master Account GitHub)** Crear cuenta GitHub + GitHub org + Personal Access Token para el bot.
+- [x] **(MVP Pago)** Integración de pago real con tarjeta vía Mercado Pago Payments API (tokenización directa, sin Bricks).
+- [x] **(Escrow completo)** `paymentRef` real guardado en DB, `capturePayment` y `cancelAuthorization` conectados a la API de MP.
+- [x] **(Cron expiración)** Endpoint `/api/cron/expire-lobbies` para liberar fondos de salas vencidas.
 - [ ] Preparar la presentación (Diapositivas) documentando:
       1. El modelo FinTech **"Autorización y Captura"** de Mercado Pago (Escrow Cero Riesgo).
       2. El aislamiento de licencias **"Multi-Tenancy"** (Workspaces independientes por sala).
       3. El patrón **"Master Account & Session Hijacking"** para evadir antibots (Cloudflare) legalmente.
+- [ ] Unificar la automatización del bot en un solo agente (vs 15 scripts individuales).
+- [ ] Conectar `inviteMemberToTeam` en `github-bot.server.ts` al flujo de lobby completado.
+
+---
+
+## Desviaciones del plan original
+
+| Item | Plan original | Realidad |
+|---|---|---|
+| **Playwright Session Hijacking** | Bot con perfil Chrome autenticado vía `zimbio-automations` | Se implementó vía **GitHub PAT + Octokit API** (más simple, sin browser, sin CAPTCHA). Para herramientas que no sean GitHub, se usará el bot de Playwright más adelante. |
+| **Mercado Pago Bricks (CardPayment)** | Integración con `@mercadopago/sdk-react` CardPayment brick | Se descartó por incompatibilidad con CSP y React DOM. Reemplazado por **tokenización directa** con `MercadoPago.createCardToken()` + Payments API. |
+| **Checkout Pro (redirect)** | Se intentó como alternativa a Bricks | Se descartó porque `auto_return` requiere HTTPS público y el sandbox de MP no devolvía bien los query params al redirect. |
+| **Presentación diapositivas** | Preparar slides del modelo FinTech | No se realizó. Pendiente. |
+
+## Archivos creados/modificados en esta sesión
+
+| Archivo | Cambio |
+|---|---|
+| `prisma/schema.prisma` | Agregado `paymentRef String?` a `LobbyMember` |
+| `lib/env.ts` | Agregadas vars `MP_ACCESS_TOKEN`, `NEXT_PUBLIC_MP_PUBLIC_KEY`, `GITHUB_BOT_TOKEN`, `GITHUB_ORG_NAME` |
+| `lib/mercadopago.server.ts` | `authorizePayment`, `capturePayment`, `cancelAuthorization` reales. Eliminado `createPreference` (Checkout Pro) |
+| `lib/github-bot.server.ts` | **(Nuevo)** Octokit client: `createTeamForLobby`, `inviteMemberToTeam` |
+| `lib/headless.server.ts` | Rewired para usar GitHub API en `INVITATION_LINK`, mock en `API_PROXY` |
+| `proxy.ts` | **(Renombrado de `middleware.ts`)** CSP con dominios MP para el SDK |
+| `app/api/checkout/pay/route.ts` | Acepta `cardToken` real, guarda `paymentRef` en `LobbyMember` |
+| `app/api/checkout/preference/route.ts` | **(Eliminado)** Ya no se usa |
+| `app/api/checkout/confirm/route.ts` | **(Nuevo)** Confirma lobby member post-redirect MP (legacy) |
+| `app/api/lobby/[id]/route.ts` | Usa `paymentRef` real en capture, llama `cancelAuthorization` al expirar, crea notificaciones |
+| `app/api/cron/expire-lobbies/route.ts` | **(Nuevo)** Endpoint GET para expirar salas stale + liberar fondos |
+| `app/api/webhooks/mercadopago/route.ts` | Webhook para eventos de pago MP |
+| `components/dashboard/checkout-view.tsx` | Card form con tokenización directa vía MP SDK, layout mejorado |
+| `app/(dashboard)/suscripciones/success/page.tsx` | Maneja redirect de MP con confirmación de pago |
+
+## Datos de prueba
+
+- **Tarjeta:** `5031 7557 3453 0604` (Mastercard) / `4235 6477 2802 5682` (Visa)
+- **CVV:** `123`
+- **Vencimiento:** fecha futura (ej. `12/28`)
+- **Titular:** `APRO`
+- **Documento:** DNI `12345678`
