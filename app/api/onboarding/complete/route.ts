@@ -19,6 +19,11 @@ export async function POST(request: Request) {
   const inviteCode = typeof body?.inviteCode === 'string' ? body.inviteCode.trim() : ''
   const role = body?.role === 'organizer' ? 'organizer' : 'member'
 
+  // BYPASS EN DESARROLLO: permitir onboarding sin BD
+  if (process.env.NODE_ENV !== 'production') {
+    return NextResponse.json({ ok: true, groupId: 'dev-group-123' }, { status: 201 })
+  }
+
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
   })

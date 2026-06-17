@@ -128,7 +128,7 @@ export function SuscripcionesView() {
             return (
               <div
                 key={sub.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-border bg-card hover:border-zinc-700 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-slate-800 bg-slate-900/70 hover:border-zinc-700 transition-colors"
               >
                 {/* Info principal */}
                 <div className="flex items-center gap-4">
@@ -136,11 +136,11 @@ export function SuscripcionesView() {
                     <sub.icon className={cn("w-5 h-5", sub.iconColor)} />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold text-foreground leading-none mb-1.5">{sub.name}</h3>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="font-medium text-zinc-300">{sub.role === 'organizer' ? 'Organizador' : 'Miembro'}</span>
-                      <span>•</span>
-                      <span className="font-mono">${sub.pricePerSeat}/mes cuota</span>
+                    <h3 className="text-base font-semibold text-zinc-50 leading-none mb-1.5">{sub.name}</h3>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="font-medium text-slate-300">{sub.role === 'organizer' ? 'Organizador' : 'Miembro'}</span>
+                      <span className="text-slate-400">•</span>
+                      <span className="font-mono text-slate-400">${sub.pricePerSeat}/mes cuota</span>
                     </div>
                   </div>
                 </div>
@@ -148,7 +148,7 @@ export function SuscripcionesView() {
                 {/* Info secundaria / Acciones */}
                 <div className="flex items-center justify-between sm:justify-end gap-6 sm:gap-8 border-t border-border sm:border-0 pt-3 sm:pt-0">
                   <div className="flex flex-col gap-1.5 sm:text-right">
-                    <span className="text-xs text-muted-foreground">Asientos</span>
+                    <span className="text-xs text-slate-300">Asientos</span>
                     <span className={cn("text-sm font-semibold", isFull ? "text-amber-500" : "text-emerald-500")}>
                       {sub.seatsTotal - sub.seatsAvailable}/{sub.seatsTotal} ocupados
                     </span>

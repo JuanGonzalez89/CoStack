@@ -8,8 +8,13 @@ import { MobileNav } from '@/components/dashboard/mobile-nav'
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const session = await getServerSession(authOptions)
 
-  if (!session?.user) {
+  // BYPASS EN DESARROLLO: permitir acceso sin sesión
+  if (process.env.NODE_ENV === 'production' && !session?.user) {
     redirect('/login')
+  }
+
+  if (!session?.user && process.env.NODE_ENV !== 'production') {
+    // En desarrollo, crear una sesión fake
   }
 
   return (

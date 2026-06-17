@@ -75,6 +75,13 @@ export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJ
 
     try {
       if (mode === 'login') {
+        // BYPASS EN DESARROLLO: ir directo al dashboard sin validar
+        if (process.env.NODE_ENV !== 'production') {
+          router.replace(ROUTES.overview)
+          router.refresh()
+          return
+        }
+
         const parsed = loginSchema.safeParse({ email: form.email, password: form.password })
 
         if (!parsed.success) {
@@ -100,6 +107,13 @@ export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJ
       }
 
       if (mode === 'register') {
+        // BYPASS EN DESARROLLO: ir directo al onboarding sin validar
+        if (process.env.NODE_ENV !== 'production') {
+          router.replace(ROUTES.onboarding)
+          router.refresh()
+          return
+        }
+
         const parsed = registerSchema.safeParse({
           name: form.name,
           email: form.email,
@@ -145,6 +159,13 @@ export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJ
         }
 
         router.replace(resolveSuccessPath(mode))
+        router.refresh()
+        return
+      }
+
+      // BYPASS EN DESARROLLO: ir directo al dashboard sin validar onboarding
+      if (process.env.NODE_ENV !== 'production') {
+        router.replace(ROUTES.overview)
         router.refresh()
         return
       }
@@ -244,7 +265,26 @@ export function AuthJourneyForm({ mode, title, description, submitLabel }: AuthJ
         </div>
       )}
 
-      <Button type="submit" className="w-full rounded-xl bg-cyan-500 text-white hover:bg-cyan-400" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        className="w-full rounded-xl bg-cyan-500 text-white hover:bg-cyan-400"
+        disabled={isSubmitting}
+        onClick={(e) => {
+          if (process.env.NODE_ENV !== 'production') {
+            e.preventDefault()
+            if (mode === 'login') {
+              router.replace(ROUTES.overview)
+              router.refresh()
+            } else if (mode === 'register') {
+              router.replace(ROUTES.onboarding)
+              router.refresh()
+            } else {
+              router.replace(ROUTES.overview)
+              router.refresh()
+            }
+          }
+        }}
+      >
         {isSubmitting ? 'Procesando...' : submitLabel}
       </Button>
     </form>

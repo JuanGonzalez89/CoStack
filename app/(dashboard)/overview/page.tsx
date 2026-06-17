@@ -4,7 +4,6 @@ import { SummaryCards } from '@/components/dashboard/summary-cards'
 import { ToolCards } from '@/components/dashboard/tool-cards'
 import { BotLog, type LogEntry } from '@/components/dashboard/bot-log'
 import { PaymentTraffic } from '@/components/dashboard/payment-traffic'
-import { SeatAccessCard } from '@/components/dashboard/seat-access-card'
 import { OnboardingPrompt } from '@/components/dashboard/onboarding-prompt'
 import type { ToolCardData } from '@/features/dashboard/contracts'
 import { getDashboardSnapshot } from '@/lib/dashboard-snapshot.server'
@@ -93,7 +92,7 @@ export default async function OverviewPage() {
         </div>
 
         <div className="space-y-6">
-          <SeatAccessCard accessState="current" groupName={snapshot.latestGroup?.name ?? 'CoStack Studio'} accessToken={snapshot.latestGroup?.seats[0]?.accessToken ?? 'COSTACK-74A2-9X11'} />
+          {/* SeatAccessCard removed per request */}
         </div>
       </section>
 

@@ -34,6 +34,21 @@ export const authOptions = {
           return null
         }
 
+        // BYPASS EN DESARROLLO: permitir cualquier credencial
+        if (process.env.NODE_ENV !== 'production') {
+          return {
+            id: `dev-${parsed.data.email}`,
+            email: parsed.data.email,
+            name: parsed.data.name || parsed.data.email,
+            image: null,
+            emailVerified: null,
+            role: 'member',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            passwordHash: null,
+          }
+        }
+
         const existingUser = await prisma.user.findUnique({
           where: { email: parsed.data.email },
         })
