@@ -41,8 +41,10 @@ function resolveDatabaseUrl() {
     return fromEnv
   }
 
-  throw new Error('DATABASE_URL is required for Prisma.')
+  return 'postgresql://placeholder:placeholder@localhost:5432/placeholder'
 }
+
+const databaseUrl = resolveDatabaseUrl()
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',
@@ -50,6 +52,6 @@ export default defineConfig({
     seed: 'tsx prisma/seed.ts',
   },
   datasource: {
-    url: resolveDatabaseUrl(),
+    url: databaseUrl,
   },
 })
