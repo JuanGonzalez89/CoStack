@@ -11,7 +11,7 @@ export interface LobbyMemberData {
 
 export interface LobbyStatus {
   id: string
-  status: "waiting" | "completed" | "expired"
+  status: "waiting" | "processing" | "completed" | "expired"
   filledSeats: number
   totalSeats: number
   expiresAt: string

@@ -154,7 +154,7 @@ npx tsx scripts/reset-lobby-canva.ts
 | Sesión Canva | `npx tsx scripts/auth-setup-canva.ts` |
 | Migraciones | `npx prisma migrate dev` |
 | Seed | `npm run seed` |
-
+ 
 ## Archivos a transferir
 
 | Archivo | Ruta | Obligatorio |

@@ -24,3 +24,6 @@ playwright-report/
 test-results/
 santiago-overview.png
 .pgdata-dev/
+
+tsconfig.tsbuildinfo
+dev-server-log.txt

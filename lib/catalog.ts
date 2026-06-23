@@ -36,7 +36,7 @@ export const CATALOG: CatalogItem[] = [
   { id: "figma",      name: "Figma Org",         provider: "Figma Inc.",pricePerMonth: 12, originalPrice: 45, monthlyCost: 45, availableSeats: 5,  icon: Pen,          iconBg: "bg-violet-500/10",   iconColor: "text-violet-500",  category: "Design", providerUrl: PROVIDER_URLS["Figma Inc."] },
   { id: "midjourney", name: "Midjourney Pro",    provider: "Midjourney",pricePerMonth: 15, originalPrice: 60, monthlyCost: 60, availableSeats: 4,  icon: Pen,          iconBg: "bg-fuchsia-500/10",  iconColor: "text-fuchsia-500", category: "AI",  providerUrl: PROVIDER_URLS["Midjourney"] },
   { id: "vercel",     name: "Vercel Pro",        provider: "Vercel",    pricePerMonth: 5,  originalPrice: 20, monthlyCost: 20, availableSeats: 4,  icon: Code,         iconBg: "bg-slate-100/10",    iconColor: "text-slate-100",  category: "IDE",   providerUrl: PROVIDER_URLS["Vercel"] },
-  { id: "canva",      name: "Canva Pro Team",    provider: "Canva",     pricePerMonth: 6,  originalPrice: 30, monthlyCost: 30, availableSeats: 5,  icon: Pen,          iconBg: "bg-blue-500/10",     iconColor: "text-blue-500",    category: "Design", providerUrl: PROVIDER_URLS["Canva"] },
+  { id: "canva",      name: "Canva Pro Team",    provider: "Canva",     pricePerMonth: 6,  originalPrice: 30, monthlyCost: 30, availableSeats: 3,  icon: Pen,          iconBg: "bg-blue-500/10",     iconColor: "text-blue-500",    category: "Design", providerUrl: PROVIDER_URLS["Canva"] },
 ]
 
 export function getCatalogItem(slug: string): CatalogItem | undefined {

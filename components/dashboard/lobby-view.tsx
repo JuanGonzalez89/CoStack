@@ -38,7 +38,7 @@ export function LobbyView({ tool, open, onOpenChange }: LobbyViewProps) {
   const [showFinal, setShowFinal] = useState(false)
 
   useEffect(() => {
-    if (data?.status === "completed" && !showFinal && !showPreparing) {
+    if ((data?.status === "completed" || data?.status === "processing") && !showFinal && !showPreparing) {
       // Allow progress bar to reach 100% and stay for 2 seconds before showing preparing modal
       const initialDelay = setTimeout(() => {
         setShowPreparing(true)

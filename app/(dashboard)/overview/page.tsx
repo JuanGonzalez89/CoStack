@@ -199,8 +199,8 @@ async function buildToolCards(snapshot: DashboardSnapshot, userId: string, userE
         accessToken: lobby.accessToken,
         accessMethod: lobby.accessMethod,
         providerUrl: catalogEntry?.providerUrl,
-        lobbyId: lobby.status === 'waiting' ? lobby.id : undefined,
-        lobbyFilled: lobby.status === 'waiting' ? memberCount : undefined,
+        lobbyId: lobby.status === 'waiting' || lobby.status === 'processing' ? lobby.id : undefined,
+        lobbyFilled: lobby.status === 'waiting' || lobby.status === 'processing' ? memberCount : undefined,
         lobbyTotal: lobby.totalSeats,
       })
     }

@@ -1,8 +1,9 @@
+export const maxDuration = 60
+
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { getMockState, clearMockState } from "@/lib/lobby-mock-store"
 import { capturePayment, cancelAuthorization } from "@/lib/mercadopago.server"
 import { runPurchaseBot } from "@/lib/headless.server"
 
@@ -35,7 +36,6 @@ export async function GET(
     const now = new Date()
 
     if (lobby.status === "waiting" && lobby.expiresAt < now) {
-      // Cancelar autorizaciones en MP antes de marcar como expirado
       const paidMembers = lobby.members.filter(m => m.status === "paid" && m.paymentRef)
       for (const member of paidMembers) {
         await cancelAuthorization(member.paymentRef!)
@@ -50,7 +50,6 @@ export async function GET(
         data: { status: "refunded" },
       })
 
-      // Notificar a todos los miembros
       for (const member of lobby.members) {
         await prisma.notification.create({
           data: {
@@ -60,8 +59,6 @@ export async function GET(
           },
         })
       }
-
-      clearMockState(id)
 
       return NextResponse.json({
         id: lobby.id,
@@ -74,56 +71,68 @@ export async function GET(
       })
     }
 
-    const realCount = lobby.members.length
-    const { virtualSeats } = getMockState(lobby.id, realCount, lobby.totalSeats)
-    const filledSeats = realCount + virtualSeats
-
-    const realMembers = lobby.members.map((m) => ({
+    const filledSeats = lobby.members.length
+    const members = lobby.members.map((m) => ({
       seatIndex: m.seatIndex,
       amount: m.amount,
-      isMock: false,
-      isSelf: m.user.email === session.user?.email,
+      email: m.user.email,
       paymentRef: m.paymentRef,
+      isSelf: m.user.email === session.user?.email,
     }))
 
-    const allMembers = [...realMembers]
-    let currentVirtualAdded = 0
-    let nextSeatIndex = 1
+    if ((lobby.status === "waiting" || lobby.status === "processing") && filledSeats >= lobby.totalSeats) {
+      // Atomic lock — solo un request puede pasar
+      const locked = await prisma.lobby.updateMany({
+        where: { id, status: "waiting" },
+        data: { status: "processing" },
+      })
 
-    while (currentVirtualAdded < virtualSeats && allMembers.length < lobby.totalSeats) {
-      if (!allMembers.find(m => m.seatIndex === nextSeatIndex)) {
-        allMembers.push({
-          seatIndex: nextSeatIndex,
-          amount: lobby.pricePerSeat,
-          isMock: true,
-          isSelf: false,
-          paymentRef: null,
+      if (locked.count === 0) {
+        // Ya está siendo procesado por otro request — devolver estado actual
+        return NextResponse.json({
+          id: lobby.id,
+          status: lobby.status as "processing" | "completed" | "expired" | "waiting",
+          filledSeats,
+          totalSeats: lobby.totalSeats,
+          expiresAt: lobby.expiresAt.toISOString(),
+          accessToken: lobby.accessToken,
+          toolName: lobby.toolName,
+          provider: lobby.provider,
+          pricePerSeat: lobby.pricePerSeat,
+          members,
         })
-        currentVirtualAdded++
       }
-      nextSeatIndex++
-    }
 
-    allMembers.sort((a, b) => a.seatIndex - b.seatIndex)
-
-    if (lobby.status === "waiting" && filledSeats >= lobby.totalSeats) {
-      // 1. Mercado Pago - CAPTURA DE FONDOS (Escrow)
-      console.log(`[Escrow] Sala llena. Iniciando CAPTURA de fondos en Mercado Pago para ${allMembers.length} usuarios.`)
-      for (const member of allMembers) {
-        if (!member.isMock && member.paymentRef) {
+      console.log(`[Escrow] Sala llena. Iniciando CAPTURA de fondos en Mercado Pago para ${filledSeats} usuarios.`)
+      for (const member of lobby.members) {
+        if (member.paymentRef) {
           await capturePayment(member.paymentRef, member.amount)
         }
       }
       console.log(`[Escrow] Fondos capturados correctamente ($${lobby.fullPrice}). Dinero en cuenta de CoStack.`)
 
-      // 2. Ejecutar Automatización (Headless Browser)
-      console.log(`[Bot] Despachando background job a Browserless...`)
-      const generatedToken = await runPurchaseBot({
-        toolProvider: lobby.provider,
-        accessMethod: lobby.accessMethod,
-        corporateEmail: "admin@costack.la",
-        lobbyId: lobby.id,
-      })
+      console.log(`[Bot] Provisionando acceso via ${lobby.accessMethod}...`)
+      const membersToInvite = lobby.members.map(m => ({
+        email: m.user.email,
+        userId: m.userId,
+      }))
+
+      let generatedToken = ""
+      try {
+        generatedToken = await runPurchaseBot({
+          lobbyId: lobby.id,
+          toolSlug: lobby.toolSlug,
+          toolName: lobby.toolName,
+          members: membersToInvite,
+        })
+      } catch (err) {
+        console.error(`[Bot] Error en provisioner, rollback a waiting:`, err)
+        await prisma.lobby.update({
+          where: { id },
+          data: { status: "waiting" },
+        })
+        throw err
+      }
 
       await prisma.lobby.update({
         where: { id },
@@ -145,8 +154,6 @@ export async function GET(
         })
       }
 
-      clearMockState(id)
-
       return NextResponse.json({
         id: lobby.id,
         status: "completed",
@@ -154,7 +161,10 @@ export async function GET(
         totalSeats: lobby.totalSeats,
         expiresAt: lobby.expiresAt.toISOString(),
         accessToken: generatedToken,
-        members: allMembers,
+        toolName: lobby.toolName,
+        provider: lobby.provider,
+        pricePerSeat: lobby.pricePerSeat,
+        members,
         message: "¡Se completaron los cupos! Ya podés acceder a tu licencia.",
       })
     }
@@ -165,7 +175,7 @@ export async function GET(
       filledSeats,
       totalSeats: lobby.totalSeats,
       expiresAt: lobby.expiresAt.toISOString(),
-      members: allMembers,
+      members,
       toolName: lobby.toolName,
       provider: lobby.provider,
       pricePerSeat: lobby.pricePerSeat,

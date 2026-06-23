@@ -21,6 +21,7 @@ export function SubscriptionDetailModal({ tool, accessToken, open, onOpenChange 
   const [showToken, setShowToken] = useState(false)
 
   if (!tool) return null
+  const provider = tool.provider ?? ''
 
   const handleCopy = () => {
     if (accessToken) {
@@ -49,7 +50,7 @@ export function SubscriptionDetailModal({ tool, accessToken, open, onOpenChange 
               {tool.iconLabel}
             </div>
             <div>
-              <p className="text-sm text-cyan-400 font-semibold">{tool.provider}</p>
+              <p className="text-sm text-cyan-400 font-semibold">{provider}</p>
               <h3 className="text-xl font-bold text-white">{tool.name}</h3>
             </div>
             <div className="ml-auto">
@@ -73,7 +74,7 @@ export function SubscriptionDetailModal({ tool, accessToken, open, onOpenChange 
 
           {accessToken && (
             <>
-              {(!tool.category && !['figma', 'canva', 'chatgpt'].includes(tool.provider.toLowerCase()) || tool.category?.toLowerCase() === 'dev' || tool.category?.toLowerCase() === 'development') && (
+              {(!tool.category && !['figma', 'canva', 'chatgpt'].includes(provider.toLowerCase()) || tool.category?.toLowerCase() === 'dev' || tool.category?.toLowerCase() === 'development') && (
                 <div className="p-5 rounded-2xl bg-cyan-500/5 border border-cyan-500/20 space-y-3">
                   <div className="flex items-center gap-2">
                     <Key className="w-4 h-4 text-cyan-400" />
@@ -104,11 +105,11 @@ export function SubscriptionDetailModal({ tool, accessToken, open, onOpenChange 
                       </Button>
                     </div>
                   </div>
-                  <p className="text-xs text-zinc-500">Usá este código para integrar {tool.provider} en tu código. Vence junto con tu licencia.</p>
+                  <p className="text-xs text-zinc-500">Usá este código para integrar {provider} en tu código. Vence junto con tu licencia.</p>
                 </div>
               )}
 
-              {(tool.category?.toLowerCase() === 'design' || tool.category?.toLowerCase() === 'ai' || ['figma', 'canva', 'chatgpt'].includes(tool.provider.toLowerCase())) && (
+              {(tool.category?.toLowerCase() === 'design' || tool.category?.toLowerCase() === 'ai' || ['figma', 'canva', 'chatgpt'].includes(provider.toLowerCase())) && (
                 <div className="p-5 rounded-2xl bg-violet-500/5 border border-violet-500/20 space-y-3">
                   <div className="flex items-center gap-2">
                     <ExternalLink className="w-4 h-4 text-violet-400" />
@@ -120,10 +121,10 @@ export function SubscriptionDetailModal({ tool, accessToken, open, onOpenChange 
                   <Button
                     className="w-full bg-violet-500 hover:bg-violet-600 text-white font-bold h-11 rounded-xl"
                     onClick={() => {
-                        window.open(accessToken.startsWith('http') ? accessToken : `https://${tool.provider.toLowerCase()}.com/invite/${accessToken}`, '_blank')
+                        window.open(accessToken.startsWith('http') ? accessToken : `https://${provider.toLowerCase()}.com/invite/${accessToken}`, '_blank')
                     }}
                   >
-                    Unirse al equipo en {tool.provider}
+                    Unirse al equipo en {provider}
                   </Button>
                 </div>
               )}
@@ -136,16 +137,16 @@ export function SubscriptionDetailModal({ tool, accessToken, open, onOpenChange 
               Cómo usar tu licencia
             </h4>
             <ol className="space-y-2.5 text-sm text-zinc-300">
-               {(tool.category?.toLowerCase() === 'design' || tool.category?.toLowerCase() === 'ai' || ['figma', 'canva', 'chatgpt'].includes(tool.provider.toLowerCase())) ? (
+               {(tool.category?.toLowerCase() === 'design' || tool.category?.toLowerCase() === 'ai' || ['figma', 'canva', 'chatgpt'].includes(provider.toLowerCase())) ? (
                  <>
                   <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-500/20 text-violet-400 text-xs font-bold shrink-0 mt-0.5">1</span><span>Haz clic en "Unirse al equipo".</span></li>
-                  <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-500/20 text-violet-400 text-xs font-bold shrink-0 mt-0.5">2</span><span>Inicia sesión con tu cuenta personal de {tool.provider}.</span></li>
+                  <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-500/20 text-violet-400 text-xs font-bold shrink-0 mt-0.5">2</span><span>Inicia sesión con tu cuenta personal de {provider}.</span></li>
                   <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-500/20 text-violet-400 text-xs font-bold shrink-0 mt-0.5">3</span><span>¡Listo! Disfruta de todos los beneficios premium desde tu propio entorno.</span></li>
                  </>
                ) : (
                  <>
                   <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold shrink-0 mt-0.5">1</span><span>Copiá tu credencial de acceso (API Key).</span></li>
-                  <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold shrink-0 mt-0.5">2</span><span>Ingresá a <strong className="text-white">{tool.provider}</strong> o configurá tu entorno.</span></li>
+                  <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold shrink-0 mt-0.5">2</span><span>Ingresá a <strong className="text-white">{provider}</strong> o configurá tu entorno.</span></li>
                   <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold shrink-0 mt-0.5">3</span><span>Pegá tu credencial cuando el sistema la solicite para vincular tu licencia.</span></li>
                  </>
                )}
@@ -167,7 +168,7 @@ export function SubscriptionDetailModal({ tool, accessToken, open, onOpenChange 
               >
                 <a href={tool.providerUrl} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="w-4 h-4 mr-1.5" />
-                  Ir a {tool.provider}
+                  Ir a {provider}
                 </a>
               </Button>
             )}
