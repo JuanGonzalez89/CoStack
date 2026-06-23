@@ -1,260 +1,154 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
-  MessageSquare,
-  Pen,
-  GitBranch,
-  Triangle,
-  Brush,
-  Sparkles,
-  Check,
-  ArrowRight,
-  Star,
+  Search, Flame, ShieldCheck, Users
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { LicenseDetailModal } from "@/components/suscripciones/license-detail-modal"
+import { CATALOG } from "@/lib/catalog"
 
-interface SoftwareCard {
-  id: string
-  name: string
-  provider: string
-  pricePerSeat: number
-  seatsAvailable: number
-  seatsTotal: number
-  icon: React.ElementType
-  iconBg: string
-  iconColor: string
-  accentBar: string
-  badge?: string
-  features: string[]
-  subscribed: boolean
-}
+export function SuscripcionesView({ isOrganizer = false }: { isOrganizer?: boolean }) {
+  const router = useRouter()
+  const [searchTerm, setSearchTerm] = useState("")
+  const [activeCategory, setActiveCategory] = useState<"All" | "AI" | "Design" | "IDE">("All")
+  const [selectedTool, setSelectedTool] = useState<string | null>(null)
 
-const catalog: SoftwareCard[] = [
-  {
-    id: "chatgpt",
-    name: "ChatGPT Team Workspace",
-    provider: "OpenAI",
-    pricePerSeat: 30,
-    seatsAvailable: 2,
-    seatsTotal: 5,
-    icon: MessageSquare,
-    iconBg: "bg-orange-500/10",
-    iconColor: "text-orange-500",
-    accentBar: "bg-orange-500",
-    badge: "Popular",
-    features: ["GPT-4o acceso completo", "Historial compartido", "Plugins del equipo"],
-    subscribed: true,
-  },
-  {
-    id: "figma",
-    name: "Figma Organization",
-    provider: "Figma Inc.",
-    pricePerSeat: 45,
-    seatsAvailable: 0,
-    seatsTotal: 10,
-    icon: Pen,
-    iconBg: "bg-violet-500/10",
-    iconColor: "text-violet-500",
-    accentBar: "bg-violet-500",
-    features: ["Proyectos ilimitados", "Variables y tokens", "Dev Mode habilitado"],
-    subscribed: true,
-  },
-  {
-    id: "midjourney",
-    name: "Midjourney Pro",
-    provider: "Midjourney",
-    pricePerSeat: 60,
-    seatsAvailable: 3,
-    seatsTotal: 5,
-    icon: Brush,
-    iconBg: "bg-sky-500/10",
-    iconColor: "text-sky-500",
-    accentBar: "bg-sky-500",
-    badge: "Nuevo",
-    features: ["Generación ilimitada", "Modo rápido", "Estilos personalizados"],
-    subscribed: false,
-  },
-  {
-    id: "copilot",
-    name: "GitHub Copilot Enterprise",
-    provider: "GitHub",
-    pricePerSeat: 39,
-    seatsAvailable: 4,
-    seatsTotal: 8,
-    icon: GitBranch,
-    iconBg: "bg-slate-200/50",
-    iconColor: "text-slate-700",
-    accentBar: "bg-slate-600",
-    features: ["Autocompletado en IDE", "Chat contextual", "Revisión de PR con IA"],
-    subscribed: false,
-  },
-  {
-    id: "vercel",
-    name: "Vercel Pro",
-    provider: "Vercel",
-    pricePerSeat: 20,
-    seatsAvailable: 5,
-    seatsTotal: 5,
-    icon: Triangle,
-    iconBg: "bg-slate-900/10",
-    iconColor: "text-slate-800",
-    accentBar: "bg-slate-800",
-    badge: "Oferta",
-    features: ["Deploys ilimitados", "Analytics avanzados", "Bandwidth 1 TB"],
-    subscribed: false,
-  },
-  {
-    id: "canva",
-    name: "Canva Pro Team",
-    provider: "Canva",
-    pricePerSeat: 17,
-    seatsAvailable: 6,
-    seatsTotal: 10,
-    icon: Sparkles,
-    iconBg: "bg-cyan-500/10",
-    iconColor: "text-cyan-600",
-    accentBar: "bg-cyan-500",
-    features: ["Brand Kit compartido", "Fondo removido", "Programación de redes"],
-    subscribed: false,
-  },
-]
-
-const badgeStyle: Record<string, string> = {
-  Popular: "bg-orange-100 text-orange-700",
-  Nuevo: "bg-sky-100 text-sky-700",
-  Oferta: "bg-emerald-100 text-emerald-700",
-}
-
-export function SuscripcionesView() {
-  const [cards, setCards] = useState(catalog)
-
-  const handleSubscribe = (id: string) => {
-    setCards((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, subscribed: true, seatsAvailable: Math.max(0, c.seatsAvailable - 1) } : c))
-    )
-  }
+  const filteredTools = CATALOG.filter(tool => {
+    const matchesSearch = tool.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          tool.provider.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = activeCategory === "All" || tool.category === activeCategory
+    return matchesSearch && matchesCategory
+  })
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h2 className="text-base font-semibold text-foreground">Catálogo de Suscripciones</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Herramientas enterprise disponibles para compartir en tu equipo
-          </p>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Header del Catálogo */}
+      <div className="flex flex-col gap-2">
+        <h2 className="text-3xl font-bold text-white tracking-tight">
+          {isOrganizer ? 'Catálogo de herramientas para tu Espacio' : 'Grupos Compartidos Disponibles'}
+        </h2>
+        <p className="text-base text-zinc-400 max-w-2xl leading-relaxed">
+          {isOrganizer 
+            ? 'Encuentra licencias premium a una fracción del costo para compartir con tu equipo. Selecciona la herramienta, confirma el pago y genera el código de invitación.'
+            : 'Encuentra grupos públicos (Automatch) que ya están compartiendo estas herramientas a un menor costo y únete al instante.'}
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400">
+          <ShieldCheck size={14} />
+          Compra Segura — Pago Protegido
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-3 py-2 rounded-xl">
-          <Star size={13} className="text-amber-500" />
-          <span>
-            <span className="font-semibold text-foreground">
-              {cards.filter((c) => c.subscribed).length}
-            </span>{" "}
-            suscripciones activas
-          </span>
+        <div className="flex items-center gap-2 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-400">
+          <Users size={14} />
+          Sala de espera en tiempo real
         </div>
       </div>
 
-      {/* Catalog grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        {cards.map((card) => {
-          const isFull = card.seatsAvailable === 0
-          return (
-            <div
-              key={card.id}
+      {/* Buscador y Filtros */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+          <Input
+            placeholder="Buscar por herramienta o proveedor (ej. JetBrains)..."
+            className="pl-12 h-14 bg-white/[0.02] border-white/5 text-white placeholder:text-zinc-500 rounded-2xl focus-visible:ring-cyan-500/20 text-base"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {(["All", "AI", "Design", "IDE"] as const).map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
               className={cn(
-                "bg-card rounded-2xl border shadow-sm hover:shadow-lg overflow-hidden transition-all duration-300",
-                card.subscribed ? "border-cyan-200 shadow-cyan-50" : "border-border"
+                "px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border",
+                activeCategory === cat 
+                  ? "bg-cyan-500 text-black border-cyan-500" 
+                  : "bg-white/[0.02] text-zinc-400 border-white/5 hover:bg-white/[0.06] hover:text-white"
               )}
             >
-              {/* Accent stripe */}
-              <div className={cn("h-1 w-full", card.accentBar)} />
+              {cat === "All" ? "Todas" : cat === "Design" ? "Diseño" : cat}
+            </button>
+          ))}
+        </div>
+      </div>
 
-              <div className="p-5 flex flex-col gap-4">
-                {/* Header row */}
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", card.iconBg)}>
-                      <card.icon className={cn("w-5 h-5", card.iconColor)} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground leading-tight">{card.name}</p>
-                      <p className="text-xs text-muted-foreground">{card.provider}</p>
-                    </div>
-                  </div>
-                  {card.badge && (
-                    <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full", badgeStyle[card.badge])}>
-                      {card.badge}
-                    </span>
-                  )}
-                </div>
+      {/* Grilla de Herramientas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        {filteredTools.map((tool) => {
+          const isSoldOut = tool.availableSeats === 0;
+          const savings = Math.round((1 - (tool.pricePerMonth / tool.originalPrice)) * 100);
 
-                {/* Price */}
-                <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-bold text-foreground">${card.pricePerSeat}</span>
-                  <span className="text-xs text-muted-foreground">/mes por asiento</span>
-                </div>
-
-                {/* Features */}
-                <ul className="space-y-1.5">
-                  {card.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Check size={12} className="text-cyan-500 shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Seat availability */}
-                <div className="flex items-center justify-between text-xs pt-1 border-t border-border">
-                  <span className="text-muted-foreground">Asientos disponibles</span>
-                  <span
-                    className={cn(
-                      "font-semibold",
-                      isFull ? "text-red-500" : card.seatsAvailable <= 2 ? "text-amber-500" : "text-emerald-600"
-                    )}
-                  >
-                    {isFull ? "Lleno" : `${card.seatsAvailable}/${card.seatsTotal} libres`}
+          return (
+            <div
+              key={tool.id}
+              className={cn(
+                "group relative flex flex-col p-8 rounded-[24px] border border-white/5 bg-white/[0.02] transition-all duration-300 overflow-hidden hover:border-white/10 hover:bg-white/[0.04] cursor-pointer hover:-translate-y-1"
+              )}
+            >
+              {/* Etiqueta de Escasez / Promoción */}
+              <div className="absolute top-4 right-4 flex items-center gap-2">
+                  <span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-cyan-400 bg-cyan-400/10 px-3 py-1 rounded-full">
+                    <Flame className="w-3 h-3" />
+                    Admite {tool.availableSeats} miembros
                   </span>
-                </div>
-
-                {/* CTA */}
-                {card.subscribed ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled
-                    className="w-full rounded-xl border-cyan-300 text-cyan-700 bg-cyan-50 font-semibold gap-2 cursor-default"
-                  >
-                    <Check size={14} />
-                    Suscrito
-                  </Button>
-                ) : isFull ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled
-                    className="w-full rounded-xl opacity-50 font-semibold gap-2"
-                  >
-                    Sin asientos disponibles
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    className="w-full rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white font-semibold gap-2 transition-all duration-150"
-                    onClick={() => handleSubscribe(card.id)}
-                  >
-                    Suscribirse
-                    <ArrowRight size={14} />
-                  </Button>
-                )}
               </div>
+
+              {/* Info de la Herramienta */}
+              <div className="flex items-start gap-5 mb-8">
+                <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 shadow-sm", tool.iconBg)}>
+                  <tool.icon className={cn("w-8 h-8", tool.iconColor)} />
+                </div>
+                <div className="pt-2">
+                  <p className="text-sm font-semibold text-cyan-400 mb-1">{tool.provider}</p>
+                  <h3 className="text-xl font-bold text-white leading-tight">{tool.name}</h3>
+                </div>
+              </div>
+
+              {/* Precios y Ahorro */}
+              <div className="mt-auto pt-5 border-t border-white/5 flex items-end justify-between mb-8">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm text-zinc-500 line-through">Oficial: ${tool.originalPrice}</p>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md">
+                      Ahorrás {savings}%
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-5xl font-bold tracking-tight text-white">${tool.pricePerMonth}</span>
+                    <span className="text-sm font-medium text-zinc-500">/mes por integrante</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA */}
+              <Button 
+                onClick={() => setSelectedTool(tool.id)}
+                className="w-full rounded-2xl h-14 font-bold text-base transition-all duration-200 bg-white hover:bg-zinc-200 text-black shadow-none"
+              >
+                {isOrganizer ? "Configurar Grupo y Añadir" : "Unirse vía Automatch"}
+              </Button>
             </div>
           )
         })}
+
+        {filteredTools.length === 0 && (
+          <div className="col-span-full py-16 text-center border border-dashed border-border rounded-2xl">
+            <p className="text-muted-foreground">No encontramos herramientas con ese nombre.</p>
+          </div>
+        )}
       </div>
+
+      <LicenseDetailModal
+        toolSlug={selectedTool}
+        isOrganizer={isOrganizer}
+        onClose={() => setSelectedTool(null)}
+      />
     </div>
   )
 }

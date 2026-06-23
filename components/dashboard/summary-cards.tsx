@@ -1,91 +1,147 @@
-import { DollarSign, Layers, CalendarClock } from "lucide-react"
+import { CalendarClock, DollarSign, Layers, Users } from 'lucide-react'
+import type { DashboardSnapshot } from '@/lib/dashboard-snapshot'
 
-const cards = [
-  {
-    title: "Inversión Mensual",
-    value: "$150.00",
-    sub: "Ciclo Mayo 2026",
-    icon: DollarSign,
-    color: "cyan",
-    extra: null,
-    footnote: null,
-  },
-  {
-    title: "Licencias en Uso",
-    value: "3 Activas",
-    sub: "ChatGPT · Figma · Canva",
-    icon: Layers,
-    color: "indigo",
-    extra: { used: 3, total: 5 },
-    footnote: "de 5 licencias suscritas",
-  },
-  {
-    title: "Próximo Vencimiento",
-    value: "5 Días",
-    sub: "Renovación: 18 May 2026",
-    icon: CalendarClock,
-    color: "amber",
-    extra: null,
-    footnote: null,
-  },
-]
+type SummaryCard = {
+  title: string
+  value: string
+  sub: string
+  icon: React.ElementType
+  color: 'cyan' | 'indigo' | 'amber' | 'emerald'
+  extra?: { used: number; total: number }
+  footnote?: string
+}
 
 const colorMap = {
   cyan: {
-    bg: "bg-cyan-500/10",
-    icon: "text-cyan-500",
-    bar: "bg-cyan-500",
-    track: "bg-cyan-100",
-    value: "text-cyan-600",
+    bg: "bg-cyan-400/10",
+    icon: "text-cyan-300",
+    bar: "bg-cyan-400",
+    track: "bg-cyan-500/15",
+    value: "text-cyan-100",
   },
   indigo: {
-    bg: "bg-indigo-500/10",
-    icon: "text-indigo-500",
-    bar: "bg-indigo-500",
-    track: "bg-indigo-100",
-    value: "text-foreground",
+    bg: "bg-sky-400/10",
+    icon: "text-sky-300",
+    bar: "bg-sky-400",
+    track: "bg-sky-500/15",
+    value: "text-zinc-50",
   },
   amber: {
-    bg: "bg-amber-500/10",
-    icon: "text-amber-500",
-    bar: "bg-amber-500",
-    track: "bg-amber-100",
-    value: "text-amber-600",
+    bg: "bg-amber-400/10",
+    icon: "text-amber-300",
+    bar: "bg-amber-400",
+    track: "bg-amber-500/15",
+    value: "text-amber-200",
+  },
+  emerald: {
+    bg: "bg-emerald-400/10",
+    icon: "text-emerald-300",
+    bar: "bg-emerald-400",
+    track: "bg-emerald-500/15",
+    value: "text-emerald-200",
   },
 }
 
-export function SummaryCards() {
+export function SummaryCards({ snapshot, isOrganizer = true }: { snapshot: DashboardSnapshot, isOrganizer?: boolean }) {
+  const groups = snapshot.activeGroups ?? []
+  const payments = groups.flatMap(g => g.payments ?? [])
+  const seats = groups.flatMap(g => g.seats ?? [])
+  const members = groups.flatMap(g => g.members ?? [])
+  
+  const paidAmount = payments.reduce((acc, payment) => acc + Number(payment.amount), 0)
+  const occupiedSeats = seats.filter((seat) => seat.status !== 'free').length
+  const overduePayments = payments.filter((payment) => payment.status === 'overdue').length
+  const activeTools = Array.from(new Set(seats.map((seat) => `${seat.tool.name}::${seat.tool.provider}`))).length
+
+  // B2C Metrics
+  const activeLicenses = seats.filter((seat) => seat.status === 'assigned').length // Simplificado
+  // Suma del ahorro: marketPrice - monthlyCost para las licencias asignadas (o pendientes/pagadas)
+  const totalSavings = seats.reduce((acc, seat) => {
+    if (seat.status !== 'free' && seat.tool.marketPrice) {
+      return acc + (Number(seat.tool.marketPrice) - Number(seat.tool.monthlyCost))
+    }
+    return acc
+  }, 0)
+
+  const b2cCards: SummaryCard[] = [
+    {
+      title: 'Tus Licencias',
+      value: `${activeLicenses}`,
+      sub: 'Listas para usar',
+      icon: Layers,
+      color: 'cyan',
+    },
+    {
+      title: 'Ahorro Mensual',
+      value: `$${totalSavings.toFixed(2)}`,
+      sub: 'vs Precio oficial',
+      icon: DollarSign,
+      color: 'emerald',
+    },
+    {
+      title: 'Próximo Vencimiento',
+      value: 'En 14 días',
+      sub: 'Renovación automática',
+      icon: CalendarClock,
+      color: 'indigo',
+    }
+  ]
+
+  const organizerCards: SummaryCard[] = [
+    {
+      title: 'Gasto operativo',
+      value: `$${paidAmount.toFixed(2)}`,
+      sub: 'Mensual estimado',
+      icon: DollarSign,
+      color: 'cyan',
+    },
+    {
+      title: 'Cupos Activos',
+      value: `${occupiedSeats}`,
+      sub: `De ${seats.length} cupos totales en el espacio`,
+      icon: Layers,
+      color: 'indigo',
+    },
+    {
+      title: 'Miembros activos',
+      value: `${members.length}`,
+      sub: 'Usuarios verificados',
+      icon: Users,
+      color: 'emerald',
+    },
+    {
+      title: 'Pagos en mora',
+      value: `${overduePayments}`,
+      sub: overduePayments > 0 ? 'Requieren atención' : 'Al día',
+      icon: CalendarClock,
+      color: overduePayments > 0 ? 'amber' : 'cyan',
+    },
+  ]
+
+  const cards = isOrganizer ? organizerCards : b2cCards
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${isOrganizer ? 'xl:grid-cols-4' : 'xl:grid-cols-3'}`}>
       {cards.map((card) => {
         const colors = colorMap[card.color as keyof typeof colorMap]
         return (
           <div
             key={card.title}
-            className="bg-card rounded-2xl p-5 shadow-sm border border-border hover:shadow-lg transition-shadow duration-200"
+            className="flex flex-col justify-between rounded-[24px] bg-transparent border-l-4 border-white/10 pl-6 py-3 hover:border-cyan-500/50 transition-colors"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className={`p-2.5 rounded-xl ${colors.bg}`}>
-                <card.icon className={`w-5 h-5 ${colors.icon}`} />
-              </div>
+            <div className="flex items-center gap-3 mb-3">
+              <card.icon className={`h-5 w-5 ${colors.icon}`} />
+              <p className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">{card.title}</p>
+              {card.title === 'Pagos en mora' && overduePayments > 0 && (
+                <span className="ml-auto rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-400">
+                  Riesgo
+                </span>
+              )}
             </div>
-            <p className="text-xs font-medium text-muted-foreground mb-1">{card.title}</p>
-            <p className={`text-2xl font-bold leading-tight ${colors.value}`}>{card.value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{card.sub}</p>
-
-            {card.extra && (
-              <div className="mt-3">
-                <div className={`w-full h-1.5 rounded-full ${colors.track}`}>
-                  <div
-                    className={`h-1.5 rounded-full ${colors.bar} transition-all duration-500`}
-                    style={{ width: `${(card.extra.used / card.extra.total) * 100}%` }}
-                  />
-                </div>
-                <p className="text-[10px] text-muted-foreground mt-1.5">
-                  {card.footnote ?? `${card.extra.total - card.extra.used} libres de ${card.extra.total}`}
-                </p>
-              </div>
-            )}
+            <div className="flex items-baseline gap-2">
+              <p className={`text-5xl font-bold tracking-tight ${colors.value}`}>{card.value}</p>
+            </div>
+            <p className="mt-2 text-sm text-zinc-500">{card.sub}</p>
           </div>
         )
       })}

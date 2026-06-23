@@ -1,28 +1,37 @@
 "use client"
 
 import Image from "next/image"
-import { LayoutDashboard, CreditCard, Armchair, Users, Wallet } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { signOut } from "next-auth/react"
+import { CreditCard, LayoutDashboard, Settings, Wallet, LogOut, HelpCircle } from "lucide-react"
+import { ROUTES } from "@/lib/constants/routes"
+import { NotificationBell } from "./notification-bell"
 import { cn } from "@/lib/utils"
 import type { NavTab } from "./sidebar"
 
-const navItems: { label: NavTab; shortLabel: string; icon: React.ElementType }[] = [
-  { label: "Dashboard", shortLabel: "Inicio", icon: LayoutDashboard },
-  { label: "Suscripciones", shortLabel: "Catálogo", icon: CreditCard },
-  { label: "Gestión de Asientos", shortLabel: "Asientos", icon: Armchair },
-  { label: "Comunidad Freelance", shortLabel: "Comunidad", icon: Users },
-  { label: "Billetera", shortLabel: "Billetera", icon: Wallet },
-]
+export function MobileNav({ 
+  isOrganizer = false,
+  activeSubscriptionsCount = 0,
+  user
+}: { 
+  isOrganizer?: boolean
+  activeSubscriptionsCount?: number
+  user?: { name: string; email: string }
+}) {
+  const pathname = usePathname()
 
-interface MobileNavProps {
-  activeTab: NavTab
-  onNavChange: (tab: NavTab) => void
-}
+  const navItems: { label: NavTab; shortLabel: string; href: string; icon: React.ElementType; adminOnly?: boolean }[] = [
+    { label: "Dashboard", shortLabel: "Inicio", href: ROUTES.overview, icon: LayoutDashboard },
+    { label: "Suscripciones", shortLabel: `Subs ${activeSubscriptionsCount}`, href: ROUTES.suscripciones, icon: CreditCard },
+    { label: "Billetera", shortLabel: "Billetera", href: ROUTES.billetera, icon: Wallet },
+    { label: "Ayuda", shortLabel: "Ayuda", href: ROUTES.ayuda, icon: HelpCircle },
+    { label: "Ajustes", shortLabel: "Ajustes", href: ROUTES.settings, icon: Settings },
+  ]
 
-export function MobileNav({ activeTab, onNavChange }: MobileNavProps) {
   return (
     <>
-      {/* Mobile top bar */}
-      <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#0f172a] border-b border-white/10 fixed top-0 left-0 right-0 z-40">
+      <header className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between border-b border-white/10 bg-[#0f172a] px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
           <Image
             src="/CoStack_Logo.png"
@@ -37,33 +46,36 @@ export function MobileNav({ activeTab, onNavChange }: MobileNavProps) {
             <span className="text-cyan-400">Stack</span>
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[11px] text-emerald-400 font-medium">Bot Online</span>
-          <div className="w-7 h-7 rounded-full bg-cyan-500/20 flex items-center justify-center ml-2">
-            <span className="text-cyan-400 font-bold text-xs">M</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 hidden sm:flex">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[11px] font-medium text-emerald-400">Sistema activo</span>
           </div>
+          <NotificationBell />
+          <button 
+            onClick={() => signOut({ callbackUrl: '/login' })}
+            className="flex items-center justify-center h-8 w-8 rounded-full bg-cyan-500/20 hover:bg-rose-500/20 text-cyan-400 hover:text-rose-400 transition-colors group"
+            title="Cerrar sesión"
+          >
+            <span className="text-xs font-bold group-hover:hidden">
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
+            </span>
+            <LogOut size={14} className="hidden group-hover:block" />
+          </button>
         </div>
       </header>
 
-      {/* Mobile bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f172a] border-t border-white/10 flex items-center justify-around px-2 py-2">
-        {navItems.map((item) => {
-          const isActive = activeTab === item.label
+      <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-white/10 bg-[#0f172a] px-2 py-2 lg:hidden">
+        {navItems.filter(item => !item.adminOnly || isOrganizer).map((item) => {
+          const isActive = pathname === item.href || (pathname?.startsWith(`${item.href}/`) ?? false)
+
           return (
-            <button
-              key={item.label}
-              onClick={() => onNavChange(item.label)}
-              className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all"
-            >
-              <item.icon
-                size={20}
-                className={cn(isActive ? "text-cyan-400" : "text-slate-500")}
-              />
-              <span className={cn("text-[10px] font-medium", isActive ? "text-cyan-400" : "text-slate-500")}>
+            <Link key={item.label} href={item.href} className="flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 transition-all">
+              <item.icon size={20} className={cn(isActive ? 'text-cyan-400' : 'text-slate-500')} />
+              <span className={cn('text-[10px] font-medium', isActive ? 'text-cyan-400' : 'text-slate-500')}>
                 {item.shortLabel}
               </span>
-            </button>
+            </Link>
           )
         })}
       </nav>

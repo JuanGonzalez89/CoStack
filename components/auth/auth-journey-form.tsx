@@ -1,0 +1,269 @@
+"use client"
+
+import { useState, type FormEvent } from 'react'
+import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { z } from 'zod'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { ROUTES } from '@/lib/constants/routes'
+
+type JourneyMode = 'login' | 'register' | 'onboarding'
+
+interface AuthJourneyFormProps {
+  mode: JourneyMode
+  title: string
+  description: string
+  submitLabel: string
+  onboardingIntent?: 'create' | 'join'
+}
+
+const loginSchema = z.object({
+  email: z.string().trim().email('Ingresá un email válido'),
+  password: z.string().min(8, 'La contraseña necesita al menos 8 caracteres'),
+})
+
+const registerSchema = loginSchema.extend({
+  name: z.string().trim().min(2, 'Escribí tu nombre'),
+})
+
+const onboardingSchema = z
+  .object({
+    groupName: z.string().trim().optional(),
+    inviteCode: z.string().trim().optional(),
+    role: z.enum(['member', 'organizer']),
+  })
+  .superRefine((data, ctx) => {
+    const hasGroupName = Boolean(data.groupName && data.groupName.length >= 2)
+    const hasInviteCode = Boolean(data.inviteCode && data.inviteCode.length >= 2)
+
+    if (!hasGroupName && !hasInviteCode) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Ingresa un codigo de acceso o define el nombre de tu espacio.',
+      })
+    }
+  })
+
+type AuthFormState = {
+  name: string
+  email: string
+  password: string
+  groupName: string
+  inviteCode: string
+  role: 'member' | 'organizer'
+}
+
+const initialFormState: AuthFormState = {
+  name: '',
+  email: '',
+  password: '',
+  groupName: '',
+  inviteCode: '',
+  role: 'member',
+}
+
+function resolveSuccessPath() {
+  return ROUTES.welcome
+}
+
+export function AuthJourneyForm({ mode, title, description, submitLabel, onboardingIntent }: AuthJourneyFormProps) {
+  const router = useRouter()
+  const [form, setForm] = useState<AuthFormState>(initialFormState)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  function patchForm(patch: Partial<AuthFormState>) {
+    setForm((current) => ({ ...current, ...patch }))
+    if (errorMessage) {
+      setErrorMessage(null)
+    }
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setErrorMessage(null)
+    setIsSubmitting(true)
+
+    try {
+      if (mode === 'login') {
+        const parsed = loginSchema.safeParse({ email: form.email, password: form.password })
+
+        if (!parsed.success) {
+          setErrorMessage(parsed.error.issues[0]?.message ?? 'Revisá los campos del formulario.')
+          return
+        }
+
+        const result = await signIn('credentials', {
+          redirect: false,
+          email: parsed.data.email,
+          password: parsed.data.password,
+          callbackUrl: ROUTES.suscripciones,
+        })
+
+        if (result?.error) {
+          setErrorMessage('No pudimos iniciar sesión. Verificá email y contraseña.')
+          return
+        }
+
+        router.replace(resolveSuccessPath())
+        router.refresh()
+        return
+      }
+
+      if (mode === 'register') {
+        const parsed = registerSchema.safeParse({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+        })
+
+        if (!parsed.success) {
+          setErrorMessage(parsed.error.issues[0]?.message ?? 'Revisá los campos del formulario.')
+          return
+        }
+
+        const registerResponse = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(parsed.data),
+        })
+
+        if (!registerResponse.ok) {
+          const payload = (await registerResponse.json().catch(() => null)) as { error?: string } | null
+          setErrorMessage(payload?.error ?? 'No pudimos crear la cuenta. Revisá los datos e intentá de nuevo.')
+          return
+        }
+
+        const result = await signIn('credentials', {
+          redirect: false,
+          email: parsed.data.email,
+          password: parsed.data.password,
+          callbackUrl: ROUTES.suscripciones,
+        })
+
+        if (result?.error) {
+          const serverError = result.error
+          if (process.env.NODE_ENV !== 'production') {
+            // eslint-disable-next-line no-console
+            console.warn('[auth] signIn error:', serverError)
+          }
+          setErrorMessage(
+            process.env.NODE_ENV !== 'production' ? `La cuenta se creó, pero no pudimos iniciar sesión: ${serverError}` : 'No pudimos iniciar sesión. Intentá nuevamente.'
+          )
+          return
+        }
+
+        router.replace(resolveSuccessPath())
+        router.refresh()
+        return
+      }
+
+      const parsed = onboardingSchema.safeParse({
+        groupName: form.groupName,
+        inviteCode: form.inviteCode,
+        role: form.role,
+      })
+
+      if (!parsed.success) {
+        setErrorMessage(parsed.error.issues[0]?.message ?? 'Revisá los campos del onboarding.')
+        return
+      }
+
+      const response = await fetch('/api/onboarding/complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(parsed.data),
+      })
+
+      if (!response.ok) {
+        setErrorMessage('No pudimos completar el onboarding.')
+        return
+      }
+
+      router.replace(ROUTES.suscripciones)
+      router.refresh()
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="w-full max-w-lg space-y-5 rounded-[28px] border border-zinc-800/80 bg-zinc-900/90 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.35)] backdrop-blur lg:p-7">
+      <div className="space-y-2 border-b border-zinc-800 pb-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.26em] text-cyan-300">Acceso seguro</p>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-50">{title}</h1>
+        <p className="text-sm leading-6 text-zinc-400">{description}</p>
+      </div>
+
+      <div className="space-y-4">
+        {mode === 'register' && (
+          <div className="space-y-2">
+            <Label htmlFor="name">Nombre completo</Label>
+            <Input id="name" value={form.name} onChange={(event) => patchForm({ name: event.target.value })} placeholder="Martín Pérez" />
+          </div>
+        )}
+
+        {(mode === 'login' || mode === 'register') && (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" value={form.email} onChange={(event) => patchForm({ email: event.target.value })} placeholder="martin@costack.app" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Contraseña</Label>
+              <Input id="password" type="password" value={form.password} onChange={(event) => patchForm({ password: event.target.value })} placeholder="••••••••" />
+            </div>
+          </>
+        )}
+
+        {mode === 'onboarding' && (
+          <>
+            {onboardingIntent !== 'join' && (
+              <div className="space-y-2">
+                <Label htmlFor="groupName">Nombre de tu espacio</Label>
+                <Input id="groupName" value={form.groupName} onChange={(event) => patchForm({ groupName: event.target.value })} placeholder="CoStack Studio" />
+              </div>
+            )}
+
+            {onboardingIntent !== 'create' && (
+              <div className="space-y-2">
+                <Label htmlFor="inviteCode">Codigo de acceso</Label>
+                <Input id="inviteCode" value={form.inviteCode} onChange={(event) => patchForm({ inviteCode: event.target.value })} placeholder="Ejemplo: COSTACK-84A2" />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="role">Rol inicial</Label>
+              <select
+                id="role"
+                value={form.role}
+                onChange={(event) => patchForm({ role: event.target.value as AuthFormState['role'] })}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="member">Miembro</option>
+                <option value="organizer">Administrador</option>
+              </select>
+            </div>
+          </>
+        )}
+      </div>
+
+      {errorMessage && (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          {errorMessage}
+        </div>
+      )}
+
+      <Button type="submit" className="w-full rounded-xl bg-cyan-500 text-white hover:bg-cyan-400" disabled={isSubmitting}>
+        {isSubmitting ? 'Procesando...' : submitLabel}
+      </Button>
+    </form>
+  )
+}

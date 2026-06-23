@@ -1,0 +1,54 @@
+# Análisis Extenso de Flujos de Usuario: CoStack
+
+Este documento mapea los flujos de usuario (User Journeys) actuales del sistema para Organizadores y Miembros, detallando qué está resuelto visualmente y **qué nos falta** a nivel de lógica, seguridad y pantallas adicionales.
+
+---
+
+## 1. Flujo del Organizador (El Inversor / Creador)
+
+El organizador es el usuario que pone el capital inicial para adquirir una Licencia Maestra y espera recuperar la inversión compartiendo cupos (sea con conocidos o vía Automatch).
+
+### Flujo Actual (Resuelto en UI)
+1. **Onboarding:** Ingresa a la plataforma. El sistema detecta que no tiene suscripciones y muestra el `OnboardingPrompt` invitándolo a explorar el catálogo.
+2. **Selección de Herramienta:** Va a `/suscripciones`. El catálogo se adapta a su rol, mostrando beneficios de recuperación de inversión y protección.
+3. **Checkout:** Selecciona una herramienta (ej. Midjourney). Pasa al `/checkout` donde el sistema le cobra el total (ej. $60) y le muestra el retorno estimado (ej. -$45). Paga.
+4. **Activación:** Vuelve al `/overview`. El sistema ya generó su `Código Privado`. 
+5. **Gestión:** Va a `/asientos`. Ve la lista de asientos disponibles. Si es una cuenta "Business" (como Figma), el sistema le recuerda que debe recolectar los emails. Si algún miembro comete una infracción, puede "Reportar Incidencia".
+6. **Finanzas:** Va a `/billetera`. Filtra por "Ingresos" para ver cómo los miembros van pagando sus cuotas y recuperando su inversión.
+
+### 🛑 ¿Qué nos falta para el Organizador? (Fricciones Críticas)
+* **Toggle Privado vs Automatch:** Actualmente asumimos que el Automatch funciona solo, pero el Organizador debe tener el poder de decidir: *"Quiero que estos asientos se llenen con Automatch"* vs *"Este grupo es 100% cerrado para mis amigos/empresa"*. Falta un interruptor (Toggle) en la Gestión de Asientos para habilitar/deshabilitar el Automatch.
+* **Flujo de Retiro de Fondos:** La `/billetera` muestra el balance y los ingresos, pero **no hay un botón ni un flujo de "Retirar Fondos"**. Necesitamos una ventana (Modal) donde el Organizador pueda ingresar su CVU/CBU o Billetera Crypto para sacar su plata.
+* **Carga de Credenciales (Shared Tokens):** Si el organizador compra ChatGPT Plus (que es con usuario y contraseña compartidos), ¿en qué momento carga la contraseña en CoStack para que el sistema se la muestre a los miembros de forma segura? Nos falta un modal de "Configurar Credenciales del Grupo".
+* **Cancelación de Licencia:** Si el Organizador se cansa y ya no quiere pagar la Licencia Maestra, debe existir un flujo para cancelar la suscripción que avise automáticamente a los miembros que el grupo se va a disolver a fin de mes.
+
+---
+
+## 2. Flujo del Miembro (El Comprador Minorista)
+
+El miembro es el usuario que quiere acceder a herramientas premium de forma económica y sin fricciones, sin hacerse cargo de la administración.
+
+### Flujo Actual (Resuelto en UI)
+1. **Onboarding:** Ingresa a la plataforma. Se le da la opción de ingresar un código que le pasó un amigo o "Explorar Automatch".
+2. **Automatch:** Va a `/suscripciones`. Ve las herramientas con sus precios fraccionados (ej. $5/mes) y la etiqueta del ahorro.
+3. **Checkout:** Selecciona una herramienta. En `/checkout`, paga únicamente su fracción del costo.
+4. **Acceso:** Vuelve al `/overview`. Ve la tarjeta `SuccessAccessCard` que le da acceso a la herramienta (sea revelando las credenciales compartidas o indicándole que espere la invitación por email para cuentas Business).
+5. **Finanzas:** Su `/billetera` refleja sus gastos mensuales de forma pasiva. Si un pago rebota, el sistema muestra el `PaymentRetryBanner`.
+
+### 🛑 ¿Qué nos falta para el Miembro? (Fricciones Críticas)
+* **Reporte de Estafas (Protección Escrow):** Prometemos "Garantía de Uso" y pagos seguros, pero si las credenciales compartidas no funcionan, o el organizador lo elimina de Figma sin razón, el Miembro **debe poder reportar al Organizador**. Necesitamos un botón de "Credenciales Inválidas" o "Reportar Problema" en su tarjeta de acceso que congele los fondos del organizador inmediatamente.
+* **Gestión de Cancelación:** El miembro tiene que poder cancelar su cuota. Al hacerlo, el asiento debe quedar marcado como "Libre a fin de mes" para que el Automatch empiece a buscarle un reemplazo al organizador sin dejarlo colgado de un día para el otro.
+* **Estado "En Espera" (Business Tools):** Cuando el miembro paga por Figma (Business), depende de que el Organizador le mande el mail. Falta un estado intermedio en la UI del Miembro que diga: *"Esperando invitación del Organizador - Si no te invita en 24hs, se te devuelve el dinero"*.
+
+---
+
+## Conclusión: El Próximo Cuello de Botella
+
+A nivel visual, las pantallas principales están creadas. A nivel de flujos lógicos, lo que nos falta construir antes de lanzar (nuestro 20% restante) gira 100% en torno a **las transiciones de estado y la resolución de conflictos**:
+
+1. **Credenciales In y Out:** Pantallas para que el Organizador guarde las claves y el Miembro las consuma.
+2. **Conflictos & Escrow:** Modal de reportes mutuos (El Organizador reporta mal uso / El Miembro reporta que no funciona).
+3. **Cash-Out:** Flujo de retiro de dinero de la Billetera.
+4. **Toggles Operativos:** Prender/Apagar Automatch.
+
+El proyecto tiene una pinta increíble y la base UX es muy sólida. Abordar estos "huecos lógicos" es lo que va a blindar la plataforma contra el caos real de los usuarios en internet.

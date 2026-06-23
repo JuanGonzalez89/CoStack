@@ -8,8 +8,22 @@ __v0_jsx-dev-runtime.ts
 
 # Environment variables
 .env*.local
+.env
+
+# Database
+*.db
+
+# Bot session files
+.auth/
 
 # Common ignores
 node_modules
 .next/
 .DS_Store
+playwright-report/
+test-results/
+santiago-overview.png
+.pgdata-dev/
+
+tsconfig.tsbuildinfo
+dev-server-log.txt
