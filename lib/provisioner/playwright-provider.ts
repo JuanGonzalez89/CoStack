@@ -1,6 +1,6 @@
-import { chromium, type BrowserContextOptions } from 'playwright'
 import { existsSync } from 'node:fs'
 import type { ProvisionResult, ProvisionerProvider, PlaywrightFlow } from './types'
+import type { BrowserContextOptions } from 'playwright'
 import { chatgptFlow } from './flows/chatgpt'
 import { canvaFlow } from './flows/canva'
 
@@ -39,6 +39,7 @@ export class PlaywrightProvider implements ProvisionerProvider {
       }
     }
 
+    const { chromium } = await import('playwright')
     const browser = await chromium.launch({
       headless: false,
       args: ['--disable-blink-features=AutomationControlled'],
