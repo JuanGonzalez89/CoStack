@@ -1,11 +1,18 @@
-import type { ProvisionResult } from './types'
+import type { ProvisionResult, ProvisionerProvider } from './types'
 import { GitHubProvider } from './providers/github'
-import { PlaywrightProvider } from './playwright-provider'
 
-const providers = [
+const staticProviders: ProvisionerProvider[] = [
   new GitHubProvider(),
-  new PlaywrightProvider(),
 ]
+
+async function getPlaywrightProvider(): Promise<ProvisionerProvider | null> {
+  try {
+    const { PlaywrightProvider } = await import('./playwright-provider')
+    return new PlaywrightProvider()
+  } catch {
+    return null
+  }
+}
 
 export async function fulfillProvision(
   lobbyId: string,
@@ -13,10 +20,17 @@ export async function fulfillProvision(
   toolName: string,
   members: { email: string; userId: string }[],
 ): Promise<ProvisionResult> {
-  const provider = providers.find(p => p.canHandle(toolSlug))
-  if (!provider) {
-    return { status: 'failed', accessToken: null, providerName: 'unknown', inviteUrl: null, errors: [`No provider for ${toolSlug}`] }
+  const staticMatch = staticProviders.find(p => p.canHandle(toolSlug))
+  if (staticMatch) {
+    console.log(`[Provisioner] Usando ${staticMatch.name} para ${toolSlug}`)
+    return staticMatch.fulfill(lobbyId, toolName, members)
   }
-  console.log(`[Provisioner] Usando ${provider.name} para ${toolSlug}`)
-  return provider.fulfill(lobbyId, toolName, members)
+
+  const pwProvider = await getPlaywrightProvider()
+  if (pwProvider && pwProvider.canHandle(toolSlug)) {
+    console.log(`[Provisioner] Usando ${pwProvider.name} para ${toolSlug}`)
+    return pwProvider.fulfill(lobbyId, toolName, members)
+  }
+
+  return { status: 'failed', accessToken: null, providerName: 'unknown', inviteUrl: null, errors: [`No provider for ${toolSlug}`] }
 }
