@@ -27,18 +27,14 @@ export function OrganizerLobbyClient({ lobbyId }: { lobbyId: string }) {
   const [showFinal, setShowFinal] = useState(false)
 
   useEffect(() => {
-    if (data?.status === "completed" && !showFinal && !showPreparing) {
-      // Allow progress bar to reach 100% and stay for 2 seconds before showing preparing modal
-      const initialDelay = setTimeout(() => {
-        setShowPreparing(true)
-        const timer = setTimeout(() => {
-          setShowPreparing(false)
-          setShowFinal(true)
-        }, 4000)
-      }, 2000)
-      return () => clearTimeout(initialDelay)
+    if (data?.status === "completed" && !showFinal) {
+      // Un pequeño retraso para asegurar transición suave
+      const timer = setTimeout(() => {
+        setShowFinal(true)
+      }, 1000)
+      return () => clearTimeout(timer)
     }
-  }, [data?.status, showFinal, showPreparing])
+  }, [data?.status, showFinal])
 
   useEffect(() => {
     if (!data?.expiresAt) return
@@ -86,14 +82,17 @@ export function OrganizerLobbyClient({ lobbyId }: { lobbyId: string }) {
     )
   }
 
-  if (showPreparing) {
+  if (data.status === "processing" || showPreparing) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 animate-in fade-in duration-500">
-        <Loader2 className="w-16 h-16 text-cyan-400 animate-spin" />
+        <div className="relative">
+          <div className="absolute inset-0 rounded-full blur-xl bg-cyan-500/20 animate-pulse" />
+          <Loader2 className="w-20 h-20 text-cyan-400 animate-spin relative z-10" />
+        </div>
         <div className="text-center">
-          <h2 className="text-3xl font-black text-white mb-3">Preparando detalles finales</h2>
+          <h2 className="text-3xl font-black text-white mb-3">CoStack está preparando tu licencia</h2>
           <p className="text-lg text-zinc-400 max-w-md mx-auto">
-            El cupo se ha completado. CoStack está validando los pagos y generando tu credencial oficial...
+            El cupo se ha completado. Estamos ejecutando la automatización en tiempo real para generar tu credencial oficial...
           </p>
         </div>
       </div>

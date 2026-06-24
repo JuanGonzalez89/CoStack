@@ -1,5 +1,5 @@
 import {
-  MessageSquare, Pen, GitBranch, Code
+  MessageSquare, Pen, GitBranch, Code, Sparkles
 } from "lucide-react"
 import type { ElementType } from "react"
 
@@ -27,9 +27,11 @@ const PROVIDER_URLS: Record<string, string> = {
   "Vercel": "https://vercel.com",
   "Canva": "https://canva.com",
   "Anthropic": "https://claude.ai",
+  "Hugging Face": "https://huggingface.co",
 }
 
 export const CATALOG: CatalogItem[] = [
+  { id: "huggingface",name: "HuggingChat Premium",provider: "Hugging Face",pricePerMonth: 5, originalPrice: 20, monthlyCost: 20, availableSeats: 3, icon: Sparkles, iconBg: "bg-amber-500/10", iconColor: "text-amber-500", category: "AI", providerUrl: PROVIDER_URLS["Hugging Face"] },
   { id: "copilot",    name: "GitHub Copilot",   provider: "GitHub",    pricePerMonth: 5,  originalPrice: 10, monthlyCost: 10, availableSeats: 2,  icon: GitBranch,    iconBg: "bg-slate-200/50",   iconColor: "text-slate-700",   category: "AI",     providerUrl: PROVIDER_URLS["GitHub"] },
   { id: "jetbrains",  name: "All Products Pack", provider: "JetBrains", pricePerMonth: 8,  originalPrice: 28, monthlyCost: 28, availableSeats: 1,  icon: Code,         iconBg: "bg-rose-500/10",     iconColor: "text-rose-500",    category: "IDE",   providerUrl: PROVIDER_URLS["JetBrains"] },
   { id: "chatgpt",    name: "ChatGPT Team",      provider: "OpenAI",    pricePerMonth: 15, originalPrice: 30, monthlyCost: 30, availableSeats: 4,  icon: MessageSquare,iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500", category: "AI",   providerUrl: PROVIDER_URLS["OpenAI"] },

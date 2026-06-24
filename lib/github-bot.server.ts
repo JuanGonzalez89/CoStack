@@ -43,11 +43,11 @@ export async function inviteMemberToTeam(teamSlug: string, email: string): Promi
   const org = getOrg()
 
   try {
-    await octokit.rest.teams.addOrUpdateMembershipForUserInOrg({
+    await octokit.rest.orgs.createInvitation({
       org,
-      teamSlug,
-      username: email,
-      role: "member",
+      email: email,
+      role: "direct_member",
+      team_slugs: [teamSlug],
     })
     console.log(`[GitHub Bot] Usuario ${email} invitado al team ${teamSlug}`)
     return true

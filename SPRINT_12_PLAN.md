@@ -32,6 +32,13 @@ Provisioner.fulfill(lobbyId, toolSlug, members)
       │           ├── 3. Invitar a cada miembro por email
       │           └── 4. Extraer link de invitación → accessToken
       │
+      ├── toolSlug = "huggingface"
+      │     └── PlaywrightProvider.ejecutarFlow("huggingface", session, members)
+      │           ├── 1. Cargar perfil .auth de la cuenta maestra de Hugging Face
+      │           ├── 2. Ir a huggingface.co → Settings → Members
+      │           ├── 3. Invitar a cada miembro por email
+      │           └── 4. Extraer link de invitación → accessToken
+      │
       └── toolSlug = "canva"
             └── PlaywrightProvider.ejecutarFlow("canva", session, members)
                   ├── 1. Cargar perfil .auth de la cuenta maestra de Canva
@@ -43,6 +50,12 @@ Provisioner.fulfill(lobbyId, toolSlug, members)
 ---
 
 ## Setup inicial (hacer una vez)
+
+### 0. Crear Organización en Hugging Face (Nuevo)
+1. Ir a [Hugging Face](https://huggingface.co/) y crear una cuenta o iniciar sesión.
+2. Hacer click en tu foto de perfil (arriba a la derecha) -> **New Organization**.
+3. Elegir un nombre (ej. `costack-ia`) y seleccionar el plan **Free**.
+4. Ir a Settings de la organización -> Members. La URL de esa página será la que usará el bot.
 
 ### 1. Instalar Playwright
 
@@ -76,6 +89,12 @@ async function main() {
   await waitForEnter()
   await context.storageState({ path: '.auth/canva.json' })
 
+  // Paso 3: Login Hugging Face
+  await page.goto('https://huggingface.co/login')
+  console.log('👉 Logueate en Hugging Face manualmente. Después presioná Enter...')
+  await waitForEnter()
+  await context.storageState({ path: '.auth/huggingface.json' })
+
   await browser.close()
   console.log('✅ Sesiones guardadas en .auth/')
 }
@@ -96,12 +115,14 @@ lib/provisioner/
   ├── playwright-provider.ts      ← Provider que ejecuta flows con Playwright
   ├── flows/
   │     ├── chatgpt.ts            ← Flow de ChatGPT
+  │     ├── huggingface.ts        ← Flow de Hugging Face
   │     └── canva.ts              ← Flow de Canva
   └── providers/
         └── github.ts             ← GitHub provider (API directa, sin Playwright)
 
 .auth/
   ├── chatgpt.json                ← Sesión guardada (gitignored)
+  ├── huggingface.json            ← Sesión guardada (gitignored)
   └── canva.json                  ← Sesión guardada (gitignored)
 
 scripts/
@@ -203,6 +224,35 @@ export const canvaFlow: PlaywrightFlow = {
 }
 ```
 
+### T4.5 `lib/provisioner/flows/huggingface.ts` (Implementación IA)
+
+```ts
+import type { PlaywrightFlow } from '../types'
+
+export const huggingfaceFlow: PlaywrightFlow = {
+  toolSlugs: ['huggingface', 'ia', 'huggingchat'],
+  nombre: 'Hugging Face IA',
+
+  async ejecutar(page, members) {
+    // Reemplazar "tu-organizacion-costack" por el ID real de la organización creada
+    await page.goto('https://huggingface.co/organizations/tu-organizacion-costack/settings/members')
+    await page.waitForSelector('text=Invite member', { timeout: 10000 })
+
+    for (const member of members) {
+      if (!member.email) continue
+      await page.fill('input[placeholder="Email address"]', member.email)
+      await page.click('button:has-text("Invite")')
+      await page.waitForTimeout(2000)
+    }
+
+    return {
+      accessToken: 'INVITATION_SENT',
+      inviteUrl: 'https://huggingface.co/organizations/tu-organizacion-costack',
+    }
+  },
+}
+```
+
 ### T5. `lib/provisioner/playwright-provider.ts`
 
 Provider genérico que recibe un flow y ejecuta Playwright:
@@ -213,8 +263,9 @@ import type { Page } from 'playwright'
 import type { ProvisionResult, ProvisionerProvider, PlaywrightFlow } from './types'
 import { chatgptFlow } from './flows/chatgpt'
 import { canvaFlow } from './flows/canva'
+import { huggingfaceFlow } from './flows/huggingface'
 
-const flows: PlaywrightFlow[] = [chatgptFlow, canvaFlow]
+const flows: PlaywrightFlow[] = [chatgptFlow, canvaFlow, huggingfaceFlow]
 
 export class PlaywrightProvider implements ProvisionerProvider {
   name = 'Playwright (Session Hijacking)'
@@ -230,10 +281,22 @@ export class PlaywrightProvider implements ProvisionerProvider {
       return { status: 'failed', accessToken: null, providerName: this.name, inviteUrl: null, errors: ['No flow matched'] }
     }
 
-    const sessionPath = `.auth/${flows.indexOf(flow) === 0 ? 'chatgpt' : 'canva'}.json`
+    // Determinar qué sesión usar según el flow
+    let sessionName = 'chatgpt'
+    if (flow.nombre === 'Canva Pro') sessionName = 'canva'
+    if (flow.nombre === 'Hugging Face IA') sessionName = 'huggingface'
+    
+    const sessionPath = `.auth/${sessionName}.json`
 
     const browser = await chromium.launch({ headless: true })
-    const context = await browser.newContext({ storageState: sessionPath })
+    
+    // Aplicar las opciones anti-bot (Implementadas post-Sprint 13)
+    const context = await browser.newContext({ 
+      storageState: sessionPath,
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      locale: 'es-AR',
+      timezoneId: 'America/Argentina/Buenos_Aires'
+    })
     const page = await context.newPage()
 
     try {
@@ -390,6 +453,14 @@ async function main() {
   await context.storageState({ path: '.auth/canva.json' })
   console.log('✅ Sesión de Canva guardada.\n')
 
+  console.log('=== Hugging Face ===')
+  await page.goto('https://huggingface.co/login')
+  console.log('👉 Logueate en Hugging Face con la cuenta maestra.')
+  console.log('👉 Después presioná Enter para continuar...')
+  await waitForEnter()
+  await context.storageState({ path: '.auth/huggingface.json' })
+  console.log('✅ Sesión de Hugging Face guardada.\n')
+
   await browser.close()
   console.log('🎉 Sesiones guardadas. Ya podés correr el bot.')
 }
@@ -443,6 +514,7 @@ Tener preparado:
 | `lib/provisioner/playwright-provider.ts` | **CREAR** |
 | `lib/provisioner/flows/chatgpt.ts` | **CREAR** |
 | `lib/provisioner/flows/canva.ts` | **CREAR** |
+| `lib/provisioner/flows/huggingface.ts` | **CREAR** |
 | `lib/provisioner/providers/github.ts` | **CREAR** (migrar) |
 | `lib/headless.server.ts` | **MODIFICAR** — usar `fulfillProvision` |
 | `app/api/lobby/[id]/route.ts` | **MODIFICAR** — pasar members, sacar mocks |
@@ -455,12 +527,35 @@ Tener preparado:
 
 ## Criterios de aceptación
 
-- [ ] `scripts/auth-setup.ts` guarda sesiones de ChatGPT y Canva correctamente
-- [ ] `PlaywrightProvider.ejecutar()` carga la sesión guardada y ejecuta el flow
-- [ ] `chatgptFlow` invita miembros por email exitosamente
-- [ ] `canvaFlow` invita miembros por email exitosamente
-- [ ] `GitHubProvider` funciona igual que antes vía API
-- [ ] `Provisioner.fulfill()` elige el provider correcto según `toolSlug`
-- [ ] El lobby se completa sin mocks (solo miembros reales)
-- [ ] Cada miembro recibe notificación con el acceso provisionado
-- [ ] Si un flow falla, el error se captura y el lobby se marca como `completed` igual (graceful degradation)
+- [x] `scripts/auth-setup.ts` guarda sesiones de ChatGPT y Canva correctamente
+- [x] `PlaywrightProvider.ejecutar()` carga la sesión guardada y ejecuta el flow
+- [x] `chatgptFlow` invita miembros por email exitosamente
+- [x] `canvaFlow` invita miembros por email exitosamente
+- [x] `huggingfaceFlow` implementado con sistema de URL Auto-Approve
+- [x] `GitHubProvider` refactorizado para soportar invitaciones por email a Org Teams
+- [x] `Provisioner.fulfill()` elige el provider correcto según `toolSlug`
+- [x] El lobby se completa sin mocks (solo miembros reales)
+- [x] Cada miembro recibe notificación con el acceso provisionado (Workspace Modal unificado)
+- [x] Si un flow falla, el error se captura y el lobby se marca como `completed` igual (graceful degradation)
+
+---
+
+## 🚀 Preparación para la Presentación (Checklist Final)
+
+Para asegurar que la demo en vivo salga **perfecta y sin fricciones** (sin lags visuales del bot o problemas de autenticación), asegúrense de repasar esto antes de presentar:
+
+1. **Restaurar las Sesiones (Cookies):**
+   - Abran las plataformas (Canva, Hugging Face, ChatGPT) en sus cuentas maestras normales.
+   - Si les cerró la sesión, usen una extensión como *Cookie-Editor* para extraer las cookies o **corran nuevamente el script `npx tsx scripts/auth-setup.ts`** para refrescar las sesiones y que `.auth/huggingface.json` o la que usen quede validada de nuevo. Las sesiones expiran, así que hacerlo justo antes de la clase es clave.
+
+2. **Ocultar Playwright (Modo Headless):**
+   - En `lib/provisioner/playwright-provider.ts`, asegúrense de que `headless: true` (ahora mismo durante pruebas está en `false` para ver el navegador). Cambiarlo a `true` acelera enormemente la ejecución, elimina el "lag" en la pantalla y mantiene la magia en segundo plano.
+
+3. **Prueba de Base de Datos (Localhost):**
+   - Corran `npm run dev` y verifiquen que todo cargue bien. Hoy modificamos la contraseña del Postgres a `1234` en el `.env`. De ser necesario, reseteen la db local con `npx prisma db push` antes de mostrar para tener una base limpia.
+
+4. **Variables de Entorno Clave (.env):**
+   - Asegúrense de que `MP_ACCESS_TOKEN`, `NEXT_PUBLIC_MP_PUBLIC_KEY` y `GITHUB_BOT_TOKEN` estén bien configurados (especialmente GitHub para la prueba en vivo).
+
+5. **El "Truco" Terminal:**
+   - Si por alguna razón el lobby de la demo web llega a trabarse por la conexión de red de UADE, tengan preparadas las consolas ejecutando `npx tsx scripts/test-bot-huggingface.ts` o `test-bot-github.ts`. Mostrar eso en vivo es una carta ganadora infalible ante cualquier falla de Next.js.
