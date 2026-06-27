@@ -22,9 +22,10 @@ export async function GET(
     const lobby = await prisma.lobby.findUnique({
       where: { id },
       include: {
+        creator: { select: { id: true, email: true } },
         members: {
           orderBy: { seatIndex: "asc" },
-          include: { user: { select: { id: true, email: true } } },
+          include: { user: { select: { id: true, email: true, name: true } } },
         },
       },
     })
@@ -33,6 +34,8 @@ export async function GET(
       return NextResponse.json({ error: "Lobby not found" }, { status: 404 })
     }
 
+    const currentUser = await prisma.user.findUnique({ where: { email: session.user.email! }, select: { id: true } })
+    const isCreator = currentUser?.id === lobby.creatorId
     const now = new Date()
 
     if (lobby.status === "waiting" && lobby.expiresAt < now) {
@@ -66,6 +69,8 @@ export async function GET(
         filledSeats: lobby.members.length,
         totalSeats: lobby.totalSeats,
         expiresAt: lobby.expiresAt.toISOString(),
+        creatorId: lobby.creatorId,
+        isCreator,
         members: [],
         message: "El tiempo de la sala de espera expiró. Tu pago será devuelto.",
       })
@@ -76,6 +81,7 @@ export async function GET(
       seatIndex: m.seatIndex,
       amount: m.amount,
       email: m.user.email,
+      name: m.user.name,
       paymentRef: m.paymentRef,
       isSelf: m.user.email === session.user?.email,
     }))
@@ -96,6 +102,8 @@ export async function GET(
           totalSeats: lobby.totalSeats,
           expiresAt: lobby.expiresAt.toISOString(),
           accessToken: lobby.accessToken,
+          creatorId: lobby.creatorId,
+          isCreator,
           toolName: lobby.toolName,
           provider: lobby.provider,
           pricePerSeat: lobby.pricePerSeat,
@@ -161,6 +169,8 @@ export async function GET(
         totalSeats: lobby.totalSeats,
         expiresAt: lobby.expiresAt.toISOString(),
         accessToken: generatedToken,
+        creatorId: lobby.creatorId,
+        isCreator,
         toolName: lobby.toolName,
         provider: lobby.provider,
         pricePerSeat: lobby.pricePerSeat,
@@ -175,6 +185,8 @@ export async function GET(
       filledSeats,
       totalSeats: lobby.totalSeats,
       expiresAt: lobby.expiresAt.toISOString(),
+      creatorId: lobby.creatorId,
+      isCreator,
       members,
       toolName: lobby.toolName,
       provider: lobby.provider,

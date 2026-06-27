@@ -162,34 +162,45 @@ export function OrganizerLobbyClient({ lobbyId }: { lobbyId: string }) {
 
               <div className="space-y-3">
                 <h3 className="font-semibold text-white mb-4">Integrantes actuales:</h3>
-                {data.members.map((member) => (
-                  <div
-                    key={member.seatIndex}
-                    className={`flex items-center justify-between p-4 rounded-2xl transition-colors ${
-                      member.isSelf
-                        ? "bg-cyan-500/10 border border-cyan-500/20"
-                        : "bg-white/[0.02] border border-white/5"
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${
-                        member.isSelf ? "bg-cyan-500 text-black" : "bg-white/10 text-zinc-400"
-                      }`}>
-                        {member.seatIndex}
+                {data.members.map((member) => {
+                  const memberLabel = member.isSelf
+                    ? "Vos (Organizador)"
+                    : member.name
+                      ? member.name
+                      : member.email
+                        ? member.email.split("@")[0]
+                        : `Miembro ${member.seatIndex}`
+                  return (
+                    <div
+                      key={member.seatIndex}
+                      className={`flex items-center justify-between p-4 rounded-2xl transition-colors ${
+                        member.isSelf
+                          ? "bg-cyan-500/10 border border-cyan-500/20"
+                          : "bg-white/[0.02] border border-white/5"
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${
+                          member.isSelf ? "bg-cyan-500 text-black" : "bg-white/10 text-zinc-400"
+                        }`}>
+                          {member.seatIndex}
+                        </div>
+                        <div>
+                          <p className={`font-bold ${member.isSelf ? "text-cyan-400" : "text-zinc-200"}`}>
+                            {memberLabel}
+                          </p>
+                          <p className="text-xs text-zinc-500">
+                            {member.isSelf ? "Organizador" : "Unido a la sala"}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className={`font-bold ${member.isSelf ? "text-cyan-400" : "text-zinc-200"}`}>
-                          {member.isSelf ? "Vos (Organizador)" : `Miembro Anónimo`}
-                        </p>
-                        <p className="text-xs text-zinc-500">Unido a la sala</p>
+                      <div className="text-right">
+                        <p className="font-bold text-emerald-400">${member.amount.toFixed(2)}</p>
+                        <p className="text-xs text-zinc-500">Aportado</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-emerald-400">${member.amount.toFixed(2)}</p>
-                      <p className="text-xs text-zinc-500">Aportado</p>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
                 
                 {/* Empty slots placeholders */}
                 {Array.from({ length: total - filled }).map((_, i) => (

@@ -16,7 +16,6 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
   const router = useRouter()
   const [timeLeft, setTimeLeft] = useState(600)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [accessMethod, setAccessMethod] = useState<'INVITATION_LINK' | 'API_PROXY'>('INVITATION_LINK')
   const [mpReady, setMpReady] = useState(false)
   const [mpInstance, setMpInstance] = useState<any>(null)
 
@@ -122,7 +121,7 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
       const res = await fetch('/api/checkout/pay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ toolSlug, accessMethod, cardToken: cardTokenId })
+        body: JSON.stringify({ toolSlug, accessMethod: 'INVITATION_LINK', cardToken: cardTokenId })
       })
 
       const data = await res.json()
@@ -176,30 +175,13 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl border border-white/5 bg-white/[0.02]">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <Zap className="w-5 h-5 text-cyan-400" />
-              ¿Cómo querés usar tu licencia?
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-               <Button 
-                  variant={accessMethod === 'INVITATION_LINK' ? 'default' : 'outline'} 
-                  onClick={() => setAccessMethod('INVITATION_LINK')} 
-                  className={`h-12 rounded-xl justify-start px-4 transition-all duration-200 ${accessMethod === 'INVITATION_LINK' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/50 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'bg-transparent border-white/10 text-zinc-400 hover:bg-white/5 hover:text-zinc-300'}`}
-               >
-                 Uso Web (Invitación Oficial)
-               </Button>
-               <Button 
-                  variant={accessMethod === 'API_PROXY' ? 'default' : 'outline'} 
-                  onClick={() => setAccessMethod('API_PROXY')} 
-                  className={`h-12 rounded-xl justify-start px-4 transition-all duration-200 ${accessMethod === 'API_PROXY' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/50 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'bg-transparent border-white/10 text-zinc-400 hover:bg-white/5 hover:text-zinc-300'}`}
-               >
-                 Desarrollo (API Key)
-               </Button>
+          <div className="p-4 rounded-2xl bg-cyan-500/5 border border-cyan-500/20">
+            <div className="flex items-center gap-3">
+              <Zap className="w-5 h-5 text-cyan-400 shrink-0" />
+              <p className="text-sm text-zinc-300">
+                Vas a recibir un <strong className="text-white">enlace de invitación oficial</strong> para unirte al equipo de la herramienta. Sin compartir contraseñas.
+              </p>
             </div>
-            <p className="mt-3 text-xs text-zinc-500">
-              El motor de Auto-Match te agrupará únicamente con usuarios que busquen este mismo método de acceso.
-            </p>
           </div>
 
           {/* Card form section — más espacio */}

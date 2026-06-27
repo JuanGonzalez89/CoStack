@@ -143,13 +143,6 @@ export async function POST(request: Request) {
         lobbyId: lobby.id,
       }, { status: 200 })
     } catch (lobbyErr: any) {
-      // Lobby table might not exist yet — fall back to legacy flow
-      if (lobbyErr?.message?.includes("does not exist") || lobbyErr?.code === "P2021") {
-        return NextResponse.json({
-          success: true,
-          message: "Pago procesado. Usá el dashboard para ver tus licencias.",
-        }, { status: 200 })
-      }
       throw lobbyErr
     }
   } catch (error) {

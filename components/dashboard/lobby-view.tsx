@@ -186,28 +186,35 @@ export function LobbyView({ tool, open, onOpenChange }: LobbyViewProps) {
             )}
 
             <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-              {data?.members.map((member) => (
-                <div
-                  key={member.seatIndex}
-                  className={`flex items-center justify-between p-3 rounded-xl text-sm ${
-                    member.isSelf
-                      ? "bg-cyan-500/10 border border-cyan-500/20"
-                      : member.isMock
-                        ? "bg-white/[0.015] border border-white/5"
+              {data?.members.map((member) => {
+                const memberLabel = member.isSelf
+                  ? "Vos"
+                  : data.isCreator && member.name
+                    ? member.name
+                    : data.isCreator && member.email
+                      ? member.email.split("@")[0]
+                      : `Miembro ${member.seatIndex}`
+                return (
+                  <div
+                    key={member.seatIndex}
+                    className={`flex items-center justify-between p-3 rounded-xl text-sm ${
+                      member.isSelf
+                        ? "bg-cyan-500/10 border border-cyan-500/20"
                         : "bg-white/[0.02] border border-white/5"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-xs font-bold text-zinc-400">
-                      {member.seatIndex}
-                    </span>
-                    <span className={member.isSelf ? "text-cyan-300 font-semibold" : "text-zinc-300"}>
-                      {member.isSelf ? "Vos" : member.isMock ? `Miembro ${member.seatIndex}` : `Miembro ${member.seatIndex}`}
-                    </span>
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-xs font-bold text-zinc-400">
+                        {member.seatIndex}
+                      </span>
+                      <span className={member.isSelf ? "text-cyan-300 font-semibold" : "text-zinc-300"}>
+                        {memberLabel}
+                      </span>
+                    </div>
+                    <span className="text-emerald-400 font-semibold">${member.amount.toFixed(2)}</span>
                   </div>
-                  <span className="text-emerald-400 font-semibold">${member.amount.toFixed(2)}</span>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             {filled < total && (

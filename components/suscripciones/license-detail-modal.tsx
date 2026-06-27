@@ -76,9 +76,9 @@ export function LicenseDetailModal({ toolSlug, isOrganizer = false, onClose }: L
 
           <div className={cn("flex gap-3", isOrganizer && "hidden")}>
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={onClose}
-              className="flex-1 rounded-xl border-white/10 text-zinc-300 hover:text-white hover:bg-white/5 h-10"
+              className="flex-1 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 h-10"
             >
               Seguir viendo
             </Button>

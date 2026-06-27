@@ -14,18 +14,18 @@ export function PaymentRetryBanner({
   href = "/billetera",
 }: PaymentRetryBannerProps) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 shadow-sm md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col gap-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-4 shadow-sm md:flex-row md:items-center md:justify-between">
       <div className="flex items-start gap-3">
-        <div className="rounded-full bg-amber-100 p-2 text-amber-600">
+        <div className="rounded-full bg-amber-500/20 p-2 text-amber-400">
           <TriangleAlert size={18} />
         </div>
         <div>
-          <p className="text-sm font-semibold text-amber-900">{title}</p>
-          <p className="text-sm text-amber-800/80">{description}</p>
+          <p className="text-sm font-semibold text-amber-300">{title}</p>
+          <p className="text-sm text-amber-300/80">{description}</p>
         </div>
       </div>
 
-      <Button asChild className="rounded-xl bg-amber-600 text-white hover:bg-amber-500">
+      <Button asChild className="rounded-xl bg-amber-500/80 text-white hover:bg-amber-500">
         <Link href={href}>
           <RotateCcw size={14} className="mr-2" />
           Reintentar pago

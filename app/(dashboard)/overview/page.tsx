@@ -95,6 +95,13 @@ export default async function OverviewPage(props: { searchParams?: Promise<{ lob
         </div>
       </header>
 
+      {snapshot?._isMock && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm flex items-center gap-3">
+          <span className="text-lg">🟡</span>
+          <span><strong>Modo demostración</strong> — los datos mostrados son simulados. Conectá la base de datos para ver información real.</span>
+        </div>
+      )}
+
       {!hasTools && !isOrganizer ? (
         <div className="min-h-[50vh] flex items-center justify-center">
           <div className="text-center max-w-md space-y-6">

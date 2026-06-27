@@ -64,6 +64,7 @@ export interface DashboardGroupSnapshot {
 }
 
 export interface DashboardSnapshot {
+  _isMock?: boolean
   totals: {
     groups: number
     memberships: number

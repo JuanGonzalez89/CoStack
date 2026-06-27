@@ -5,7 +5,8 @@ import { useState, useEffect, useCallback, useRef } from "react"
 export interface LobbyMemberData {
   seatIndex: number
   amount: number
-  isMock: boolean
+  email?: string
+  name?: string
   isSelf?: boolean
 }
 
@@ -16,6 +17,8 @@ export interface LobbyStatus {
   totalSeats: number
   expiresAt: string
   accessToken?: string
+  creatorId?: string
+  isCreator?: boolean
   members: LobbyMemberData[]
   toolName?: string
   provider?: string

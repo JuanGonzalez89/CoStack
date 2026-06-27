@@ -28,7 +28,7 @@ export function PaymentFailureModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>
-          <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600">
+          <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 text-red-400">
             <AlertTriangle size={18} />
           </div>
           <DialogTitle className="text-xl">El pago no pudo completarse</DialogTitle>
@@ -41,7 +41,7 @@ export function PaymentFailureModal({
           <Button variant="outline" className="rounded-xl" onClick={() => onOpenChange(false)}>
             Cerrar
           </Button>
-          <Button className="rounded-xl bg-red-600 text-white hover:bg-red-500" onClick={onRetry}>
+          <Button className="rounded-xl bg-red-500/80 text-white hover:bg-red-500" onClick={onRetry}>
             <RotateCcw size={14} />
             Reintentar ahora
           </Button>

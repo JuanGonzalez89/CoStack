@@ -48,6 +48,7 @@ export async function getDashboardSnapshot(userEmail?: string | null): Promise<D
   } catch (error) {
     console.warn("Database connection failed. Using mock dashboard snapshot data.")
     return {
+      _isMock: true,
       totals: { groups: 1, memberships: 5, payments: 12, seats: 8, posts: 3, botEvents: 15 },
       latestGroup: {
         id: "mock-group-1",
