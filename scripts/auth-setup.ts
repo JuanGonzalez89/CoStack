@@ -28,6 +28,14 @@ async function main() {
   await context.storageState({ path: '.auth/canva.json' })
   console.log('✅ Sesión de Canva guardada.\n')
 
+  console.log('=== Hugging Face ===')
+  await page.goto('https://huggingface.co/login')
+  console.log('👉 Logueate en Hugging Face con la cuenta maestra.')
+  console.log('👉 Después presioná Enter para continuar...')
+  await waitForEnter()
+  await context.storageState({ path: '.auth/huggingface.json' })
+  console.log('✅ Sesión de Hugging Face guardada.\n')
+
   await browser.close()
   console.log('🎉 Sesiones guardadas. Ya podés correr el bot.')
 }

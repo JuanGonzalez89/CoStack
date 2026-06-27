@@ -74,7 +74,7 @@ export function SubscriptionDetailModal({ tool, accessToken, open, onOpenChange 
 
           {accessToken && (
             <>
-              {(!tool.category && !['figma', 'canva', 'chatgpt'].includes(provider.toLowerCase()) || tool.category?.toLowerCase() === 'dev' || tool.category?.toLowerCase() === 'development') && (
+              {(!tool.category && !['figma', 'canva', 'chatgpt', 'hugging face', 'github'].includes(provider.toLowerCase()) || tool.category?.toLowerCase() === 'dev' || tool.category?.toLowerCase() === 'development') && (
                 <div className="p-5 rounded-2xl bg-cyan-500/5 border border-cyan-500/20 space-y-3">
                   <div className="flex items-center gap-2">
                     <Key className="w-4 h-4 text-cyan-400" />
@@ -109,19 +109,19 @@ export function SubscriptionDetailModal({ tool, accessToken, open, onOpenChange 
                 </div>
               )}
 
-              {(tool.category?.toLowerCase() === 'design' || tool.category?.toLowerCase() === 'ai' || ['figma', 'canva', 'chatgpt'].includes(provider.toLowerCase())) && (
+              {(tool.category?.toLowerCase() === 'design' || tool.category?.toLowerCase() === 'ai' || ['figma', 'canva', 'chatgpt', 'hugging face', 'github'].includes(provider.toLowerCase())) && (
                 <div className="p-5 rounded-2xl bg-violet-500/5 border border-violet-500/20 space-y-3">
                   <div className="flex items-center gap-2">
                     <ExternalLink className="w-4 h-4 text-violet-400" />
                     <h4 className="font-semibold text-white text-sm">Invitación al Workspace Corporativo</h4>
                   </div>
                   <p className="text-xs text-zinc-400">
-                    Tu pago ha sido confirmado. Hemos generado un enlace seguro para que te unas al equipo sin necesidad de compartir contraseñas.
+                    Tu pago ha sido confirmado. Te enviamos la invitación por mail o podés unirte con el siguiente enlace seguro sin necesidad de compartir contraseñas.
                   </p>
                   <Button
                     className="w-full bg-violet-500 hover:bg-violet-600 text-white font-bold h-11 rounded-xl"
                     onClick={() => {
-                        window.open(accessToken.startsWith('http') ? accessToken : `https://${provider.toLowerCase()}.com/invite/${accessToken}`, '_blank')
+                        window.open(accessToken.startsWith('http') ? accessToken : `https://${provider.toLowerCase().replace(/\s/g, '')}.com/invite/${accessToken}`, '_blank')
                     }}
                   >
                     Unirse al equipo en {provider}
@@ -137,7 +137,7 @@ export function SubscriptionDetailModal({ tool, accessToken, open, onOpenChange 
               Cómo usar tu licencia
             </h4>
             <ol className="space-y-2.5 text-sm text-zinc-300">
-               {(tool.category?.toLowerCase() === 'design' || tool.category?.toLowerCase() === 'ai' || ['figma', 'canva', 'chatgpt'].includes(provider.toLowerCase())) ? (
+               {(tool.category?.toLowerCase() === 'design' || tool.category?.toLowerCase() === 'ai' || ['figma', 'canva', 'chatgpt', 'hugging face', 'github'].includes(provider.toLowerCase())) ? (
                  <>
                   <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-500/20 text-violet-400 text-xs font-bold shrink-0 mt-0.5">1</span><span>Haz clic en "Unirse al equipo".</span></li>
                   <li className="flex items-start gap-3"><span className="flex items-center justify-center w-5 h-5 rounded-full bg-violet-500/20 text-violet-400 text-xs font-bold shrink-0 mt-0.5">2</span><span>Inicia sesión con tu cuenta personal de {provider}.</span></li>

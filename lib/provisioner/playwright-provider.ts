@@ -3,12 +3,14 @@ import type { ProvisionResult, ProvisionerProvider, PlaywrightFlow } from './typ
 import type { BrowserContextOptions } from '@playwright/test'
 import { chatgptFlow } from './flows/chatgpt'
 import { canvaFlow } from './flows/canva'
+import { huggingfaceFlow } from './flows/huggingface'
 
-const flows: PlaywrightFlow[] = [chatgptFlow, canvaFlow]
+const flows: PlaywrightFlow[] = [chatgptFlow, canvaFlow, huggingfaceFlow]
 
 const FLOW_SESSION_MAP: Record<string, string> = {
   chatgpt: '.auth/chatgpt.json',
   canva: '.auth/canva.json',
+  huggingface: '.auth/huggingface.json',
 }
 
 export class PlaywrightProvider implements ProvisionerProvider {
@@ -51,6 +53,7 @@ export class PlaywrightProvider implements ProvisionerProvider {
       locale: sessionKey === 'canva' ? 'es-AR' : 'en-US',
       timezoneId: sessionKey === 'canva' ? 'America/Argentina/Buenos_Aires' : 'America/New_York',
       viewport: { width: 1280, height: 800 },
+      permissions: ['clipboard-read', 'clipboard-write'],
     }
     const context = await browser.newContext(contextOptions)
     const page = await context.newPage()
