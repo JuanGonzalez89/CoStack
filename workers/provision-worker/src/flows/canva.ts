@@ -89,7 +89,10 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
       throw new Error(`No se encontró botón invitar. Visibles: ${JSON.stringify(allBtnTexts)}`)
     }
 
-    await inviteBtn.click({ force: true, timeout: 15000, noWaitAfter: true })
+    await inviteBtn.evaluate((el: HTMLElement) => {
+      el.scrollIntoView({ block: 'center' })
+      el.click()
+    })
     await page.waitForTimeout(4000)
     await takeScreenshot(page, 'after-invite-click')
 
@@ -142,7 +145,7 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
       throw new Error(`No se encontró input email. Inputs: ${JSON.stringify(allInputs)}`)
     }
 
-    await emailInput.click({ force: true, noWaitAfter: true })
+    await emailInput.evaluate((el: HTMLElement) => el.focus())
     await emailInput.fill(member.email)
     await page.waitForTimeout(1000)
 
@@ -163,7 +166,10 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
     if (!confirmBtn) {
       throw new Error(`No se encontró botón confirmar. Inputs: ${JSON.stringify(allInputs)}`)
     }
-    await confirmBtn.click({ force: true, timeout: 15000, noWaitAfter: true })
+    await confirmBtn.evaluate((el: HTMLElement) => {
+      el.scrollIntoView({ block: 'center' })
+      el.click()
+    })
     console.log('[Canva] Invitación enviada')
     await page.waitForTimeout(2000)
   }
