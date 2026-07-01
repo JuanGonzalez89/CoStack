@@ -1,9 +1,43 @@
 import type { Page } from 'playwright'
 
 async function takeScreenshot(page: Page, label: string) {
-  try {
-    await page.screenshot({ path: `/tmp/canva-${label}.png`, fullPage: true })
-  } catch {}
+  try { await page.screenshot({ path: `/tmp/canva-${label}.png`, fullPage: true }) } catch {}
+}
+
+async function domClick(page: Page, selector: string, timeout = 10000): Promise<void> {
+  const start = Date.now()
+  while (Date.now() - start < timeout) {
+    const clicked = await page.evaluate((sel) => {
+      const el = document.querySelector(sel) as HTMLElement | null
+      if (el && el.offsetParent !== null && el.offsetHeight > 0 && el.getAttribute('aria-hidden') !== 'true') {
+        el.scrollIntoView({ block: 'center', behavior: 'instant' })
+        el.click()
+        return true
+      }
+      return false
+    }, selector).catch(() => false)
+    if (clicked) return
+    await page.waitForTimeout(500)
+  }
+  throw new Error(`domClick: no se pudo hacer click en "${selector}"`)
+}
+
+async function domType(page: Page, selector: string, text: string, timeout = 10000): Promise<void> {
+  const start = Date.now()
+  while (Date.now() - start < timeout) {
+    const done = await page.evaluate(({ sel, txt }) => {
+      const el = document.querySelector(sel) as HTMLInputElement | null
+      if (!el || el.offsetParent === null || el.offsetHeight === 0) return false
+      el.focus()
+      el.value = txt
+      el.dispatchEvent(new Event('input', { bubbles: true }))
+      el.dispatchEvent(new Event('change', { bubbles: true }))
+      return true
+    }, { sel: selector, txt: text }).catch(() => false)
+    if (done) return
+    await page.waitForTimeout(500)
+  }
+  throw new Error(`domType: no se pudo escribir en "${selector}"`)
 }
 
 export async function ejecutar(page: Page, members: { email: string }[]): Promise<{ accessToken: string; inviteUrl: string }> {
@@ -11,166 +45,85 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
     if (msg.type() === 'error') console.log('[Page Error]', msg.text().substring(0, 200))
   })
 
-  // Navigate directly to settings/people
+  // Navigate to settings/people
   console.log('[Canva] Navegando a /settings/people...')
   await page.goto('https://www.canva.com/settings/people', { waitUntil: 'domcontentloaded', timeout: 30000 })
   await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
   console.log('[Canva] URL:', page.url())
   console.log('[Canva] Title:', await page.title().catch(() => '?'))
   await page.waitForTimeout(3000)
-  await takeScreenshot(page, 'settings')
 
-  // Log all text and count buttons
-  const info = await page.evaluate(() => ({
-    text: document.body?.innerText?.substring(0, 3000) || '',
-    buttons: [...document.querySelectorAll('button')].map(b => ({ t: b.innerText?.substring(0, 40), v: b.offsetHeight > 0 })).filter(b => b.v),
-    links: [...document.querySelectorAll('a')].map(a => a.innerText?.substring(0, 40)).filter(Boolean),
-  })).catch(() => ({ text: '', buttons: [], links: [] }))
-  console.log('[Canva] Text:', info.text.substring(0, 500))
-  console.log('[Canva] Buttons:', info.buttons.map(b => b.t).join(' | '))
+  // Check if page loaded
+  const pageText = await page.evaluate(() => document.body?.innerText || '').catch(() => '')
+  console.log('[Canva] Page text (first 300):', pageText.substring(0, 300))
 
-  // If text is just the shell, try homepage first then settings
-  if (info.text.trim().length < 100) {
-    console.log('[Canva] Shell vacío, intentando homepage primero...')
+  if (pageText.trim().length < 100) {
+    console.log('[Canva] Shell vacío, reintentando vía homepage...')
     await page.goto('https://www.canva.com/', { waitUntil: 'domcontentloaded', timeout: 30000 })
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
     await page.waitForTimeout(3000)
-    await takeScreenshot(page, 'homepage')
-    const homeText = await page.evaluate(() => document.body?.innerText?.substring(0, 1000) || '').catch(() => '')
-    console.log('[Canva] Homepage text:', homeText.substring(0, 300))
-
-    console.log('[Canva] Navegando a /settings/people (v2)...')
     await page.goto('https://www.canva.com/settings/people', { waitUntil: 'domcontentloaded', timeout: 30000 })
-    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
     await page.waitForTimeout(5000)
-    await takeScreenshot(page, 'settings-v2')
-
-    const info2 = await page.evaluate(() => ({
-      text: document.body?.innerText?.substring(0, 3000) || '',
-      buttons: [...document.querySelectorAll('button')].map(b => ({ t: b.innerText?.substring(0, 40), v: b.offsetHeight > 0 })).filter(b => b.v),
-    })).catch(() => ({ text: '', buttons: [] }))
-    console.log('[Canva] Text v2:', info2.text.substring(0, 500))
-    console.log('[Canva] Buttons v2:', info2.buttons.map(b => b.t).join(' | '))
-
-    if (info2.text.trim().length < 100) {
-      throw new Error(`Canva no carga contenido. URL final: ${page.url()}. Text: ${info2.text.substring(0, 200)}`)
-    }
   }
+
+  await takeScreenshot(page, 'settings')
+  console.log('[Canva] Buttons:', await page.evaluate(() => [...document.querySelectorAll('button')].filter(b=>b.offsetHeight>0).map(b=>b.innerText.substring(0,30))).catch(()=>[]))
 
   for (const member of members) {
     if (!member.email) continue
     console.log('[Canva] Invitando a:', member.email)
-    await page.waitForTimeout(2000)
 
-    const bodyText = await page.evaluate(() => document.body?.innerText || '').catch(() => '')
-
-    // Find invite button by visible text
-    const inviteTexts = ['Invitar', 'Añadir', 'Add people', 'Invitar a alguien', 'Invite', 'Add member', 'Add team member', 'Agregar', 'Share', 'Compartir']
-    let inviteBtn = null
-    for (const txt of inviteTexts) {
-      try {
-        const btn = page.getByRole('button', { name: new RegExp(txt, 'i') }).first()
-        if (await btn.isVisible({ timeout: 1000 }).catch(() => false)) {
-          inviteBtn = btn
-          console.log('[Canva] Invite btn found:', txt)
-          break
-        }
-      } catch { }
+    // 1. Click invite button — find by text content
+    const inviteClicked = await page.evaluate(() => {
+      const btns = [...document.querySelectorAll('button')]
+        .filter(b => b.offsetParent !== null && b.offsetHeight > 0 && b.getAttribute('aria-hidden') !== 'true')
+      const target = btns.find(b => /invitar|añadir|add|invite|share/i.test(b.innerText))
+      if (!target) return 'no-match'
+      target.scrollIntoView({ block: 'center', behavior: 'instant' })
+      target.click()
+      return 'ok'
+    }).catch(() => 'error')
+    console.log('[Canva] Invite click result:', inviteClicked)
+    if (inviteClicked !== 'ok') {
+      await takeScreenshot(page, 'no-invite')
+      const visBtns = await page.evaluate(() => [...document.querySelectorAll('button')].filter(b=>b.offsetHeight>0).map(b=>b.innerText.substring(0,40)).filter(Boolean)).catch(()=>[])
+      throw new Error(`No se pudo clickear invitar. Botones visibles: ${JSON.stringify(visBtns)}`)
     }
 
-    if (!inviteBtn) {
-      await takeScreenshot(page, 'no-invite-btn')
-      const allBtnTexts = await page.evaluate(() =>
-        [...document.querySelectorAll('button')]
-          .filter(b => b.offsetParent !== null && b.offsetHeight > 0)
-          .map(b => b.innerText.substring(0, 50))
-          .filter(Boolean)
-      )
-      throw new Error(`No se encontró botón invitar. Visibles: ${JSON.stringify(allBtnTexts)}`)
+    await page.waitForTimeout(3000)
+    await takeScreenshot(page, 'modal')
+
+    // 2. Find and fill email input
+    await domType(page, 'input[type="email"], input[type="search"], input:not([type]), input[placeholder*="email" i], input[placeholder*="correo" i]', member.email, 10000)
+
+    // 3. Click confirm button
+    const confirmClicked = await page.evaluate(() => {
+      const btns = [...document.querySelectorAll('button')]
+        .filter(b => b.offsetParent !== null && b.offsetHeight > 0 && b.getAttribute('aria-hidden') !== 'true')
+      const target = btns.find(b => /confirmar e invitar|send invite|confirmar|invitar|enviar|send|invite/i.test(b.innerText))
+      if (!target) return 'no-match'
+      target.scrollIntoView({ block: 'center', behavior: 'instant' })
+      target.click()
+      return 'ok'
+    }).catch(() => 'error')
+    console.log('[Canva] Confirm click result:', confirmClicked)
+    if (confirmClicked !== 'ok') {
+      // Fallback: try to find submit button in modal
+      const fallback = await page.evaluate(() => {
+        const btns = [...document.querySelectorAll('button')].filter(b => b.offsetHeight > 0)
+        const submit = btns.find(b => b.type === 'submit') || btns[btns.length - 1]
+        if (submit) { submit.click(); return 'ok' }
+        return 'no-match'
+      }).catch(() => 'error')
+      console.log('[Canva] Confirm fallback:', fallback)
+      if (fallback !== 'ok') {
+        await takeScreenshot(page, 'no-confirm')
+        const visBtns = await page.evaluate(() => [...document.querySelectorAll('button')].filter(b=>b.offsetHeight>0).map(b=>b.innerText.substring(0,40)).filter(Boolean)).catch(()=>[])
+        throw new Error(`No se pudo clickear confirmar. Botones: ${JSON.stringify(visBtns)}`)
+      }
     }
 
-    await inviteBtn.evaluate((el: HTMLElement) => {
-      el.scrollIntoView({ block: 'center' })
-      el.click()
-    })
-    await page.waitForTimeout(4000)
-    await takeScreenshot(page, 'after-invite-click')
-
-    // Debug: log all interactive elements on the page
-    const allInputs = await page.evaluate(() => {
-      const all = [...document.querySelectorAll('input, textarea, [contenteditable], [role="textbox"]')]
-        .map(el => ({
-          tag: el.tagName,
-          type: (el as HTMLInputElement).type || '',
-          placeholder: (el as HTMLInputElement).placeholder || '',
-          ariaLabel: el.getAttribute('aria-label') || '',
-          role: el.getAttribute('role') || '',
-          visible: el.offsetParent !== null && el.offsetHeight > 0,
-        }))
-        .filter(i => i.visible)
-      return all
-    }).catch(() => [])
-    console.log('[Canva] Inputs visibles:', JSON.stringify(allInputs))
-
-    // Find email input — try many selectors
-    const emailSelectors = [
-      'input[type="email"]',
-      'input[type="search"]',
-      'input[type="text"]',
-      'input:not([type])',
-      'input[placeholder*="email" i]',
-      'input[placeholder*="correo" i]',
-      'input[placeholder*="people" i]',
-      'input[placeholder*="name" i]',
-      'input[aria-label*="email" i]',
-      'input[aria-label*="correo" i]',
-      '[contenteditable="true"]',
-      '[role="textbox"]',
-      'textarea',
-    ]
-    let emailInput = null
-    for (const sel of emailSelectors) {
-      try {
-        const el = page.locator(sel).first()
-        if (await el.isVisible({ timeout: 1500 }).catch(() => false)) {
-          emailInput = el
-          console.log('[Canva] Email input encontrado con:', sel)
-          break
-        }
-      } catch {}
-    }
-
-    if (!emailInput) {
-      await takeScreenshot(page, 'no-input')
-      throw new Error(`No se encontró input email. Inputs: ${JSON.stringify(allInputs)}`)
-    }
-
-    await emailInput.evaluate((el: HTMLElement) => el.focus())
-    await emailInput.fill(member.email)
-    await page.waitForTimeout(1000)
-
-    // Find confirm button by text
-    const confirmTexts = ['Confirmar e invitar', 'Send invite', 'Invitar', 'Enviar', 'Send', 'Confirmar', 'Invite']
-    let confirmBtn = null
-    for (const txt of confirmTexts) {
-      try {
-        const btn = page.getByRole('button', { name: new RegExp(txt, 'i') }).first()
-        if (await btn.isVisible({ timeout: 1000 }).catch(() => false)) {
-          confirmBtn = btn
-          console.log('[Canva] Confirm btn found:', txt)
-          break
-        }
-      } catch { }
-    }
-
-    if (!confirmBtn) {
-      throw new Error(`No se encontró botón confirmar. Inputs: ${JSON.stringify(allInputs)}`)
-    }
-    await confirmBtn.evaluate((el: HTMLElement) => {
-      el.scrollIntoView({ block: 'center' })
-      el.click()
-    })
-    console.log('[Canva] Invitación enviada')
+    console.log('[Canva] Invitación enviada a', member.email)
     await page.waitForTimeout(2000)
   }
 
