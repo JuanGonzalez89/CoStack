@@ -1,13 +1,7 @@
 import type { Page } from 'playwright'
 
 // ============================================================
-// CANVA INVITE FLOW — DIRECT HTTP API
-// ============================================================
-// Strategy: 
-// 1. Navigate to Canva to establish the authenticated browser context.
-// 2. Steal x-canva-* headers and CSRF tokens by temporarily hooking fetch.
-// 3. Execute the invitation POST directly via page.evaluate(fetch), 
-//    bypassing all DOM interaction and React remount issues.
+// CANVA INVITE FLOW — DIRECT HTTP API (Playwright Intercept)
 // ============================================================
 
 export async function ejecutar(
@@ -17,7 +11,30 @@ export async function ejecutar(
 
   console.log('[Canva] Navegando a Canva para validar sesión y capturar auth headers...')
 
-  // Go to settings just to get the SPA initialized with valid context
+  const capturedAuth: Record<string, string> = {}
+  let capturedBrandId = ''
+
+  // Usamos Playwright nativo para espiar todas las peticiones y robar los headers de Auth
+  // Esto es infalible porque atrapa fetch, XHR, y todo lo que salga del browser
+  page.on('request', req => {
+    if (req.url().includes('canva.com')) {
+      const headers = req.headers()
+      for (const [k, v] of Object.entries(headers)) {
+        const key = k.toLowerCase()
+        if (key.startsWith('x-canva-') || key.includes('csrf') || key === 'authorization') {
+          // No pisar si ya lo tenemos y es válido, a menos que sea un token fresco
+          if (!capturedAuth[key]) {
+            capturedAuth[key] = v
+          }
+          if (key === 'x-canva-brand' && !capturedBrandId) {
+            capturedBrandId = v
+          }
+        }
+      }
+    }
+  })
+
+  // Ir a settings para forzar a Canva a disparar su inicialización de SPA
   await page.goto('https://www.canva.com/settings/people', {
     waitUntil: 'domcontentloaded',
     timeout: 30000,
@@ -28,82 +45,24 @@ export async function ejecutar(
     throw new Error('❌ Sesión de Canva expirada. Regenerar con auth-setup-canva.ts')
   }
 
-  console.log('[Canva] Interceptando fetch para robar headers internos...')
-
-  const authData = await page.evaluate(async () => {
-    return new Promise<{ headers: Record<string, string>, brandId: string }>((resolve) => {
-      const headers: Record<string, string> = {}
-      
-      // 1. Get CSRF tokens from cookies (Canva might send these if present)
-      for (const c of document.cookie.split(';')) {
-        const [name, val] = c.trim().split('=')
-        if (name && (/csrf|xsrf/i.test(name))) {
-          headers['x-csrf-token'] = val || ''
-        }
-      }
-
-      // 2. Try to get Brand ID from cookie (CB=...)
-      let brandId = ''
-      const cbCookie = document.cookie.split(';').find(c => c.trim().startsWith('CB='))
-      if (cbCookie) {
-        brandId = cbCookie.split('=')[1].trim()
-      }
-
-      // 3. Hook window.fetch to capture x-canva-* headers from Canva's own telemetry/ajax
-      const origFetch = window.fetch
-      let captured = false
-      
-      window.fetch = function(...args) {
-        const [resource, opts] = args
-        if (!captured && opts && opts.headers) {
-          const h = opts.headers as any
-          const entries = h.entries ? Array.from(h.entries() as Iterable<any>) : Object.entries(h)
-          let foundCanvaHeaders = false
-          
-          for (const [k, v] of entries) {
-            const key = k.toLowerCase()
-            if (key.startsWith('x-canva-') || key.includes('csrf') || key === 'authorization') {
-              headers[key] = v as string
-              foundCanvaHeaders = true
-            }
-          }
-          
-          if (foundCanvaHeaders) {
-            captured = true
-            if (!brandId && headers['x-canva-brand']) {
-              brandId = headers['x-canva-brand']
-            }
-            resolve({ headers, brandId })
-            window.fetch = origFetch // Restore original
-          }
-        }
-        return origFetch.apply(window, args as any)
-      }
-
-      // 4. Force a dummy request if Canva is quiet
-      setTimeout(() => {
-        if (!captured) {
-          origFetch('/_ajax/session/validate', { method: 'POST', body: '{}' }).catch(() => {})
-        }
-      }, 500)
-      
-      // 5. Ultimate timeout fallback
-      setTimeout(() => {
-        if (!captured) resolve({ headers, brandId })
-      }, 4000)
-    })
-  })
+  console.log('[Canva] Esperando peticiones en background para recolectar tokens...')
+  
+  // Esperar hasta que tengamos el Brand ID o timeout (max 5 segs)
+  for (let i = 0; i < 20; i++) {
+    if (capturedBrandId && capturedAuth['x-canva-user']) break
+    await page.waitForTimeout(250)
+  }
 
   // Mandatory header for the invite endpoint
-  authData.headers['x-canva-request'] = 'createbrandinvitations'
+  capturedAuth['x-canva-request'] = 'createbrandinvitations'
   // Canva needs a content-type for the POST payload
-  authData.headers['Content-Type'] = 'application/json;charset=UTF-8'
+  capturedAuth['Content-Type'] = 'application/json;charset=UTF-8'
 
-  console.log(`[Canva] Headers capturados (${Object.keys(authData.headers).length}):`, Object.keys(authData.headers))
-  console.log(`[Canva] Brand ID: ${authData.brandId || '⚠️ NO DETECTADO'}`)
+  console.log(`[Canva] Headers capturados (${Object.keys(capturedAuth).length}):`, Object.keys(capturedAuth))
+  console.log(`[Canva] Brand ID: ${capturedBrandId || '⚠️ NO DETECTADO'}`)
 
-  if (!authData.brandId) {
-    throw new Error('❌ No se pudo capturar el Brand ID de Canva (CB cookie o x-canva-brand header ausentes).')
+  if (!capturedBrandId) {
+    throw new Error('❌ No se pudo capturar el Brand ID de Canva (x-canva-brand header ausente).')
   }
 
   // ============================================================
@@ -113,6 +72,8 @@ export async function ejecutar(
     if (!member.email) continue
     console.log(`\n[Canva] ══════════ Invitando vía HTTP (API): ${member.email} ══════════`)
 
+    // Inject the captured headers and execute fetch directly inside the browser 
+    // to utilize the existing cookies automatically.
     const result = await page.evaluate(async ({ email, authHeaders, brandId }) => {
       try {
         const url = '/_ajax/invitation/brand/invitations/create'
@@ -140,7 +101,7 @@ export async function ejecutar(
       } catch (err: any) {
         return { ok: false, status: 0, text: err.message }
       }
-    }, { email: member.email, authHeaders: authData.headers, brandId: authData.brandId })
+    }, { email: member.email, authHeaders: capturedAuth, brandId: capturedBrandId })
 
     if (result.ok) {
       console.log(`[Canva] ✅ API HTTP exitosa para ${member.email}: [${result.status}] ${result.text}`)
