@@ -76,8 +76,8 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
     // 1. Click invite button — find by text content
     const inviteClicked = await page.evaluate(() => {
       const btns = [...document.querySelectorAll('button')]
-        .filter(b => b.offsetParent !== null && b.offsetHeight > 0 && b.getAttribute('aria-hidden') !== 'true')
-      const target = btns.find(b => /invitar|añadir|add|invite|share/i.test(b.innerText))
+        .filter(b => b.offsetHeight > 0 && !b.closest('[aria-hidden="true"]'))
+      const target = btns.find(b => /invitar|añadir|add|invite|share|gestionar/i.test(b.innerText))
       if (!target) return 'no-match'
       target.scrollIntoView({ block: 'center', behavior: 'instant' })
       target.click()
@@ -99,7 +99,7 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
     // 3. Click confirm button
     const confirmClicked = await page.evaluate(() => {
       const btns = [...document.querySelectorAll('button')]
-        .filter(b => b.offsetParent !== null && b.offsetHeight > 0 && b.getAttribute('aria-hidden') !== 'true')
+        .filter(b => b.offsetHeight > 0 && !b.closest('[aria-hidden="true"]'))
       const target = btns.find(b => /confirmar e invitar|send invite|confirmar|invitar|enviar|send|invite/i.test(b.innerText))
       if (!target) return 'no-match'
       target.scrollIntoView({ block: 'center', behavior: 'instant' })
