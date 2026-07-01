@@ -144,6 +144,82 @@ app.post('/provision', async (req, res) => {
   res.json({ lobbyId, ...result })
 })
 
+app.get('/debug', async (_req, res) => {
+  console.log('[Worker] Debug: navegando a Canva settings…')
+  decodeSession()
+
+  let browser
+  try {
+    browser = await chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu',
+        '--disable-blink-features=AutomationControlled', '--window-size=1280,800', '--lang=es-AR'],
+    })
+  } catch (e: any) {
+    return res.json({ error: 'chromium launch failed', detail: e.message })
+  }
+
+  const contextOptions: any = {
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+    viewport: { width: 1280, height: 800 }, locale: 'es-AR', timezoneId: 'America/Argentina/Buenos_Aires',
+  }
+  if (existsSync(SESSION_PATH)) contextOptions.storageState = SESSION_PATH
+
+  const context = await browser.newContext(contextOptions)
+  await context.addInitScript(() => { Object.defineProperty(navigator, 'webdriver', { get: () => undefined }) })
+  const page = await context.newPage()
+
+  try {
+    const t0 = Date.now()
+    await page.goto('https://www.canva.com/settings/people', { waitUntil: 'domcontentloaded', timeout: 20000 })
+    const gotoMs = Date.now() - t0
+
+    const url = page.url()
+
+    // Poll for content
+    let info = { title: '?', textLen: 0, buttons: 0, preview: '' }
+    const pollStart = Date.now()
+    for (let i = 0; i < 20; i++) { // 10s max
+      info = await page.evaluate(() => ({
+        title: document.title,
+        textLen: (document.body?.innerText || '').length,
+        buttons: document.querySelectorAll('button').length,
+        preview: (document.body?.innerText || '').substring(0, 500),
+      })).catch(() => ({ title: '?', textLen: 0, buttons: 0, preview: '' }))
+      if (info.buttons >= 3 && info.textLen > 100) break
+      await page.waitForTimeout(500)
+    }
+    const pollMs = Date.now() - pollStart
+
+    // Get visible buttons
+    const visibleButtons = await page.evaluate(() =>
+      [...document.querySelectorAll('button')]
+        .filter(b => (b as HTMLElement).offsetHeight > 0 && (b as HTMLElement).offsetWidth > 0)
+        .map(b => (b.innerText || '').substring(0, 40).trim())
+        .filter(Boolean),
+    ).catch(() => [])
+
+    await page.screenshot({ path: '/tmp/canva-debug.png', fullPage: true }).catch(() => {})
+
+    res.json({
+      url,
+      gotoMs,
+      pollMs,
+      totalMs: Date.now() - t0,
+      sessionValid: !url.includes('/login') && !url.includes('accounts.google'),
+      title: info.title,
+      textLength: info.textLen,
+      buttonCount: info.buttons,
+      visibleButtons,
+      preview: info.preview.substring(0, 300),
+    })
+  } catch (e: any) {
+    res.json({ error: e.message })
+  } finally {
+    await browser.close()
+  }
+})
+
 app.get('/health', (_req, res) => {
   res.json({ ok: true, timestamp: new Date().toISOString() })
 })

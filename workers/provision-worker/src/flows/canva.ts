@@ -57,19 +57,42 @@ function setupRequestCapture(page: Page): { calls: CapturedApiCall[] } {
 }
 
 // ============================================================
-// NAVIGATION — loads /settings/people with retry via homepage
+// NAVIGATION — loads /settings/people with smart polling
 // ============================================================
+
+/** Poll until we see buttons on the page (Canva SPA hydrated) or timeout. */
+async function waitForContent(page: Page, maxMs = 10000): Promise<{ textLen: number; buttons: number; preview: string; title: string }> {
+  const start = Date.now()
+  let info = { title: '?', textLen: 0, preview: '', buttons: 0 }
+
+  while (Date.now() - start < maxMs) {
+    info = await page.evaluate(() => ({
+      title: document.title,
+      textLen: (document.body?.innerText || '').length,
+      preview: (document.body?.innerText || '').substring(0, 300),
+      buttons: document.querySelectorAll('button').length,
+    })).catch(() => ({ title: '?', textLen: 0, preview: '', buttons: 0 }))
+
+    // Canva settings page has multiple buttons when loaded
+    if (info.buttons >= 3 && info.textLen > 100) {
+      console.log(`[Canva] Contenido detectado en ${Date.now() - start}ms (${info.buttons} botones, ${info.textLen} chars)`)
+      return info
+    }
+    await page.waitForTimeout(500)
+  }
+
+  console.log(`[Canva] waitForContent timeout ${maxMs}ms (${info.buttons} botones, ${info.textLen} chars)`)
+  return info
+}
 
 async function navigateToSettingsPage(page: Page): Promise<{ loaded: boolean; sessionValid: boolean }> {
   console.log('[Canva] Navegando a /settings/people…')
 
   await page.goto('https://www.canva.com/settings/people', {
     waitUntil: 'domcontentloaded',
-    timeout: 30000,
+    timeout: 20000,
   })
-  await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {
-    console.log('[Canva] networkidle timeout (normal en Canva SPA)')
-  })
+  // No networkidle — Canva SPA never truly idles
 
   const currentUrl = page.url()
   console.log('[Canva] URL actual:', currentUrl)
@@ -79,29 +102,20 @@ async function navigateToSettingsPage(page: Page): Promise<{ loaded: boolean; se
     return { loaded: false, sessionValid: false }
   }
 
-  // Give the SPA time to hydrate
-  await page.waitForTimeout(3000)
-
-  const info = await page.evaluate(() => ({
-    title: document.title,
-    textLen: (document.body?.innerText || '').length,
-    preview: (document.body?.innerText || '').substring(0, 300),
-    buttons: document.querySelectorAll('button').length,
-  })).catch(() => ({ title: '?', textLen: 0, preview: '', buttons: 0 }))
+  // Smart poll: wait for buttons to appear instead of fixed 5s
+  let info = await waitForContent(page, 10000)
 
   console.log('[Canva] Title:', info.title, '| Text:', info.textLen, '| Buttons:', info.buttons)
   console.log('[Canva] Preview:', info.preview.substring(0, 200))
 
   if (info.textLen < 50) {
     console.log('[Canva] Página vacía, retrying via homepage…')
-    await page.goto('https://www.canva.com/', { waitUntil: 'domcontentloaded', timeout: 30000 })
-    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})
-    await page.waitForTimeout(2000)
-    await page.goto('https://www.canva.com/settings/people', { waitUntil: 'domcontentloaded', timeout: 30000 })
-    await page.waitForTimeout(3000)
+    await page.goto('https://www.canva.com/', { waitUntil: 'domcontentloaded', timeout: 15000 })
+    await waitForContent(page, 5000)
+    await page.goto('https://www.canva.com/settings/people', { waitUntil: 'domcontentloaded', timeout: 20000 })
+    info = await waitForContent(page, 10000)
 
-    const retryLen = await page.evaluate(() => (document.body?.innerText || '').length).catch(() => 0)
-    if (retryLen < 50) {
+    if (info.textLen < 50) {
       console.log('[Canva] Página sigue vacía después de retry')
       return { loaded: false, sessionValid: true }
     }
