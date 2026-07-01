@@ -148,31 +148,32 @@ async function navigateToSettingsPage(page: Page): Promise<{ loaded: boolean; se
 
 /** Click the "Invite someone" / "Invitar a alguien" button. */
 async function clickInviteButton(page: Page): Promise<boolean> {
-  console.log('[Canva][DOM] Buscando botón de invitar nativamente con Playwright…')
+  console.log('[Canva][DOM] Buscando botón de invitar mediante ElementHandle…')
 
-  const regexPattern = /invitar a alguien|invite someone|invitar|invite|añadir miembro|add member/i
-  
-  // Strategy 1: Find any element containing the text that acts as a button
-  try {
-    const loc = page.locator('button, a, [role="button"]').filter({ hasText: regexPattern }).first()
-    if (await loc.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await loc.scrollIntoViewIfNeeded()
-      await loc.click({ force: true, delay: 50, timeout: 5000 })
-      console.log(`[Canva][DOM] ✅ Click exitoso usando selector de texto (Strategy 1)`)
-      return true
-    }
-  } catch {}
+  const btnHandle = await page.evaluateHandle(() => {
+    const regex = /invitar a alguien|invite someone|invitar|invite|añadir miembro|add member/i
+    const allNodes = [...document.querySelectorAll('button, a, [role="button"]')]
+    const target = allNodes.find(b => {
+      const el = b as HTMLElement
+      if (el.offsetHeight === 0 || el.offsetWidth === 0) return false
+      return regex.test(el.innerText || '') || regex.test(el.getAttribute('aria-label') || '')
+    })
+    return target || null
+  }).catch(() => null)
 
-  // Strategy 2: Ultra broad text search just in case Canva wraps it weirdly
-  try {
-    const broadLoc = page.getByText(regexPattern).first()
-    if (await broadLoc.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await broadLoc.click({ force: true, delay: 50, timeout: 5000 })
-      console.log(`[Canva][DOM] ✅ Click exitoso usando broad text search (Strategy 2)`)
-      return true
-    }
-  } catch {}
+  const el = btnHandle ? btnHandle.asElement() : null
 
+  if (el) {
+    console.log(`[Canva][DOM] ✅ Botón encontrado en el DOM (ElementHandle). Ejecutando click nativo…`)
+    await el.scrollIntoViewIfNeeded().catch(() => {})
+    // Force true bypasses actionability checks, delay helps React register it
+    await el.click({ force: true, delay: 50, timeout: 5000 }).catch(e => console.log('[Canva][DOM] Error click:', e.message))
+    console.log(`[Canva][DOM] ✅ Click nativo exitoso.`)
+    await btnHandle?.dispose()
+    return true
+  }
+
+  await btnHandle?.dispose()
   console.log('[Canva][DOM] ❌ No se encontró botón de invitar')
   return false
 }
