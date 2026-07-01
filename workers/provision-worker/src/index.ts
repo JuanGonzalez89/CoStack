@@ -1,11 +1,31 @@
 import express from 'express'
 import { chromium } from 'playwright'
-import { existsSync, writeFileSync, readFileSync } from 'node:fs'
+import { existsSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs'
+import { execSync } from 'node:child_process'
 import { ejecutar as canvaFlow } from './flows/canva'
 import { ejecutar as chatgptFlow } from './flows/chatgpt'
 
 const app = express()
 app.use(express.json())
+
+function ensureBrowser(): void {
+  const home = process.env.HOME || '/opt/render'
+  const cacheDir = `${home}/.cache/ms-playwright`
+  if (existsSync(cacheDir)) {
+    const items = readdirSync(cacheDir)
+    if (items.some(i => i.includes('chromium'))) {
+      console.log('[Worker] Chromium headless shell ya instalado')
+      return
+    }
+  }
+  console.log('[Worker] Instalando chromium-headless-shell...')
+  execSync('PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium-headless-shell --force', {
+    stdio: 'inherit',
+    cwd: __dirname,
+    timeout: 120_000,
+  })
+  console.log('[Worker] Chromium headless shell instalado')
+}
 
 const SESSION_PATH = '/tmp/.auth/canva.json'
 
@@ -26,7 +46,6 @@ function decodeSession() {
     const json = Buffer.from(raw, 'base64').toString('utf-8')
     const dir = '/tmp/.auth'
     if (!existsSync(dir)) {
-      const { mkdirSync } = require('node:fs')
       mkdirSync(dir, { recursive: true })
     }
     writeFileSync(SESSION_PATH, json, 'utf-8')
@@ -98,6 +117,8 @@ app.post('/provision', async (req, res) => {
 app.get('/health', (_req, res) => {
   res.json({ ok: true, timestamp: new Date().toISOString() })
 })
+
+ensureBrowser()
 
 const PORT = parseInt(process.env.PORT || '3001', 10)
 app.listen(PORT, () => {

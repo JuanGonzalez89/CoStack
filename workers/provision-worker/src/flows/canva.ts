@@ -31,7 +31,7 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
   }
 
   return {
-    accessToken: page.url(),
-    inviteUrl: 'https://www.canva.com/settings/people',
+    accessToken: 'https://www.canva.com',
+    inviteUrl: 'https://www.canva.com',
   }
 }
