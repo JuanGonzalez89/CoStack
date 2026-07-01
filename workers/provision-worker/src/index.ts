@@ -115,7 +115,12 @@ async function provision(toolSlug: string, toolName: string, members: { email: s
   const page = await context.newPage()
 
   try {
-    const result = await flow(page, members)
+    // Safety timeout: abort the entire flow after 120 seconds
+    const FLOW_TIMEOUT_MS = 120_000
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`Flow timeout: exceeded ${FLOW_TIMEOUT_MS / 1000}s`)), FLOW_TIMEOUT_MS),
+    )
+    const result = await Promise.race([flow(page, members), timeoutPromise])
     return { status: 'success' as const, accessToken: result.accessToken, inviteUrl: result.inviteUrl, errors: [] }
   } catch (error: any) {
     console.error('[Worker] Error en flow:', error.message)

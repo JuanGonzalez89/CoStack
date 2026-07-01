@@ -67,7 +67,7 @@ async function navigateToSettingsPage(page: Page): Promise<{ loaded: boolean; se
     waitUntil: 'domcontentloaded',
     timeout: 30000,
   })
-  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {
+  await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {
     console.log('[Canva] networkidle timeout (normal en Canva SPA)')
   })
 
@@ -80,7 +80,7 @@ async function navigateToSettingsPage(page: Page): Promise<{ loaded: boolean; se
   }
 
   // Give the SPA time to hydrate
-  await page.waitForTimeout(5000)
+  await page.waitForTimeout(3000)
 
   const info = await page.evaluate(() => ({
     title: document.title,
@@ -95,10 +95,10 @@ async function navigateToSettingsPage(page: Page): Promise<{ loaded: boolean; se
   if (info.textLen < 50) {
     console.log('[Canva] Página vacía, retrying via homepage…')
     await page.goto('https://www.canva.com/', { waitUntil: 'domcontentloaded', timeout: 30000 })
-    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
-    await page.waitForTimeout(3000)
+    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})
+    await page.waitForTimeout(2000)
     await page.goto('https://www.canva.com/settings/people', { waitUntil: 'domcontentloaded', timeout: 30000 })
-    await page.waitForTimeout(5000)
+    await page.waitForTimeout(3000)
 
     const retryLen = await page.evaluate(() => (document.body?.innerText || '').length).catch(() => 0)
     if (retryLen < 50) {
@@ -188,7 +188,7 @@ async function clickInviteButton(page: Page): Promise<boolean> {
 
 /** Fill the email field inside the invite modal and confirm. */
 async function fillEmailAndConfirm(page: Page, email: string): Promise<boolean> {
-  await page.waitForTimeout(3000)
+  await page.waitForTimeout(2000)
   await takeScreenshot(page, 'modal-opened')
 
   // Debug: list all visible inputs
@@ -286,12 +286,12 @@ async function fillEmailAndConfirm(page: Page, email: string): Promise<boolean> 
   }
 
   // Give Canva time to process the input (autocomplete, validation, etc.)
-  await page.waitForTimeout(2000)
+  await page.waitForTimeout(1000)
   await takeScreenshot(page, 'email-filled')
 
   // Press Enter — often enough to submit in Canva's modal
   await page.keyboard.press('Enter')
-  await page.waitForTimeout(2000)
+  await page.waitForTimeout(1500)
 
   // ---- Click confirm button ----
   const confirmPatterns: RegExp[] = [
@@ -327,7 +327,7 @@ async function fillEmailAndConfirm(page: Page, email: string): Promise<boolean> 
 
     if (confirmed) {
       console.log(`[Canva][DOM] ✅ Confirm clickeado: "${confirmed}"`)
-      await page.waitForTimeout(2000)
+      await page.waitForTimeout(1500)
       return true
     }
   }
@@ -341,7 +341,7 @@ async function fillEmailAndConfirm(page: Page, email: string): Promise<boolean> 
 
   if (fallback) {
     console.log(`[Canva][DOM] ✅ Fallback confirm: ${fallback}`)
-    await page.waitForTimeout(2000)
+    await page.waitForTimeout(1500)
     return true
   }
 
@@ -547,7 +547,7 @@ export async function ejecutar(
     const inviteClicked = await clickInviteButton(page)
 
     if (inviteClicked) {
-      await page.waitForTimeout(3000)
+      await page.waitForTimeout(2000)
 
       // Check for new captured requests that look like invite calls
       const newCalls = captured.calls.slice(preCount)
@@ -567,7 +567,7 @@ export async function ejecutar(
       const filled = await fillEmailAndConfirm(page, member.email)
 
       // Wait and check for invite API calls
-      await page.waitForTimeout(2000)
+      await page.waitForTimeout(1500)
       const postFillCalls = captured.calls.slice(preCount)
       const inviteCalls = postFillCalls.filter(c => {
         const lc = (c.url + ' ' + (c.body || '')).toLowerCase()
@@ -586,7 +586,7 @@ export async function ejecutar(
         // Refresh page for next member
         if (members.indexOf(member) < members.length - 1) {
           await page.goto('https://www.canva.com/settings/people', { waitUntil: 'domcontentloaded', timeout: 30000 })
-          await page.waitForTimeout(5000)
+          await page.waitForTimeout(3000)
         }
         continue
       }
@@ -597,7 +597,7 @@ export async function ejecutar(
 
         if (members.indexOf(member) < members.length - 1) {
           await page.goto('https://www.canva.com/settings/people', { waitUntil: 'domcontentloaded', timeout: 30000 })
-          await page.waitForTimeout(5000)
+          await page.waitForTimeout(3000)
         }
         continue
       }
