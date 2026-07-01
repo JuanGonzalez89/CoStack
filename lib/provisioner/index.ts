@@ -1,8 +1,10 @@
 import type { ProvisionResult, ProvisionerProvider } from './types'
 import { GitHubProvider } from './providers/github'
+import { WorkerProvider } from './providers/worker'
 
 const staticProviders: ProvisionerProvider[] = [
   new GitHubProvider(),
+  new WorkerProvider(),
 ]
 
 async function getPlaywrightProvider(): Promise<ProvisionerProvider | null> {
@@ -20,10 +22,15 @@ export async function fulfillProvision(
   toolName: string,
   members: { email: string; userId: string }[],
 ): Promise<ProvisionResult> {
-  const staticMatch = staticProviders.find(p => p.canHandle(toolSlug))
-  if (staticMatch) {
-    console.log(`[Provisioner] Usando ${staticMatch.name} para ${toolSlug}`)
-    return staticMatch.fulfill(lobbyId, toolName, members)
+  for (const provider of staticProviders) {
+    if (provider.canHandle(toolSlug)) {
+      console.log(`[Provisioner] Probando ${provider.name} para ${toolSlug}`)
+      const result = await provider.fulfill(lobbyId, toolName, members)
+      if (result.status === 'success') {
+        return result
+      }
+      console.log(`[Provisioner] ${provider.name} falló:`, result.errors)
+    }
   }
 
   const pwProvider = await getPlaywrightProvider()

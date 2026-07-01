@@ -44,6 +44,7 @@ export class PlaywrightProvider implements ProvisionerProvider {
     const { chromium } = await import('@playwright/test')
     const browser = await chromium.launch({
       headless: false,
+      channel: 'msedge',
       args: ['--disable-blink-features=AutomationControlled'],
     })
     const contextOptions: BrowserContextOptions = {

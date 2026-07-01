@@ -9,6 +9,7 @@ function waitForEnter(): Promise<void> {
 async function main() {
   const browser = await chromium.launch({
     headless: false,
+    channel: 'msedge',
     args: ['--disable-blink-features=AutomationControlled'],
   })
   const context = await browser.newContext({
