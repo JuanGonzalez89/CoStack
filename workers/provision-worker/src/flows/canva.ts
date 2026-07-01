@@ -24,7 +24,7 @@ interface CapturedApiCall {
 
 async function takeScreenshot(page: Page, label: string) {
   try {
-    await page.screenshot({ path: `/tmp/canva-${label}.png` })
+    await page.screenshot({ path: `/tmp/canva-${label}.png`, timeout: 1500 })
     console.log(`[Canva] 📸 Screenshot: /tmp/canva-${label}.png`)
   } catch {}
 }
@@ -148,29 +148,34 @@ async function navigateToSettingsPage(page: Page): Promise<{ loaded: boolean; se
 
 /** Click the "Invite someone" / "Invitar a alguien" button. */
 async function clickInviteButton(page: Page): Promise<boolean> {
-  console.log('[Canva][DOM] Ejecutando click 100% JS para evitar remounts de React…')
+  console.log('[Canva][DOM] Ejecutando click 100% JS a todos los candidatos para evitar fallos…')
 
   const clicked = await page.evaluate(() => {
     const regex = /invitar a alguien|invite someone|invitar|invite|añadir miembro|add member/i
     const allNodes = [...document.querySelectorAll('button, a, [role="button"]')]
-    const target = allNodes.find(b => {
+    const targets = allNodes.filter(b => {
       const el = b as HTMLElement
       if (el.offsetHeight === 0 || el.offsetWidth === 0) return false
       return regex.test(el.innerText || '') || regex.test(el.getAttribute('aria-label') || '')
-    }) as HTMLElement
+    })
 
-    if (!target) return false
+    if (targets.length === 0) return false
 
-    target.scrollIntoView({ block: 'center' })
+    console.log(`[Canva][DOM-Eval] Encontrados ${targets.length} botones candidatos. Clickeando todos...`)
     
-    // Simulate full React/browser event lifecycle
-    target.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, cancelable: true }))
-    target.dispatchEvent(new PointerEvent('pointerenter', { bubbles: true, cancelable: true }))
-    target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }))
-    target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
-    target.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true }))
-    target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }))
-    target.click() // Fallback nativo
+    for (const b of targets) {
+      const target = b as HTMLElement
+      target.scrollIntoView({ block: 'center' })
+      
+      // Simulate full React/browser event lifecycle
+      target.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, cancelable: true }))
+      target.dispatchEvent(new PointerEvent('pointerenter', { bubbles: true, cancelable: true }))
+      target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }))
+      target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
+      target.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true }))
+      target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }))
+      target.click() // Fallback nativo
+    }
     
     return true
   }).catch(e => {
@@ -179,11 +184,11 @@ async function clickInviteButton(page: Page): Promise<boolean> {
   })
 
   if (clicked) {
-    console.log(`[Canva][DOM] ✅ Click JS nativo ejecutado exitosamente.`)
+    console.log(`[Canva][DOM] ✅ Click JS nativo ejecutado exitosamente a todos los candidatos.`)
     return true
   }
 
-  console.log('[Canva][DOM] ❌ No se encontró botón de invitar en el DOM')
+  console.log('[Canva][DOM] ❌ No se encontró ningún botón de invitar en el DOM')
   return false
 }
 
