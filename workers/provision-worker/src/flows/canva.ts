@@ -148,47 +148,42 @@ async function navigateToSettingsPage(page: Page): Promise<{ loaded: boolean; se
 
 /** Click the "Invite someone" / "Invitar a alguien" button. */
 async function clickInviteButton(page: Page): Promise<boolean> {
-  console.log('[Canva][DOM] Ejecutando click 100% JS a todos los candidatos para evitar fallos…')
+  console.log('[Canva][DOM] Buscando botón de invitar mediante locator de Playwright…')
 
-  const clicked = await page.evaluate(() => {
-    const regex = /invitar a alguien|invite someone|invitar|invite|añadir miembro|add member/i
-    const allNodes = [...document.querySelectorAll('button, a, [role="button"]')]
-    const targets = allNodes.filter(b => {
-      const el = b as HTMLElement
-      if (el.offsetHeight === 0 || el.offsetWidth === 0) return false
-      return regex.test(el.innerText || '') || regex.test(el.getAttribute('aria-label') || '')
-    })
+  const regex = /invitar a alguien|invite someone|invitar|invite|añadir miembro|add member/i
+  const loc = page.locator('button, a, [role="button"]').filter({ hasText: regex }).first()
 
-    if (targets.length === 0) return false
-
-    console.log(`[Canva][DOM-Eval] Encontrados ${targets.length} botones candidatos. Clickeando todos...`)
+  try {
+    console.log('[Canva][DOM] Esperando a que el botón sea clickeable (max 20s)…')
+    await loc.click({ timeout: 20000 })
+    console.log('[Canva][DOM] ✅ Click nativo de Playwright exitoso.')
+    return true
+  } catch (e: any) {
+    console.log('[Canva][DOM] ❌ Error en click nativo:', e.message)
     
-    for (const b of targets) {
-      const target = b as HTMLElement
-      target.scrollIntoView({ block: 'center' })
-      
-      // Simulate full React/browser event lifecycle
-      target.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, cancelable: true }))
-      target.dispatchEvent(new PointerEvent('pointerenter', { bubbles: true, cancelable: true }))
-      target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }))
-      target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
-      target.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true }))
-      target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }))
-      target.click() // Fallback nativo
+    // Fallback 100% JS
+    console.log('[Canva][DOM] Intentando click 100% JS como fallback…')
+    const clicked = await page.evaluate((src) => {
+      const rx = new RegExp(src, 'i')
+      const targets = [...document.querySelectorAll('button, a, [role="button"]')].filter(b => {
+        const el = b as HTMLElement
+        if (el.offsetHeight === 0 || el.offsetWidth === 0) return false
+        return rx.test(el.innerText || '') || rx.test(el.getAttribute('aria-label') || '')
+      })
+      if (targets.length === 0) return false
+      for (const t of targets) {
+        (t as HTMLElement).scrollIntoView({ block: 'center' })
+        ;(t as HTMLElement).click()
+      }
+      return true
+    }, regex.source).catch(() => false)
+    
+    if (clicked) {
+      console.log('[Canva][DOM] ✅ Fallback JS ejecutado.')
+      return true
     }
-    
-    return true
-  }).catch(e => {
-    console.log('[Canva][DOM] Error eval JS:', e.message)
-    return false
-  })
-
-  if (clicked) {
-    console.log(`[Canva][DOM] ✅ Click JS nativo ejecutado exitosamente a todos los candidatos.`)
-    return true
   }
 
-  console.log('[Canva][DOM] ❌ No se encontró ningún botón de invitar en el DOM')
   return false
 }
 
@@ -219,20 +214,13 @@ async function fillEmailAndConfirm(page: Page, email: string): Promise<boolean> 
 
   // ---- Fill email ----
   // Strategy A: Find input and use Playwright keyboard (works with React)
-  // Use a combined selector to avoid the 14s sequential penalty
-  const combinedSelector = [
-    'input[type="email"]', 'input[placeholder*="email" i]', 'input[placeholder*="correo" i]',
-    'input[placeholder*="nombre" i]', 'input[placeholder*="buscar" i]', 'input[placeholder*="search" i]',
-    'input[aria-label*="email" i]', 'input[aria-label*="invit" i]', '[role="combobox"]',
-    '[role="textbox"]', 'input[type="search"]', 'input[type="text"]', 'input:not([type])',
-    '[contenteditable="true"]'
-  ].join(', ')
+  const combinedSelector = 'input[type="email"], input[placeholder*="email" i], input[placeholder*="correo" i], input[type="text"]'
 
   let emailFilled = false
 
   try {
     const loc = page.locator(combinedSelector).first()
-    if (await loc.isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (await loc.isVisible({ timeout: 5000 }).catch(() => false)) {
       await loc.click({ force: true, timeout: 2000 })
       await page.waitForTimeout(300)
       await page.keyboard.press('Control+A')
