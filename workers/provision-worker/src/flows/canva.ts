@@ -60,42 +60,33 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
   for (const member of members) {
     if (!member.email) continue
     console.log('[Canva] Invitando a:', member.email)
-
-    // Wait for page to be stable (no loading spinners)
     await page.waitForTimeout(2000)
 
     const bodyText = await page.evaluate(() => document.body?.innerText || '').catch(() => '')
 
-    // Find invite button — only really-visible buttons (not aria-hidden)
-    const inviteCandidates = await page.evaluate(() => {
-      const allBtns = [...document.querySelectorAll('button')]
-      return allBtns
-        .filter(b =>
-          b.offsetParent !== null &&
-          b.offsetHeight > 0 &&
-          b.getAttribute('aria-hidden') !== 'true' &&
-          !b.closest('[aria-hidden="true"]') &&
-          /invitar|añadir|add|invite|share|compartir/i.test(b.innerText)
-        )
-        .map(b => ({ text: b.innerText.substring(0, 50), idx: allBtns.indexOf(b) }))
-    })
-    console.log('[Canva] Invite candidates:', JSON.stringify(inviteCandidates))
-
+    // Find invite button by visible text
+    const inviteTexts = ['Invitar', 'Añadir', 'Add people', 'Invitar a alguien', 'Invite', 'Add member', 'Add team member', 'Agregar', 'Share', 'Compartir']
     let inviteBtn = null
-    if (inviteCandidates.length > 0) {
-      inviteBtn = page.locator('button').nth(inviteCandidates[0].idx)
+    for (const txt of inviteTexts) {
+      try {
+        const btn = page.getByRole('button', { name: new RegExp(txt, 'i') }).first()
+        if (await btn.isVisible({ timeout: 1000 }).catch(() => false)) {
+          inviteBtn = btn
+          console.log('[Canva] Invite btn found:', txt)
+          break
+        }
+      } catch { }
     }
 
     if (!inviteBtn) {
       await takeScreenshot(page, 'no-invite-btn')
       const allBtnTexts = await page.evaluate(() =>
-        [...document.querySelectorAll('button')].map(b => ({
-          t: b.innerText.substring(0, 40),
-          v: b.offsetParent !== null && b.offsetHeight > 0,
-          h: b.getAttribute('aria-hidden')
-        }))
+        [...document.querySelectorAll('button')]
+          .filter(b => b.offsetParent !== null && b.offsetHeight > 0)
+          .map(b => b.innerText.substring(0, 50))
+          .filter(Boolean)
       )
-      throw new Error(`No se encontró botón invitar. Todos: ${JSON.stringify(allBtnTexts)}`)
+      throw new Error(`No se encontró botón invitar. Visibles: ${JSON.stringify(allBtnTexts)}`)
     }
 
     await inviteBtn.click({ force: true, timeout: 15000, noWaitAfter: true })
@@ -112,8 +103,6 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
           ariaLabel: el.getAttribute('aria-label') || '',
           role: el.getAttribute('role') || '',
           visible: el.offsetParent !== null && el.offsetHeight > 0,
-          rect: el.getBoundingClientRect(),
-          value: (el as HTMLInputElement).value?.substring(0, 20) || '',
         }))
         .filter(i => i.visible)
       return all
@@ -157,28 +146,22 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
     await emailInput.fill(member.email)
     await page.waitForTimeout(1000)
 
-    // Find confirm button (visible, not aria-hidden)
-    const confirmCandidates = await page.evaluate(() => {
-      const allBtns = [...document.querySelectorAll('button')]
-      return allBtns
-        .filter(b =>
-          b.offsetParent !== null &&
-          b.offsetHeight > 0 &&
-          b.getAttribute('aria-hidden') !== 'true' &&
-          !b.closest('[aria-hidden="true"]') &&
-          /confirmar|send|invitar|invite|enviar/i.test(b.innerText)
-        )
-        .map(b => ({ text: b.innerText.substring(0, 50), idx: allBtns.indexOf(b) }))
-    })
-    console.log('[Canva] Confirm candidates:', JSON.stringify(confirmCandidates))
-
+    // Find confirm button by text
+    const confirmTexts = ['Confirmar e invitar', 'Send invite', 'Invitar', 'Enviar', 'Send', 'Confirmar', 'Invite']
     let confirmBtn = null
-    if (confirmCandidates.length > 0) {
-      confirmBtn = page.locator('button').nth(confirmCandidates[0].idx)
+    for (const txt of confirmTexts) {
+      try {
+        const btn = page.getByRole('button', { name: new RegExp(txt, 'i') }).first()
+        if (await btn.isVisible({ timeout: 1000 }).catch(() => false)) {
+          confirmBtn = btn
+          console.log('[Canva] Confirm btn found:', txt)
+          break
+        }
+      } catch { }
     }
 
     if (!confirmBtn) {
-      throw new Error('No se encontró botón confirmar')
+      throw new Error(`No se encontró botón confirmar. Inputs: ${JSON.stringify(allInputs)}`)
     }
     await confirmBtn.click({ force: true, timeout: 15000, noWaitAfter: true })
     console.log('[Canva] Invitación enviada')
