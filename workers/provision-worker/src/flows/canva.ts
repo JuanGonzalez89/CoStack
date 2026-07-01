@@ -106,8 +106,8 @@ export async function ejecutar(
         // Canva requiere CAZ (x-canva-authz) y CAU (x-canva-active-user). 
         // A veces no se envían en las peticiones de background, así que los sacamos crudos.
         const cookies = document.cookie.split(';')
-        const getCookie = (name: string) => {
-          const match = cookies.find(c => c.trim().startsWith(name + '='))
+        const getCookie = (cookieName: string) => {
+          const match = cookies.find(c => c.trim().startsWith(cookieName + '='))
           return match ? match.split('=')[1].trim() : undefined
         }
 
