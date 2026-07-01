@@ -229,6 +229,9 @@ app.get('/health', (_req, res) => {
 ensureBrowser()
 
 const PORT = parseInt(process.env.PORT || '3001', 10)
+const INSTANCE_ID = Math.random().toString(36).substring(2, 8).toUpperCase()
+console.log(`\n[Worker] 🚀 Instancia iniciada: ${INSTANCE_ID}`)
+
 app.listen(PORT, () => {
   console.log(`[Worker] Servidor iniciado en puerto ${PORT}`)
 })

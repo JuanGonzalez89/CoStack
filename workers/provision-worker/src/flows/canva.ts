@@ -21,37 +21,41 @@ export async function ejecutar(
 
   // Usamos Playwright nativo para espiar todas las peticiones y robar los headers de Auth
   page.on('request', req => {
-    if (req.url().includes('canva.com') && req.method() === 'POST') {
-      postCandidatesSeen++
-      
-      if (req.url().includes('/_ajax/')) {
-        const bodyStr = req.postData()
+    try {
+      if (req.url().includes('canva.com') && req.method() === 'POST') {
+        postCandidatesSeen++
         
-        // Si tiene body, es una request representativa de datos
-        if (bodyStr && bodyStr.length > 2) {
+        if (req.url().includes('/_ajax/')) {
+          const bodyStr = req.postData()
           
-          // 1. Extraer Brand ID / User ID del body si es session/validate
-          if (req.url().includes('/session/validate')) {
-            try {
-              const body = JSON.parse(bodyStr)
-              if (body.B && !capturedBrandId) capturedBrandId = body.B
-              if (body.A && !capturedAuth['x-canva-user']) capturedAuth['x-canva-user'] = body.A
-            } catch (e) {}
-          }
+          // Si tiene body, es una request representativa de datos
+          if (bodyStr && bodyStr.length > 2) {
+            
+            // 1. Extraer Brand ID / User ID del body si es session/validate
+            if (req.url().includes('/session/validate')) {
+              try {
+                const body = JSON.parse(bodyStr)
+                if (body.B && !capturedBrandId) capturedBrandId = body.B
+                if (body.A && !capturedAuth['x-canva-user']) capturedAuth['x-canva-user'] = body.A
+              } catch (e) {}
+            }
 
-          // 2. Capturar TODOS los headers de una SOLA petición representativa
-          if (!capturedSourceUrl) {
-            capturedSourceUrl = req.url()
-            const headers = req.headers()
-            for (const [k, v] of Object.entries(headers)) {
-              const key = k.toLowerCase()
-              if (key.startsWith('x-canva-') || key.includes('csrf') || key === 'authorization') {
-                capturedAuth[key] = v
+            // 2. Capturar TODOS los headers de una SOLA petición representativa
+            if (!capturedSourceUrl) {
+              capturedSourceUrl = req.url()
+              const headers = req.headers()
+              for (const [k, v] of Object.entries(headers)) {
+                const key = k.toLowerCase()
+                if (key.startsWith('x-canva-') || key.includes('csrf') || key === 'authorization') {
+                  capturedAuth[key] = v
+                }
               }
             }
           }
         }
       }
+    } catch (err: any) {
+      console.log(`[Canva] ⚠️ Ignorando error en interceptor de red: ${err.message}`)
     }
   })
 
