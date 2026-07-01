@@ -63,23 +63,40 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
 
     const bodyText = await page.evaluate(() => document.body?.innerText || '').catch(() => '')
 
-    // Find invite button by iterating all visible buttons
-    const inviteBtns = await page.locator('button').all()
+    // Find invite button — only really-visible buttons (not aria-hidden)
+    const inviteCandidates = await page.evaluate(() => {
+      const allBtns = [...document.querySelectorAll('button')]
+      return allBtns
+        .filter(b =>
+          b.offsetParent !== null &&
+          b.offsetHeight > 0 &&
+          b.getAttribute('aria-hidden') !== 'true' &&
+          !b.closest('[aria-hidden="true"]') &&
+          /invitar|añadir|add|invite|share|compartir/i.test(b.innerText)
+        )
+        .map(b => ({ text: b.innerText.substring(0, 50), idx: allBtns.indexOf(b) }))
+    })
+    console.log('[Canva] Invite candidates:', JSON.stringify(inviteCandidates))
+
     let inviteBtn = null
-    for (const btn of inviteBtns) {
-      const text = await btn.innerText().catch(() => '')
-      if (/invitar|añadir|add|invite|share|compartir/i.test(text) && await btn.isVisible()) {
-        inviteBtn = btn
-        console.log('[Canva] Invite btn found:', text)
-        break
-      }
+    if (inviteCandidates.length > 0) {
+      inviteBtn = page.locator('button').nth(inviteCandidates[0].idx)
     }
 
     if (!inviteBtn) {
       await takeScreenshot(page, 'no-invite-btn')
-      throw new Error(`No se encontró botón invitar. Botones: ${(await Promise.all(inviteBtns.map(b => b.innerText().catch(()=>'')))).filter(Boolean).join(' | ')}`)
+      const allBtnTexts = await page.evaluate(() =>
+        [...document.querySelectorAll('button')].map(b => ({
+          t: b.innerText.substring(0, 40),
+          v: b.offsetParent !== null && b.offsetHeight > 0,
+          h: b.getAttribute('aria-hidden')
+        }))
+      )
+      throw new Error(`No se encontró botón invitar. Todos: ${JSON.stringify(allBtnTexts)}`)
     }
 
+    await inviteBtn.scrollIntoViewIfNeeded()
+    await page.waitForTimeout(500)
     await inviteBtn.click({ force: true })
     await page.waitForTimeout(3000)
 
@@ -92,25 +109,31 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
     await emailInput.fill(member.email)
     await page.waitForTimeout(500)
 
-    // Find confirm button
-    const confirmBtns = await page.locator('button').all()
+    // Find confirm button (visible, not aria-hidden)
+    const confirmCandidates = await page.evaluate(() => {
+      const allBtns = [...document.querySelectorAll('button')]
+      return allBtns
+        .filter(b =>
+          b.offsetParent !== null &&
+          b.offsetHeight > 0 &&
+          b.getAttribute('aria-hidden') !== 'true' &&
+          !b.closest('[aria-hidden="true"]') &&
+          /confirmar|send|invitar|invite|enviar/i.test(b.innerText)
+        )
+        .map(b => ({ text: b.innerText.substring(0, 50), idx: allBtns.indexOf(b) }))
+    })
+    console.log('[Canva] Confirm candidates:', JSON.stringify(confirmCandidates))
+
     let confirmBtn = null
-    for (const btn of confirmBtns) {
-      const text = await btn.innerText().catch(() => '')
-      if (/confirmar|send|invitar|invite|enviar/i.test(text) && await btn.isVisible()) {
-        confirmBtn = btn
-        console.log('[Canva] Confirm btn found:', text)
-        break
-      }
+    if (confirmCandidates.length > 0) {
+      confirmBtn = page.locator('button').nth(confirmCandidates[0].idx)
     }
 
     if (!confirmBtn) {
-      // Try by role
-      confirmBtn = page.getByRole('button', { name: /confirmar e invitar|send invite|invitar/i }).first()
-    }
-    if (!(await confirmBtn.isVisible({ timeout: 5000 }).catch(() => false))) {
       throw new Error('No se encontró botón confirmar')
     }
+    await confirmBtn.scrollIntoViewIfNeeded()
+    await page.waitForTimeout(500)
     await confirmBtn.click({ force: true })
     console.log('[Canva] Invitación enviada')
     await page.waitForTimeout(2000)
