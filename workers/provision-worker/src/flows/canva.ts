@@ -16,34 +16,36 @@ export async function ejecutar(
 
   const capturedAuth: Record<string, string> = {}
   let capturedBrandId = ''
+  let capturedSourceUrl = ''
 
   // Usamos Playwright nativo para espiar todas las peticiones y robar los headers de Auth
   page.on('request', req => {
-    if (req.url().includes('canva.com')) {
-      // 1. Extraer headers
-      const headers = req.headers()
-      for (const [k, v] of Object.entries(headers)) {
-        const key = k.toLowerCase()
-        if (key.startsWith('x-canva-') || key.includes('csrf') || key === 'authorization') {
-          if (!capturedAuth[key]) {
-            capturedAuth[key] = v
-          }
-          if (key === 'x-canva-brand' && !capturedBrandId) {
-            capturedBrandId = v
-          }
-        }
-      }
-
-      // 2. Extraer Brand ID / User ID del body de validación de sesión
-      if (req.method() === 'POST' && req.url().includes('/session/validate')) {
-        try {
-          const bodyStr = req.postData()
-          if (bodyStr) {
+    if (req.url().includes('canva.com') && req.method() === 'POST' && req.url().includes('/_ajax/')) {
+      const bodyStr = req.postData()
+      
+      // Si tiene body, es una request representativa de datos
+      if (bodyStr && bodyStr.length > 2) {
+        
+        // 1. Extraer Brand ID / User ID del body si es session/validate
+        if (req.url().includes('/session/validate')) {
+          try {
             const body = JSON.parse(bodyStr)
             if (body.B && !capturedBrandId) capturedBrandId = body.B
             if (body.A && !capturedAuth['x-canva-user']) capturedAuth['x-canva-user'] = body.A
+          } catch (e) {}
+        }
+
+        // 2. Capturar TODOS los headers de una SOLA petición representativa
+        if (!capturedSourceUrl) {
+          capturedSourceUrl = req.url()
+          const headers = req.headers()
+          for (const [k, v] of Object.entries(headers)) {
+            const key = k.toLowerCase()
+            if (key.startsWith('x-canva-') || key.includes('csrf') || key === 'authorization') {
+              capturedAuth[key] = v
+            }
           }
-        } catch (e) {}
+        }
       }
     }
   })
@@ -61,11 +63,13 @@ export async function ejecutar(
 
   console.log('[Canva] Esperando peticiones en background para recolectar tokens...')
   
-  // Esperar hasta que tengamos el Brand ID o timeout (max 5 segs)
+  // Esperar hasta que tengamos headers de una request fuente (max 5 segs)
   for (let i = 0; i < 20; i++) {
-    if (capturedBrandId && capturedAuth['x-canva-user']) break
+    if (capturedSourceUrl && capturedBrandId) break
     await page.waitForTimeout(250)
   }
+
+  console.log(`[Canva] Headers capturados de la fuente: ${capturedSourceUrl || '⚠️ NINGUNA (fallback)'}`)
 
   // Si falló la intercepción, usar los valores estables de la cuenta
   if (!capturedBrandId) {
@@ -98,6 +102,21 @@ export async function ejecutar(
     // to utilize the existing cookies automatically.
     const result = await page.evaluate(async ({ email, authHeaders, brandId }) => {
       try {
+        // --- EXTRAER TOKENS CRÍTICOS DE LAS COOKIES ---
+        // Canva requiere CAZ (x-canva-authz) y CAU (x-canva-active-user). 
+        // A veces no se envían en las peticiones de background, así que los sacamos crudos.
+        const cookies = document.cookie.split(';')
+        const getCookie = (name: string) => {
+          const match = cookies.find(c => c.trim().startsWith(name + '='))
+          return match ? match.split('=')[1].trim() : undefined
+        }
+
+        const caz = getCookie('CAZ')
+        if (caz) authHeaders['x-canva-authz'] = caz
+
+        const cau = getCookie('CAU')
+        if (cau) authHeaders['x-canva-active-user'] = cau
+
         const url = '/_ajax/invitation/brand/invitations/create'
         
         // Exact payload schema expected by Canva
@@ -110,6 +129,17 @@ export async function ejecutar(
           "B": true
         }
         
+        // Log final headers safe mode
+        const logHeaders: Record<string, string> = {}
+        for (const [k, v] of Object.entries(authHeaders)) {
+          if (k.toLowerCase().includes('auth') || k.toLowerCase().includes('token')) {
+            logHeaders[k] = v.substring(0, 15) + '***'
+          } else {
+            logHeaders[k] = v
+          }
+        }
+        console.log(`[Canva] Headers finales para fetch:`, JSON.stringify(logHeaders, null, 2))
+
         const response = await fetch(url, {
           method: 'POST',
           headers: authHeaders,
