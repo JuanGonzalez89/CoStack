@@ -158,7 +158,7 @@ CoStack incorpora OpenClaw Bot para automatizar la entrega de accesos. El flujo 
 
 ## Provisioning de Canva (Invite Link)
 
-El acceso a Canva se provisiona mediante un **link de invitación al equipo** generado manualmente desde la cuenta master (`costack.dev.bot@gmail.com`). Este link es reusable (varios usuarios pueden unirse con el mismo) y **expira a los 30 días** de generado.
+El acceso a Canva se provisiona mediante un **link de invitación al equipo** generado manualmente desde la cuenta master (`costack.dev.bot@gmail.com`). Este link es **reutilizable durante su período de vigencia (30 días de generado) y siempre y cuando el usuario esté al día con su pago**.
 
 Cuando un lobby de Canva se completa, el sistema envía automáticamente un email a cada miembro con el link de invitación.
 
