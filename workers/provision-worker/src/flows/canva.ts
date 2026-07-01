@@ -175,39 +175,36 @@ async function clickInviteButton(page: Page): Promise<boolean> {
   ]
 
   for (const re of patterns) {
-    const clicked = await page.evaluate(
+    const targetIndex = await page.evaluate(
       ({ src, fl }) => {
         const regex = new RegExp(src, fl)
-        // Do NOT filter by aria-hidden ancestors or offsetParent — just size
-        const btns = [...document.querySelectorAll('button, a, [role="button"]')].filter(
-          b => (b as HTMLElement).offsetHeight > 0 && (b as HTMLElement).offsetWidth > 0,
-        )
-        const target = btns.find(
-          b => regex.test((b as HTMLElement).innerText || '') || regex.test(b.getAttribute('aria-label') || ''),
-        )
-        if (target) {
-          ;(target as HTMLElement).scrollIntoView({ block: 'center', behavior: 'instant' })
-          ;(target as HTMLElement).click()
-          return ((target as HTMLElement).innerText || '').substring(0, 50)
-        }
-        return null
+        const allNodes = [...document.querySelectorAll('button, a, [role="button"]')]
+        const idx = allNodes.findIndex(b => {
+          if ((b as HTMLElement).offsetHeight === 0 || (b as HTMLElement).offsetWidth === 0) return false
+          return regex.test((b as HTMLElement).innerText || '') || regex.test(b.getAttribute('aria-label') || '')
+        })
+        return idx
       },
       { src: re.source, fl: re.flags },
-    ).catch(() => null)
+    ).catch(() => -1)
 
-    if (clicked) {
-      console.log(`[Canva][DOM] ✅ Click exitoso en: "${clicked}" (patrón /${re.source}/)`)
+    if (targetIndex !== -1) {
+      console.log(`[Canva][DOM] ✅ Botón encontrado (index ${targetIndex}). Usando click nativo…`)
+      const loc = page.locator('button, a, [role="button"]').nth(targetIndex)
+      await loc.scrollIntoViewIfNeeded()
+      await loc.click({ force: true, delay: 50, timeout: 5000 })
+      console.log(`[Canva][DOM] ✅ Click nativo exitoso (patrón /${re.source}/)`)
       return true
     }
   }
 
-  // Fallback: Playwright locator with force
+  // Fallback: Playwright locator with text
   for (const label of ['Invitar a alguien', 'Invitar', 'Invite someone', 'Invite']) {
     try {
-      const loc = page.locator(`button:has-text("${label}")`).first()
-      if (await loc.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await loc.click({ force: true, noWaitAfter: true, timeout: 5000 })
-        console.log(`[Canva][DOM] ✅ Playwright click: "${label}"`)
+      const loc = page.locator(`button:has-text("${label}"), a:has-text("${label}"), [role="button"]:has-text("${label}")`).first()
+      if (await loc.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await loc.click({ force: true, delay: 50, timeout: 5000 })
+        console.log(`[Canva][DOM] ✅ Playwright click fallback: "${label}"`)
         return true
       }
     } catch {}
@@ -244,42 +241,29 @@ async function fillEmailAndConfirm(page: Page, email: string): Promise<boolean> 
 
   // ---- Fill email ----
   // Strategy A: Find input and use Playwright keyboard (works with React)
-  const inputSelectors = [
-    'input[type="email"]',
-    'input[placeholder*="email" i]',
-    'input[placeholder*="correo" i]',
-    'input[placeholder*="nombre" i]',
-    'input[placeholder*="buscar" i]',
-    'input[placeholder*="search" i]',
-    'input[aria-label*="email" i]',
-    'input[aria-label*="invit" i]',
-    '[role="combobox"]',
-    '[role="textbox"]',
-    'input[type="search"]',
-    'input[type="text"]',
-    'input:not([type])',
-    '[contenteditable="true"]',
-  ]
+  // Use a combined selector to avoid the 14s sequential penalty
+  const combinedSelector = [
+    'input[type="email"]', 'input[placeholder*="email" i]', 'input[placeholder*="correo" i]',
+    'input[placeholder*="nombre" i]', 'input[placeholder*="buscar" i]', 'input[placeholder*="search" i]',
+    'input[aria-label*="email" i]', 'input[aria-label*="invit" i]', '[role="combobox"]',
+    '[role="textbox"]', 'input[type="search"]', 'input[type="text"]', 'input:not([type])',
+    '[contenteditable="true"]'
+  ].join(', ')
 
   let emailFilled = false
 
-  for (const sel of inputSelectors) {
-    try {
-      const loc = page.locator(sel).first()
-      if (await loc.isVisible({ timeout: 1000 }).catch(() => false)) {
-        await loc.click({ force: true, timeout: 2000 })
-        await page.waitForTimeout(300)
-        // Clear existing content
-        await page.keyboard.press('Control+A')
-        await page.keyboard.press('Backspace')
-        // Type email char by char (triggers React onChange properly)
-        await page.keyboard.type(email, { delay: 30 })
-        console.log(`[Canva][DOM] ✅ Email escrito via keyboard en: ${sel}`)
-        emailFilled = true
-        break
-      }
-    } catch {}
-  }
+  try {
+    const loc = page.locator(combinedSelector).first()
+    if (await loc.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await loc.click({ force: true, timeout: 2000 })
+      await page.waitForTimeout(300)
+      await page.keyboard.press('Control+A')
+      await page.keyboard.press('Backspace')
+      await page.keyboard.type(email, { delay: 30 })
+      console.log(`[Canva][DOM] ✅ Email escrito via keyboard en selector combinado`)
+      emailFilled = true
+    }
+  } catch {}
 
   if (!emailFilled) {
     // Strategy B: focus any input via DOM and type
