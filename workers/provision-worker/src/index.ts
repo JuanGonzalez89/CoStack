@@ -199,7 +199,8 @@ app.get('/debug', async (_req, res) => {
         .filter(Boolean),
     ).catch(() => [])
 
-    await page.screenshot({ path: '/tmp/canva-debug.png' }).catch(() => {})
+    const screenshotBuffer = await page.screenshot({ type: 'jpeg', quality: 50 }).catch(() => null)
+    const screenshotBase64 = screenshotBuffer ? screenshotBuffer.toString('base64') : null
 
     res.json({
       url,
@@ -212,6 +213,7 @@ app.get('/debug', async (_req, res) => {
       buttonCount: info.buttons,
       visibleButtons,
       preview: info.preview.substring(0, 300),
+      screenshotBase64,
     })
   } catch (e: any) {
     res.json({ error: e.message })
