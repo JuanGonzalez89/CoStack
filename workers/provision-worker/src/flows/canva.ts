@@ -1,178 +1,117 @@
 import type { Page } from 'playwright'
 
-async function takeDebugScreenshot(page: Page, label: string) {
-  const path = `/tmp/canva-${label}.png`
-  await page.screenshot({ path, fullPage: true }).catch(() => {})
-  console.log(`[Canva Debug] Screenshot guardado: ${path}`)
-}
-
-async function waitForSpa(page: Page, timeout = 30000) {
-  const started = Date.now()
-  while (Date.now() - started < timeout) {
-    const text = await page.evaluate(() => document.body?.innerText || '').catch(() => '')
-    if (text.length > 300) {
-      return text
-    }
-    await page.waitForTimeout(2000)
-  }
-  return await page.evaluate(() => document.body?.innerText || '').catch(() => '')
+async function takeScreenshot(page: Page, label: string) {
+  try {
+    await page.screenshot({ path: `/tmp/canva-${label}.png`, fullPage: true })
+  } catch {}
 }
 
 export async function ejecutar(page: Page, members: { email: string }[]): Promise<{ accessToken: string; inviteUrl: string }> {
-  // Capture console errors from the page
   page.on('console', msg => {
-    if (msg.type() === 'error') {
-      console.log('[Canva Page Error]', msg.text().substring(0, 300))
-    }
+    if (msg.type() === 'error') console.log('[Page Error]', msg.text().substring(0, 200))
   })
 
-  // 1. Navigate to homepage first to establish session in SPA context
-  console.log('[Canva Worker] Navegando a canva.com...')
-  await page.goto('https://www.canva.com/', { waitUntil: 'domcontentloaded', timeout: 30000 })
-  await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {})
-  console.log('[Canva Worker] URL:', page.url())
-
-  // Wait for SPA to render
+  // Navigate directly to settings/people
+  console.log('[Canva] Navegando a /settings/people...')
+  await page.goto('https://www.canva.com/settings/people', { waitUntil: 'load', timeout: 45000 })
+  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {})
+  console.log('[Canva] URL:', page.url())
+  console.log('[Canva] Title:', await page.title().catch(() => '?'))
   await page.waitForTimeout(3000)
-  let bodyText = await page.evaluate(() => document.body?.innerText?.substring(0, 2000) || '').catch(() => '')
-  console.log('[Canva Worker] Texto homepage:', bodyText.substring(0, 500))
-  await takeDebugScreenshot(page, 'homepage')
+  await takeScreenshot(page, 'settings')
 
-  // 2. Navigate to /settings/people
-  console.log('[Canva Worker] Navegando a /settings/people...')
-  await page.goto('https://www.canva.com/settings/people', { waitUntil: 'domcontentloaded', timeout: 30000 })
-  await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {})
+  // Log all text and count buttons
+  const info = await page.evaluate(() => ({
+    text: document.body?.innerText?.substring(0, 3000) || '',
+    buttons: [...document.querySelectorAll('button')].map(b => ({ t: b.innerText?.substring(0, 40), v: b.offsetHeight > 0 })).filter(b => b.v),
+    links: [...document.querySelectorAll('a')].map(a => a.innerText?.substring(0, 40)).filter(Boolean),
+  })).catch(() => ({ text: '', buttons: [], links: [] }))
+  console.log('[Canva] Text:', info.text.substring(0, 500))
+  console.log('[Canva] Buttons:', info.buttons.map(b => b.t).join(' | '))
 
-  // Wait for SPA content
-  await page.waitForTimeout(3000)
-  bodyText = await waitForSpa(page)
-  console.log('[Canva Worker] URL settings:', page.url())
-  console.log('[Canva Worker] Texto settings:', bodyText.substring(0, 500))
-  await takeDebugScreenshot(page, 'settings')
-
-  // If the page is mostly empty shell, try reloading
-  if (bodyText.length < 200) {
-    console.log('[Canva Worker] Página vacía, recargando...')
-    await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 })
-    await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {})
+  // If text is just the shell, try reload
+  if (info.text.trim().length < 100) {
+    console.log('[Canva] Shell vacío, recargando con timeout largo...')
+    await page.goto('https://www.canva.com/settings/people', { waitUntil: 'load', timeout: 60000 })
     await page.waitForTimeout(5000)
-    bodyText = await waitForSpa(page)
-    console.log('[Canva Worker] Texto después de recargar:', bodyText.substring(0, 500))
-    await takeDebugScreenshot(page, 'settings-reload')
+    await takeScreenshot(page, 'settings-reload')
+    const text2 = await page.evaluate(() => document.body?.innerText?.substring(0, 3000) || '').catch(() => '')
+    console.log('[Canva] Text after reload:', text2.substring(0, 500))
+    if (text2.trim().length < 100) {
+      // Try homepage first then settings
+      console.log('[Canva] Intentando homepage primero...')
+      await page.goto('https://www.canva.com/', { waitUntil: 'load', timeout: 45000 })
+      await page.waitForTimeout(5000)
+      await takeScreenshot(page, 'homepage')
+      await page.goto('https://www.canva.com/settings/people', { waitUntil: 'load', timeout: 45000 })
+      await page.waitForTimeout(5000)
+      await takeScreenshot(page, 'settings-v2')
+      const text3 = await page.evaluate(() => document.body?.innerText?.substring(0, 3000) || '').catch(() => '')
+      console.log('[Canva] Text after v2:', text3.substring(0, 500))
+      if (text3.trim().length < 100) {
+        throw new Error(`Canva no carga contenido. URL final: ${page.url()}. Text: ${text3.substring(0, 200)}`)
+      }
+    }
   }
 
   for (const member of members) {
     if (!member.email) continue
-    console.log('[Canva Worker] Invitando a:', member.email)
+    console.log('[Canva] Invitando a:', member.email)
 
-    // Update bodyText before each member in case it changed
-    bodyText = await page.evaluate(() => document.body?.innerText?.substring(0, 3000) || '').catch(() => '')
+    const bodyText = await page.evaluate(() => document.body?.innerText || '').catch(() => '')
 
-    // 3. Buscar botón de invitar con múltiples estrategias
-    const btnSelectors = [
-      // Text-based
-      ...['Invitar', 'Añadir', 'Add people', 'Invitar a alguien', 'Invite', 'Add member', 'Add team member', 'Agregar', 'Share', 'Compartir', '+'].map(t => `text=${t}`),
-      // Common testids / attributes
-      '[data-testid="invite-button"]',
-      '[data-testid="add-people-button"]',
-      '[aria-label*="invitar" i]',
-      '[aria-label*="añadir" i]',
-      '[aria-label*="add" i]',
-      // By role
-      'button:has-text("Invitar")',
-      'button:has-text("Añadir")',
-      'button:has-text("Add")',
-    ]
+    // Find invite button by iterating all visible buttons
+    const inviteBtns = await page.locator('button').all()
     let inviteBtn = null
-    for (const sel of btnSelectors) {
-      try {
-        const btn = page.locator(sel).first()
-        if (await btn.isVisible({ timeout: 1500 }).catch(() => false)) {
-          inviteBtn = btn
-          console.log('[Canva Worker] Botón encontrado con selector:', sel)
-          break
-        }
-      } catch { }
+    for (const btn of inviteBtns) {
+      const text = await btn.innerText().catch(() => '')
+      if (/invitar|añadir|add|invite|share|compartir/i.test(text) && await btn.isVisible()) {
+        inviteBtn = btn
+        console.log('[Canva] Invite btn found:', text)
+        break
+      }
     }
 
     if (!inviteBtn) {
-      await takeDebugScreenshot(page, 'no-invite-btn')
-      throw new Error(`No se encontró botón de invitar. Texto visible: ${bodyText.substring(0, 1000)}`)
+      await takeScreenshot(page, 'no-invite-btn')
+      throw new Error(`No se encontró botón invitar. Botones: ${(await Promise.all(inviteBtns.map(b => b.innerText().catch(()=>'')))).filter(Boolean).join(' | ')}`)
     }
 
-    await inviteBtn.scrollIntoViewIfNeeded()
-    await inviteBtn.click({ timeout: 10000, force: true })
+    await inviteBtn.click({ force: true })
     await page.waitForTimeout(3000)
 
-    // 4. Buscar cualquier input de texto visible (email)
-    const emailInputSelectors = [
-      'input[type="email"]',
-      'input[type="text"]:not([type="hidden"])',
-      'input:not([type="hidden"]):not([type="checkbox"]):not([type="submit"]):not([type="radio"]):not([type="search"])',
-      '[contenteditable="true"]',
-      'textarea',
-    ]
-    let emailInput = null
-    for (const sel of emailInputSelectors) {
-      try {
-        const input = page.locator(sel).first()
-        if (await input.isVisible({ timeout: 1000 }).catch(() => false)) {
-          emailInput = input
-          console.log('[Canva Worker] Input encontrado con selector:', sel)
-          break
-        }
-      } catch { }
+    // Find email input
+    const emailInput = page.locator('input[type="email"], input:not([type])').first()
+    if (!(await emailInput.isVisible({ timeout: 5000 }).catch(() => false))) {
+      await takeScreenshot(page, 'no-input')
+      throw new Error('No se encontró input email')
     }
-
-    if (!emailInput) {
-      await takeDebugScreenshot(page, 'no-email-input')
-      const html = await page.evaluate(() => document.querySelector('[role=dialog]')?.innerHTML?.substring(0, 2000) || 'sin modal').catch(() => '')
-      console.log('[Canva Debug] HTML modal:', html)
-      throw new Error('No se encontró campo de email')
-    }
-
     await emailInput.fill(member.email)
     await page.waitForTimeout(500)
 
-    // 5. Buscar botón de confirmar/invitar
-    const confirmSelectors = [
-      'button:has-text("Confirmar e invitar")',
-      'button:has-text("Send invite")',
-      'button:has-text("Invitar")',
-      'button:has-text("Enviar")',
-      'button:has-text("Send")',
-      'button:has-text("Confirmar")',
-      'button:has-text("Invite")',
-      '[data-testid="confirm-invite-button"]',
-      'button[type="submit"]',
-    ]
+    // Find confirm button
+    const confirmBtns = await page.locator('button').all()
     let confirmBtn = null
-    for (const sel of confirmSelectors) {
-      try {
-        const btn = page.locator(sel).first()
-        if (await btn.isVisible({ timeout: 1500 }).catch(() => false)) {
-          confirmBtn = btn
-          console.log('[Canva Worker] Confirm encontrado con selector:', sel)
-          break
-        }
-      } catch { }
+    for (const btn of confirmBtns) {
+      const text = await btn.innerText().catch(() => '')
+      if (/confirmar|send|invitar|invite|enviar/i.test(text) && await btn.isVisible()) {
+        confirmBtn = btn
+        console.log('[Canva] Confirm btn found:', text)
+        break
+      }
     }
+
     if (!confirmBtn) {
-      throw new Error('No se encontró botón de confirmar')
+      // Try by role
+      confirmBtn = page.getByRole('button', { name: /confirmar e invitar|send invite|invitar/i }).first()
     }
-    await confirmBtn.waitFor({ state: 'visible', timeout: 5000 })
+    if (!(await confirmBtn.isVisible({ timeout: 5000 }).catch(() => false))) {
+      throw new Error('No se encontró botón confirmar')
+    }
     await confirmBtn.click({ force: true })
-    console.log('[Canva Worker] Click en confirmar ejecutado')
-    await page.waitForTimeout(3000)
-
-    // 6. Volver a /settings/people para el siguiente miembro
-    await page.goto('https://www.canva.com/settings/people', { waitUntil: 'domcontentloaded', timeout: 30000 })
-    await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {})
-    await page.waitForTimeout(3000)
+    console.log('[Canva] Invitación enviada')
+    await page.waitForTimeout(2000)
   }
 
-  return {
-    accessToken: 'https://www.canva.com',
-    inviteUrl: 'https://www.canva.com',
-  }
+  return { accessToken: 'https://www.canva.com', inviteUrl: 'https://www.canva.com' }
 }

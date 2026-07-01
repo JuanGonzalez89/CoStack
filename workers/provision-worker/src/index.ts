@@ -81,6 +81,11 @@ async function provision(toolSlug: string, toolName: string, members: { email: s
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
+        '--disable-blink-features=AutomationControlled',
+        '--disable-web-security',
+        '--disable-features=IsolateOrigins,site-per-process',
+        '--window-size=1280,800',
+        '--lang=es-AR',
       ],
     })
   } catch (error: any) {
@@ -91,6 +96,8 @@ async function provision(toolSlug: string, toolName: string, members: { email: s
   const contextOptions: any = {
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
     viewport: { width: 1280, height: 800 },
+    locale: 'es-AR',
+    timezoneId: 'America/Argentina/Buenos_Aires',
   }
 
   if (existsSync(SESSION_PATH)) {
@@ -99,6 +106,12 @@ async function provision(toolSlug: string, toolName: string, members: { email: s
   }
 
   const context = await browser.newContext(contextOptions)
+
+  // Remove webdriver detection
+  await context.addInitScript(() => {
+    Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
+  })
+
   const page = await context.newPage()
 
   try {
