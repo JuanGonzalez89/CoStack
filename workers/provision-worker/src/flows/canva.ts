@@ -70,9 +70,9 @@ async function waitForContent(page: Page, maxMs = 25000): Promise<{
 
   while (Date.now() - start < maxMs) {
     info = await page.evaluate(() => {
-      const allBtns = [...document.querySelectorAll('button')]
+      const allBtns = [...document.querySelectorAll('button, a, [role="button"]')]
       const visBtns = allBtns.filter(b => (b as HTMLElement).offsetHeight > 0 && (b as HTMLElement).offsetWidth > 0)
-      const hasInvite = visBtns.some(b => /invitar|invite|añadir/i.test(b.innerText || ''))
+      const hasInvite = visBtns.some(b => /invitar|invite|añadir/i.test((b as HTMLElement).innerText || ''))
       return {
         title: document.title,
         textLen: (document.body?.innerText || '').length,
@@ -152,11 +152,11 @@ async function clickInviteButton(page: Page): Promise<boolean> {
 
   // Debug: list every visible button
   const allBtns = await page.evaluate(() =>
-    [...document.querySelectorAll('button')]
+    [...document.querySelectorAll('button, a, [role="button"]')]
       .filter(b => (b as HTMLElement).offsetHeight > 0 && (b as HTMLElement).offsetWidth > 0)
       .map((b, i) => ({
         i,
-        text: (b.innerText || '').substring(0, 50).trim(),
+        text: ((b as HTMLElement).innerText || '').substring(0, 50).trim(),
         aria: b.getAttribute('aria-label') || '',
         hiddenAncestor: !!b.closest('[aria-hidden="true"]'),
       })),
@@ -179,16 +179,16 @@ async function clickInviteButton(page: Page): Promise<boolean> {
       ({ src, fl }) => {
         const regex = new RegExp(src, fl)
         // Do NOT filter by aria-hidden ancestors or offsetParent — just size
-        const btns = [...document.querySelectorAll('button')].filter(
+        const btns = [...document.querySelectorAll('button, a, [role="button"]')].filter(
           b => (b as HTMLElement).offsetHeight > 0 && (b as HTMLElement).offsetWidth > 0,
         )
         const target = btns.find(
-          b => regex.test(b.innerText || '') || regex.test(b.getAttribute('aria-label') || ''),
+          b => regex.test((b as HTMLElement).innerText || '') || regex.test(b.getAttribute('aria-label') || ''),
         )
         if (target) {
           ;(target as HTMLElement).scrollIntoView({ block: 'center', behavior: 'instant' })
           ;(target as HTMLElement).click()
-          return (target.innerText || '').substring(0, 50)
+          return ((target as HTMLElement).innerText || '').substring(0, 50)
         }
         return null
       },
@@ -342,14 +342,14 @@ async function fillEmailAndConfirm(page: Page, email: string): Promise<boolean> 
     const confirmed = await page.evaluate(
       ({ src, fl }) => {
         const regex = new RegExp(src, fl)
-        const btns = [...document.querySelectorAll('button')].filter(
+        const btns = [...document.querySelectorAll('button, a, [role="button"]')].filter(
           b => (b as HTMLElement).offsetHeight > 0 && (b as HTMLElement).offsetWidth > 0,
         )
-        const t = btns.find(b => regex.test(b.innerText || ''))
+        const t = btns.find(b => regex.test((b as HTMLElement).innerText || ''))
         if (t) {
           ;(t as HTMLElement).scrollIntoView({ block: 'center', behavior: 'instant' })
           ;(t as HTMLElement).click()
-          return (t.innerText || '').substring(0, 50)
+          return ((t as HTMLElement).innerText || '').substring(0, 50)
         }
         return null
       },
@@ -365,7 +365,7 @@ async function fillEmailAndConfirm(page: Page, email: string): Promise<boolean> 
 
   // Fallback: submit button
   const fallback = await page.evaluate(() => {
-    const submit = [...document.querySelectorAll('button')].find(b => (b as HTMLButtonElement).type === 'submit' && (b as HTMLElement).offsetHeight > 0)
+    const submit = [...document.querySelectorAll('button, a, [role="button"]')].find(b => (b as HTMLButtonElement).type === 'submit' && (b as HTMLElement).offsetHeight > 0)
     if (submit) { (submit as HTMLElement).click(); return 'submit-button' }
     return null
   }).catch(() => null)
