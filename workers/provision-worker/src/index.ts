@@ -24,13 +24,13 @@ function ensureBrowser(): void {
       }
     }
   }
-  console.log('[Worker] Instalando chromium-headless-shell...')
-  execSync('npx playwright install chromium-headless-shell --force', {
+  console.log('[Worker] Instalando chromium...')
+  execSync('npx playwright install chromium --force', {
     stdio: 'inherit',
     cwd: resolve(__dirname, '..'),
     timeout: 120_000,
   })
-  console.log('[Worker] Chromium headless shell instalado')
+  console.log('[Worker] Chromium instalado')
 }
 
 const SESSION_PATH = '/tmp/.auth/canva.json'
@@ -75,7 +75,7 @@ async function provision(toolSlug: string, toolName: string, members: { email: s
   let browser
   try {
     browser = await chromium.launch({
-      headless: true,
+      headless: 'new' as any,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -84,7 +84,7 @@ async function provision(toolSlug: string, toolName: string, members: { email: s
         '--disable-blink-features=AutomationControlled',
         '--disable-web-security',
         '--disable-features=IsolateOrigins,site-per-process',
-        '--window-size=1280,800',
+        '--window-size=1920,1080',
         '--lang=es-AR',
       ],
     })
@@ -94,8 +94,8 @@ async function provision(toolSlug: string, toolName: string, members: { email: s
   }
 
   const contextOptions: any = {
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-    viewport: { width: 1280, height: 800 },
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
+    viewport: { width: 1920, height: 1080 },
     locale: 'es-AR',
     timezoneId: 'America/Argentina/Buenos_Aires',
   }
@@ -151,17 +151,17 @@ app.get('/debug', async (_req, res) => {
   let browser
   try {
     browser = await chromium.launch({
-      headless: true,
+      headless: 'new' as any,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu',
-        '--disable-blink-features=AutomationControlled', '--window-size=1280,800', '--lang=es-AR'],
+        '--disable-blink-features=AutomationControlled', '--window-size=1920,1080', '--lang=es-AR'],
     })
   } catch (e: any) {
     return res.json({ error: 'chromium launch failed', detail: e.message })
   }
 
   const contextOptions: any = {
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-    viewport: { width: 1280, height: 800 }, locale: 'es-AR', timezoneId: 'America/Argentina/Buenos_Aires',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
+    viewport: { width: 1920, height: 1080 }, locale: 'es-AR', timezoneId: 'America/Argentina/Buenos_Aires',
   }
   if (existsSync(SESSION_PATH)) contextOptions.storageState = SESSION_PATH
 
