@@ -98,7 +98,7 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
       throw new Error(`No se encontró botón invitar. Todos: ${JSON.stringify(allBtnTexts)}`)
     }
 
-    await inviteBtn.click({ force: true, timeout: 15000 })
+    await inviteBtn.click({ force: true, timeout: 15000, noWaitAfter: true })
     await page.waitForTimeout(3000)
 
     // Find email input
@@ -133,7 +133,7 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
     if (!confirmBtn) {
       throw new Error('No se encontró botón confirmar')
     }
-    await confirmBtn.click({ force: true, timeout: 15000 })
+    await confirmBtn.click({ force: true, timeout: 15000, noWaitAfter: true })
     console.log('[Canva] Invitación enviada')
     await page.waitForTimeout(2000)
   }
