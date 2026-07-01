@@ -99,16 +99,63 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
     }
 
     await inviteBtn.click({ force: true, timeout: 15000, noWaitAfter: true })
-    await page.waitForTimeout(3000)
+    await page.waitForTimeout(4000)
+    await takeScreenshot(page, 'after-invite-click')
 
-    // Find email input
-    const emailInput = page.locator('input[type="email"], input:not([type])').first()
-    if (!(await emailInput.isVisible({ timeout: 5000 }).catch(() => false))) {
-      await takeScreenshot(page, 'no-input')
-      throw new Error('No se encontró input email')
+    // Debug: log all interactive elements on the page
+    const allInputs = await page.evaluate(() => {
+      const all = [...document.querySelectorAll('input, textarea, [contenteditable], [role="textbox"]')]
+        .map(el => ({
+          tag: el.tagName,
+          type: (el as HTMLInputElement).type || '',
+          placeholder: (el as HTMLInputElement).placeholder || '',
+          ariaLabel: el.getAttribute('aria-label') || '',
+          role: el.getAttribute('role') || '',
+          visible: el.offsetParent !== null && el.offsetHeight > 0,
+          rect: el.getBoundingClientRect(),
+          value: (el as HTMLInputElement).value?.substring(0, 20) || '',
+        }))
+        .filter(i => i.visible)
+      return all
+    }).catch(() => [])
+    console.log('[Canva] Inputs visibles:', JSON.stringify(allInputs))
+
+    // Find email input — try many selectors
+    const emailSelectors = [
+      'input[type="email"]',
+      'input[type="search"]',
+      'input[type="text"]',
+      'input:not([type])',
+      'input[placeholder*="email" i]',
+      'input[placeholder*="correo" i]',
+      'input[placeholder*="people" i]',
+      'input[placeholder*="name" i]',
+      'input[aria-label*="email" i]',
+      'input[aria-label*="correo" i]',
+      '[contenteditable="true"]',
+      '[role="textbox"]',
+      'textarea',
+    ]
+    let emailInput = null
+    for (const sel of emailSelectors) {
+      try {
+        const el = page.locator(sel).first()
+        if (await el.isVisible({ timeout: 1500 }).catch(() => false)) {
+          emailInput = el
+          console.log('[Canva] Email input encontrado con:', sel)
+          break
+        }
+      } catch {}
     }
+
+    if (!emailInput) {
+      await takeScreenshot(page, 'no-input')
+      throw new Error(`No se encontró input email. Inputs: ${JSON.stringify(allInputs)}`)
+    }
+
+    await emailInput.click({ force: true, noWaitAfter: true })
     await emailInput.fill(member.email)
-    await page.waitForTimeout(500)
+    await page.waitForTimeout(1000)
 
     // Find confirm button (visible, not aria-hidden)
     const confirmCandidates = await page.evaluate(() => {
