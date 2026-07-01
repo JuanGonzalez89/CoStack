@@ -1,7 +1,10 @@
+process.env.PLAYWRIGHT_BROWSERS_PATH = '0'
+
 import express from 'express'
 import { chromium } from 'playwright'
 import { existsSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs'
 import { execSync } from 'node:child_process'
+import { resolve } from 'node:path'
 import { ejecutar as canvaFlow } from './flows/canva'
 import { ejecutar as chatgptFlow } from './flows/chatgpt'
 
@@ -9,19 +12,22 @@ const app = express()
 app.use(express.json())
 
 function ensureBrowser(): void {
-  const home = process.env.HOME || '/opt/render'
-  const cacheDir = `${home}/.cache/ms-playwright`
-  if (existsSync(cacheDir)) {
-    const items = readdirSync(cacheDir)
-    if (items.some(i => i.includes('chromium'))) {
-      console.log('[Worker] Chromium headless shell ya instalado')
-      return
+  const pwCoreDir = resolve(__dirname, '..', 'node_modules', 'playwright-core', '.local-browsers')
+  const localDir = resolve(__dirname, '..', 'node_modules', '.cache', 'ms-playwright')
+  const possibleDirs = [pwCoreDir, localDir]
+  for (const dir of possibleDirs) {
+    if (existsSync(dir)) {
+      const items = readdirSync(dir)
+      if (items.some(i => i.includes('chromium'))) {
+        console.log('[Worker] Chromium headless shell ya instalado en', dir)
+        return
+      }
     }
   }
   console.log('[Worker] Instalando chromium-headless-shell...')
-  execSync('PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium-headless-shell --force', {
+  execSync('npx playwright install chromium-headless-shell --force', {
     stdio: 'inherit',
-    cwd: __dirname,
+    cwd: resolve(__dirname, '..'),
     timeout: 120_000,
   })
   console.log('[Worker] Chromium headless shell instalado')
@@ -66,15 +72,21 @@ async function provision(toolSlug: string, toolName: string, members: { email: s
 
   decodeSession()
 
-  const browser = await chromium.launch({
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-    ],
-  })
+  let browser
+  try {
+    browser = await chromium.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+      ],
+    })
+  } catch (error: any) {
+    console.error('[Worker] Error lanzando Chromium:', error.message)
+    return { status: 'failed' as const, accessToken: null, inviteUrl: null, errors: [error.message] }
+  }
 
   const contextOptions: any = {
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
