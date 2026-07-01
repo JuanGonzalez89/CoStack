@@ -199,7 +199,7 @@ app.get('/debug', async (_req, res) => {
         .filter(Boolean),
     ).catch(() => [])
 
-    await page.screenshot({ path: '/tmp/canva-debug.png', fullPage: true }).catch(() => {})
+    await page.screenshot({ path: '/tmp/canva-debug.png' }).catch(() => {})
 
     res.json({
       url,

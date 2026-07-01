@@ -24,7 +24,7 @@ interface CapturedApiCall {
 
 async function takeScreenshot(page: Page, label: string) {
   try {
-    await page.screenshot({ path: `/tmp/canva-${label}.png`, fullPage: true })
+    await page.screenshot({ path: `/tmp/canva-${label}.png` })
     console.log(`[Canva] 📸 Screenshot: /tmp/canva-${label}.png`)
   } catch {}
 }
