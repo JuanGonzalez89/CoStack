@@ -60,28 +60,45 @@ function setupRequestCapture(page: Page): { calls: CapturedApiCall[] } {
 // NAVIGATION — loads /settings/people with smart polling
 // ============================================================
 
-/** Poll until we see buttons on the page (Canva SPA hydrated) or timeout. */
-async function waitForContent(page: Page, maxMs = 10000): Promise<{ textLen: number; buttons: number; preview: string; title: string }> {
+/** Poll until we see VISIBLE buttons (especially "Invitar") on the page, or timeout. */
+async function waitForContent(page: Page, maxMs = 25000): Promise<{
+  textLen: number; buttons: number; visibleButtons: number;
+  hasInviteButton: boolean; preview: string; title: string;
+}> {
   const start = Date.now()
-  let info = { title: '?', textLen: 0, preview: '', buttons: 0 }
+  let info = { title: '?', textLen: 0, preview: '', buttons: 0, visibleButtons: 0, hasInviteButton: false }
 
   while (Date.now() - start < maxMs) {
-    info = await page.evaluate(() => ({
-      title: document.title,
-      textLen: (document.body?.innerText || '').length,
-      preview: (document.body?.innerText || '').substring(0, 300),
-      buttons: document.querySelectorAll('button').length,
-    })).catch(() => ({ title: '?', textLen: 0, preview: '', buttons: 0 }))
+    info = await page.evaluate(() => {
+      const allBtns = [...document.querySelectorAll('button')]
+      const visBtns = allBtns.filter(b => (b as HTMLElement).offsetHeight > 0 && (b as HTMLElement).offsetWidth > 0)
+      const hasInvite = visBtns.some(b => /invitar|invite|añadir/i.test(b.innerText || ''))
+      return {
+        title: document.title,
+        textLen: (document.body?.innerText || '').length,
+        preview: (document.body?.innerText || '').substring(0, 300),
+        buttons: allBtns.length,
+        visibleButtons: visBtns.length,
+        hasInviteButton: hasInvite,
+      }
+    }).catch(() => ({ title: '?', textLen: 0, preview: '', buttons: 0, visibleButtons: 0, hasInviteButton: false }))
 
-    // Canva settings page has multiple buttons when loaded
-    if (info.buttons >= 3 && info.textLen > 100) {
-      console.log(`[Canva] Contenido detectado en ${Date.now() - start}ms (${info.buttons} botones, ${info.textLen} chars)`)
+    // Best case: we found the invite button
+    if (info.hasInviteButton) {
+      console.log(`[Canva] ✅ Botón "Invitar" detectado en ${Date.now() - start}ms (${info.visibleButtons} vis, ${info.buttons} total)`)
       return info
     }
+
+    // Good enough: many visible buttons and substantial text
+    if (info.visibleButtons >= 4 && info.textLen > 300) {
+      console.log(`[Canva] Contenido detectado en ${Date.now() - start}ms (${info.visibleButtons} vis btns, ${info.textLen} chars)`)
+      return info
+    }
+
     await page.waitForTimeout(500)
   }
 
-  console.log(`[Canva] waitForContent timeout ${maxMs}ms (${info.buttons} botones, ${info.textLen} chars)`)
+  console.log(`[Canva] waitForContent timeout ${maxMs}ms (${info.visibleButtons} vis/${info.buttons} total btns, ${info.textLen} chars, invite=${info.hasInviteButton})`)
   return info
 }
 
@@ -102,21 +119,21 @@ async function navigateToSettingsPage(page: Page): Promise<{ loaded: boolean; se
     return { loaded: false, sessionValid: false }
   }
 
-  // Smart poll: wait for buttons to appear instead of fixed 5s
-  let info = await waitForContent(page, 10000)
+  // Smart poll: wait for buttons to appear (up to 25s)
+  let info = await waitForContent(page, 25000)
 
-  console.log('[Canva] Title:', info.title, '| Text:', info.textLen, '| Buttons:', info.buttons)
+  console.log('[Canva] Title:', info.title, '| Text:', info.textLen, '| Visible Buttons:', info.visibleButtons)
   console.log('[Canva] Preview:', info.preview.substring(0, 200))
 
-  if (info.textLen < 50) {
-    console.log('[Canva] Página vacía, retrying via homepage…')
+  if (!info.hasInviteButton && info.visibleButtons < 3) {
+    console.log('[Canva] Página vacía o sin cargar completamente, retrying via homepage…')
     await page.goto('https://www.canva.com/', { waitUntil: 'domcontentloaded', timeout: 15000 })
     await waitForContent(page, 5000)
     await page.goto('https://www.canva.com/settings/people', { waitUntil: 'domcontentloaded', timeout: 20000 })
-    info = await waitForContent(page, 10000)
+    info = await waitForContent(page, 25000)
 
-    if (info.textLen < 50) {
-      console.log('[Canva] Página sigue vacía después de retry')
+    if (!info.hasInviteButton && info.visibleButtons < 3) {
+      console.log('[Canva] Página sigue sin cargar bien después de retry')
       return { loaded: false, sessionValid: true }
     }
   }
