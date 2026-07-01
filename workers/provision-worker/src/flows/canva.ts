@@ -13,8 +13,8 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
 
   // Navigate directly to settings/people
   console.log('[Canva] Navegando a /settings/people...')
-  await page.goto('https://www.canva.com/settings/people', { waitUntil: 'load', timeout: 45000 })
-  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {})
+  await page.goto('https://www.canva.com/settings/people', { waitUntil: 'domcontentloaded', timeout: 30000 })
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
   console.log('[Canva] URL:', page.url())
   console.log('[Canva] Title:', await page.title().catch(() => '?'))
   await page.waitForTimeout(3000)
@@ -29,28 +29,31 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
   console.log('[Canva] Text:', info.text.substring(0, 500))
   console.log('[Canva] Buttons:', info.buttons.map(b => b.t).join(' | '))
 
-  // If text is just the shell, try reload
+  // If text is just the shell, try homepage first then settings
   if (info.text.trim().length < 100) {
-    console.log('[Canva] Shell vacío, recargando con timeout largo...')
-    await page.goto('https://www.canva.com/settings/people', { waitUntil: 'load', timeout: 60000 })
+    console.log('[Canva] Shell vacío, intentando homepage primero...')
+    await page.goto('https://www.canva.com/', { waitUntil: 'domcontentloaded', timeout: 30000 })
+    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
+    await page.waitForTimeout(3000)
+    await takeScreenshot(page, 'homepage')
+    const homeText = await page.evaluate(() => document.body?.innerText?.substring(0, 1000) || '').catch(() => '')
+    console.log('[Canva] Homepage text:', homeText.substring(0, 300))
+
+    console.log('[Canva] Navegando a /settings/people (v2)...')
+    await page.goto('https://www.canva.com/settings/people', { waitUntil: 'domcontentloaded', timeout: 30000 })
+    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {})
     await page.waitForTimeout(5000)
-    await takeScreenshot(page, 'settings-reload')
-    const text2 = await page.evaluate(() => document.body?.innerText?.substring(0, 3000) || '').catch(() => '')
-    console.log('[Canva] Text after reload:', text2.substring(0, 500))
-    if (text2.trim().length < 100) {
-      // Try homepage first then settings
-      console.log('[Canva] Intentando homepage primero...')
-      await page.goto('https://www.canva.com/', { waitUntil: 'load', timeout: 45000 })
-      await page.waitForTimeout(5000)
-      await takeScreenshot(page, 'homepage')
-      await page.goto('https://www.canva.com/settings/people', { waitUntil: 'load', timeout: 45000 })
-      await page.waitForTimeout(5000)
-      await takeScreenshot(page, 'settings-v2')
-      const text3 = await page.evaluate(() => document.body?.innerText?.substring(0, 3000) || '').catch(() => '')
-      console.log('[Canva] Text after v2:', text3.substring(0, 500))
-      if (text3.trim().length < 100) {
-        throw new Error(`Canva no carga contenido. URL final: ${page.url()}. Text: ${text3.substring(0, 200)}`)
-      }
+    await takeScreenshot(page, 'settings-v2')
+
+    const info2 = await page.evaluate(() => ({
+      text: document.body?.innerText?.substring(0, 3000) || '',
+      buttons: [...document.querySelectorAll('button')].map(b => ({ t: b.innerText?.substring(0, 40), v: b.offsetHeight > 0 })).filter(b => b.v),
+    })).catch(() => ({ text: '', buttons: [] }))
+    console.log('[Canva] Text v2:', info2.text.substring(0, 500))
+    console.log('[Canva] Buttons v2:', info2.buttons.map(b => b.t).join(' | '))
+
+    if (info2.text.trim().length < 100) {
+      throw new Error(`Canva no carga contenido. URL final: ${page.url()}. Text: ${info2.text.substring(0, 200)}`)
     }
   }
 
