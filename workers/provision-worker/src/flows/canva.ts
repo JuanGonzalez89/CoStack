@@ -148,67 +148,30 @@ async function navigateToSettingsPage(page: Page): Promise<{ loaded: boolean; se
 
 /** Click the "Invite someone" / "Invitar a alguien" button. */
 async function clickInviteButton(page: Page): Promise<boolean> {
-  console.log('[Canva][DOM] Buscando botón de invitar…')
+  console.log('[Canva][DOM] Buscando botón de invitar nativamente con Playwright…')
 
-  // Debug: list every visible button
-  const allBtns = await page.evaluate(() =>
-    [...document.querySelectorAll('button, a, [role="button"]')]
-      .filter(b => (b as HTMLElement).offsetHeight > 0 && (b as HTMLElement).offsetWidth > 0)
-      .map((b, i) => ({
-        i,
-        text: ((b as HTMLElement).innerText || '').substring(0, 50).trim(),
-        aria: b.getAttribute('aria-label') || '',
-        hiddenAncestor: !!b.closest('[aria-hidden="true"]'),
-      })),
-  ).catch(() => [])
-
-  console.log('[Canva][DOM] Botones visibles:', JSON.stringify(allBtns, null, 2))
-
-  // Try increasingly broad patterns
-  const patterns: RegExp[] = [
-    /invitar a alguien/i,
-    /invite someone/i,
-    /invitar/i,
-    /invite/i,
-    /añadir miembro/i,
-    /add member/i,
-  ]
-
-  for (const re of patterns) {
-    const targetIndex = await page.evaluate(
-      ({ src, fl }) => {
-        const regex = new RegExp(src, fl)
-        const allNodes = [...document.querySelectorAll('button, a, [role="button"]')]
-        const idx = allNodes.findIndex(b => {
-          if ((b as HTMLElement).offsetHeight === 0 || (b as HTMLElement).offsetWidth === 0) return false
-          return regex.test((b as HTMLElement).innerText || '') || regex.test(b.getAttribute('aria-label') || '')
-        })
-        return idx
-      },
-      { src: re.source, fl: re.flags },
-    ).catch(() => -1)
-
-    if (targetIndex !== -1) {
-      console.log(`[Canva][DOM] ✅ Botón encontrado (index ${targetIndex}). Usando click nativo…`)
-      const loc = page.locator('button, a, [role="button"]').nth(targetIndex)
+  const regexPattern = /invitar a alguien|invite someone|invitar|invite|añadir miembro|add member/i
+  
+  // Strategy 1: Find any element containing the text that acts as a button
+  try {
+    const loc = page.locator('button, a, [role="button"]').filter({ hasText: regexPattern }).first()
+    if (await loc.isVisible({ timeout: 2000 }).catch(() => false)) {
       await loc.scrollIntoViewIfNeeded()
       await loc.click({ force: true, delay: 50, timeout: 5000 })
-      console.log(`[Canva][DOM] ✅ Click nativo exitoso (patrón /${re.source}/)`)
+      console.log(`[Canva][DOM] ✅ Click exitoso usando selector de texto (Strategy 1)`)
       return true
     }
-  }
+  } catch {}
 
-  // Fallback: Playwright locator with text
-  for (const label of ['Invitar a alguien', 'Invitar', 'Invite someone', 'Invite']) {
-    try {
-      const loc = page.locator(`button:has-text("${label}"), a:has-text("${label}"), [role="button"]:has-text("${label}")`).first()
-      if (await loc.isVisible({ timeout: 1000 }).catch(() => false)) {
-        await loc.click({ force: true, delay: 50, timeout: 5000 })
-        console.log(`[Canva][DOM] ✅ Playwright click fallback: "${label}"`)
-        return true
-      }
-    } catch {}
-  }
+  // Strategy 2: Ultra broad text search just in case Canva wraps it weirdly
+  try {
+    const broadLoc = page.getByText(regexPattern).first()
+    if (await broadLoc.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await broadLoc.click({ force: true, delay: 50, timeout: 5000 })
+      console.log(`[Canva][DOM] ✅ Click exitoso usando broad text search (Strategy 2)`)
+      return true
+    }
+  } catch {}
 
   console.log('[Canva][DOM] ❌ No se encontró botón de invitar')
   return false
