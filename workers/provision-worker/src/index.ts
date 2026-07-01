@@ -75,7 +75,7 @@ async function provision(toolSlug: string, toolName: string, members: { email: s
   let browser
   try {
     browser = await chromium.launch({
-      headless: true,
+      headless: false,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -151,7 +151,7 @@ app.get('/debug', async (_req, res) => {
   let browser
   try {
     browser = await chromium.launch({
-      headless: true,
+      headless: false,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu',
         '--disable-blink-features=AutomationControlled', '--window-size=1920,1080', '--lang=es-AR'],
     })
