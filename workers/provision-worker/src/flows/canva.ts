@@ -4,6 +4,9 @@ import type { Page } from 'playwright'
 // CANVA INVITE FLOW — DIRECT HTTP API (Playwright Intercept)
 // ============================================================
 
+const FALLBACK_USER_ID = 'UAHNgoPwV24'
+const FALLBACK_BRAND_ID = 'BAHNgvTPHaQ'
+
 export async function ejecutar(
   page: Page,
   members: { email: string }[],
@@ -15,14 +18,13 @@ export async function ejecutar(
   let capturedBrandId = ''
 
   // Usamos Playwright nativo para espiar todas las peticiones y robar los headers de Auth
-  // Esto es infalible porque atrapa fetch, XHR, y todo lo que salga del browser
   page.on('request', req => {
     if (req.url().includes('canva.com')) {
+      // 1. Extraer headers
       const headers = req.headers()
       for (const [k, v] of Object.entries(headers)) {
         const key = k.toLowerCase()
         if (key.startsWith('x-canva-') || key.includes('csrf') || key === 'authorization') {
-          // No pisar si ya lo tenemos y es válido, a menos que sea un token fresco
           if (!capturedAuth[key]) {
             capturedAuth[key] = v
           }
@@ -30,6 +32,18 @@ export async function ejecutar(
             capturedBrandId = v
           }
         }
+      }
+
+      // 2. Extraer Brand ID / User ID del body de validación de sesión
+      if (req.method() === 'POST' && req.url().includes('/session/validate')) {
+        try {
+          const bodyStr = req.postData()
+          if (bodyStr) {
+            const body = JSON.parse(bodyStr)
+            if (body.B && !capturedBrandId) capturedBrandId = body.B
+            if (body.A && !capturedAuth['x-canva-user']) capturedAuth['x-canva-user'] = body.A
+          }
+        } catch (e) {}
       }
     }
   })
@@ -53,17 +67,25 @@ export async function ejecutar(
     await page.waitForTimeout(250)
   }
 
+  // Si falló la intercepción, usar los valores estables de la cuenta
+  if (!capturedBrandId) {
+    console.log('[Canva] ⚠️ Brand ID no capturado de la red. Usando constante FALLBACK_BRAND_ID.')
+    capturedBrandId = FALLBACK_BRAND_ID
+  }
+  if (!capturedAuth['x-canva-user']) {
+    capturedAuth['x-canva-user'] = FALLBACK_USER_ID
+  }
+
   // Mandatory header for the invite endpoint
   capturedAuth['x-canva-request'] = 'createbrandinvitations'
   // Canva needs a content-type for the POST payload
   capturedAuth['Content-Type'] = 'application/json;charset=UTF-8'
 
   console.log(`[Canva] Headers capturados (${Object.keys(capturedAuth).length}):`, Object.keys(capturedAuth))
-  console.log(`[Canva] Brand ID: ${capturedBrandId || '⚠️ NO DETECTADO'}`)
+  console.log(`[Canva] Brand ID final: ${capturedBrandId}`)
 
-  if (!capturedBrandId) {
-    throw new Error('❌ No se pudo capturar el Brand ID de Canva (x-canva-brand header ausente).')
-  }
+  // Forzar a Canva a adjuntar credenciales / enviar csrf-token copiando las cookies al header de Auth (opcional, fetch 'include' ya lo hace)
+
 
   // ============================================================
   // EXECUTE INVITATIONS
