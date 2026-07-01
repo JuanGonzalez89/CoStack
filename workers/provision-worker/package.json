@@ -6,7 +6,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "tsx src/index.ts",
-    "postinstall": "npx playwright install --with-deps chromium --force"
+    "postinstall": "npx playwright install chromium --force"
   },
   "dependencies": {
     "express": "^4.21.0",
