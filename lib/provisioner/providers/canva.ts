@@ -97,34 +97,35 @@ export class CanvaInviteLinkProvider implements ProvisionerProvider {
       console.log(`[CanvaProvider] ✅ Link vigente. Faltan ${Math.ceil(daysUntilExpiry)} días para expirar.`)
     }
 
-    // --- Enviar email con el link a cada miembro ---
+    // --- Enviar email con el link a cada miembro (best-effort) ---
+    // Si el servicio de email no está configurado o falla, el provisioning
+    // sigue exitoso — el link se muestra en la UI del lobby como accessToken.
     const emailErrors: string[] = []
+    let emailsAttempted = false
 
-    for (const member of members) {
-      if (!member.email) continue
-      try {
-        await sendInviteLinkEmail(member.email, 'Canva', inviteLink)
-        console.log(`[CanvaProvider] Email enviado a ${member.email}`)
-      } catch (err) {
-        const msg = `Error enviando email a ${member.email}: ${(err as Error).message}`
-        console.error(`[CanvaProvider] ${msg}`)
-        emailErrors.push(msg)
+    if (process.env.RESEND_API_KEY) {
+      emailsAttempted = true
+      for (const member of members) {
+        if (!member.email) continue
+        try {
+          await sendInviteLinkEmail(member.email, 'Canva', inviteLink)
+          console.log(`[CanvaProvider] ✅ Email enviado a ${member.email}`)
+        } catch (err) {
+          const msg = `Error enviando email a ${member.email}: ${(err as Error).message}`
+          console.warn(`[CanvaProvider] ⚠️  ${msg}`)
+          emailErrors.push(msg)
+        }
       }
+    } else {
+      console.warn('[CanvaProvider] ⚠️  RESEND_API_KEY no configurada — emails no enviados. El link se mostrará en la UI.')
     }
 
-    if (emailErrors.length === members.filter(m => m.email).length) {
-      // Todos los emails fallaron
-      return {
-        status: 'failed',
-        accessToken: null,
-        providerName: this.name,
-        inviteUrl: inviteLink,
-        errors: emailErrors,
-      }
+    if (emailErrors.length > 0) {
+      console.warn(`[CanvaProvider] ⚠️  ${emailErrors.length} email(s) fallaron, pero el link sigue disponible en la UI.`)
     }
 
     return {
-      status: emailErrors.length > 0 ? 'partial' : 'success',
+      status: 'success',
       accessToken: inviteLink,
       providerName: this.name,
       inviteUrl: inviteLink,
