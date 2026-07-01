@@ -1,8 +1,10 @@
 import type { ProvisionResult, ProvisionerProvider } from './types'
+import { CanvaInviteLinkProvider } from './providers/canva'
 import { GitHubProvider } from './providers/github'
 import { WorkerProvider } from './providers/worker'
 
 const staticProviders: ProvisionerProvider[] = [
+  new CanvaInviteLinkProvider(),
   new GitHubProvider(),
   new WorkerProvider(),
 ]

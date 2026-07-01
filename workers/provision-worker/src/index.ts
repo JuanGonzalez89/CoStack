@@ -36,9 +36,11 @@ function ensureBrowser(): void {
 const SESSION_PATH = '/tmp/.auth/canva.json'
 
 const FLOW_MAP: Record<string, (page: any, members: { email: string }[]) => Promise<{ accessToken: string; inviteUrl: string }>> = {
-  canva: canvaFlow,
-  'canva-pro': canvaFlow,
-  diseno: canvaFlow,
+  // DESACTIVADO: Canva ahora usa CanvaInviteLinkProvider (invite link estático + email)
+  // en la app principal. La automatización Playwright fue bloqueada por anti-bot (PerimeterX/HUMAN).
+  // canva: canvaFlow,
+  // 'canva-pro': canvaFlow,
+  // diseno: canvaFlow,
   chatgpt: chatgptFlow,
 }
 

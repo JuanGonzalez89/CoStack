@@ -156,6 +156,33 @@ CoStack incorpora OpenClaw Bot para automatizar la entrega de accesos. El flujo 
 3. El bot entrega un enlace privado y único por mensaje directo.
 4. El asiento queda asignado sin exponer credenciales reales.
 
+## Provisioning de Canva (Invite Link)
+
+El acceso a Canva se provisiona mediante un **link de invitación al equipo** generado manualmente desde la cuenta master (`costack.dev.bot@gmail.com`). Este link es reusable (varios usuarios pueden unirse con el mismo) y **expira a los 30 días** de generado.
+
+Cuando un lobby de Canva se completa, el sistema envía automáticamente un email a cada miembro con el link de invitación.
+
+### Variables de entorno
+
+| Variable | Descripción | Ejemplo |
+|---|---|---|
+| `CANVA_INVITE_LINK` | URL del link de invitación al equipo | `https://www.canva.com/brand/join?token=XXX&referrer=team-invite` |
+| `CANVA_INVITE_LINK_GENERATED_AT` | Fecha en que se generó (YYYY-MM-DD) | `2026-07-01` |
+| `RESEND_API_KEY` | API key de Resend para envío de emails | `re_XXXXXXXXX` |
+
+### ⚠️ Regeneración del link (cada ~25 días)
+
+El link expira a los 30 días. El sistema loguea un warning cuando faltan menos de 5 días. Para regenerarlo:
+
+1. Iniciar sesión en [Canva](https://www.canva.com) con la cuenta master (`costack.dev.bot@gmail.com`)
+2. Ir a **Settings** → **People** (o Configuración → Personas)
+3. Buscar la opción de **link de invitación al equipo** y generar uno nuevo
+4. Copiar la URL generada
+5. En el [dashboard de Vercel](https://vercel.com), actualizar:
+   - `CANVA_INVITE_LINK` → pegar la nueva URL
+   - `CANVA_INVITE_LINK_GENERATED_AT` → poner la fecha de hoy (`YYYY-MM-DD`)
+6. Redesplegar la aplicación para que tome los nuevos valores
+
 ## Autores
 
 - Santiago Calderon

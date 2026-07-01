@@ -2,10 +2,13 @@ import { existsSync } from 'node:fs'
 import type { ProvisionResult, ProvisionerProvider, PlaywrightFlow } from './types'
 import type { BrowserContextOptions } from '@playwright/test'
 import { chatgptFlow } from './flows/chatgpt'
-import { canvaFlow } from './flows/canva'
+// DESACTIVADO: Canva ahora usa CanvaInviteLinkProvider (invite link + email)
+// en vez de automatización Playwright, que fue bloqueada por anti-bot (PerimeterX/HUMAN).
+// El archivo flows/canva.ts se mantiene en el repo como referencia.
+// import { canvaFlow } from './flows/canva'
 import { huggingfaceFlow } from './flows/huggingface'
 
-const flows: PlaywrightFlow[] = [chatgptFlow, canvaFlow, huggingfaceFlow]
+const flows: PlaywrightFlow[] = [chatgptFlow, huggingfaceFlow]
 
 const FLOW_SESSION_MAP: Record<string, string> = {
   chatgpt: '.auth/chatgpt.json',
