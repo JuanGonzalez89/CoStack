@@ -61,6 +61,9 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
     if (!member.email) continue
     console.log('[Canva] Invitando a:', member.email)
 
+    // Wait for page to be stable (no loading spinners)
+    await page.waitForTimeout(2000)
+
     const bodyText = await page.evaluate(() => document.body?.innerText || '').catch(() => '')
 
     // Find invite button — only really-visible buttons (not aria-hidden)
@@ -95,9 +98,7 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
       throw new Error(`No se encontró botón invitar. Todos: ${JSON.stringify(allBtnTexts)}`)
     }
 
-    await inviteBtn.scrollIntoViewIfNeeded()
-    await page.waitForTimeout(500)
-    await inviteBtn.click({ force: true })
+    await inviteBtn.click({ force: true, timeout: 15000 })
     await page.waitForTimeout(3000)
 
     // Find email input
@@ -132,9 +133,7 @@ export async function ejecutar(page: Page, members: { email: string }[]): Promis
     if (!confirmBtn) {
       throw new Error('No se encontró botón confirmar')
     }
-    await confirmBtn.scrollIntoViewIfNeeded()
-    await page.waitForTimeout(500)
-    await confirmBtn.click({ force: true })
+    await confirmBtn.click({ force: true, timeout: 15000 })
     console.log('[Canva] Invitación enviada')
     await page.waitForTimeout(2000)
   }
