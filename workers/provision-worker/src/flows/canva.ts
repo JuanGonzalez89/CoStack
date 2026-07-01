@@ -148,33 +148,42 @@ async function navigateToSettingsPage(page: Page): Promise<{ loaded: boolean; se
 
 /** Click the "Invite someone" / "Invitar a alguien" button. */
 async function clickInviteButton(page: Page): Promise<boolean> {
-  console.log('[Canva][DOM] Buscando botón de invitar mediante ElementHandle…')
+  console.log('[Canva][DOM] Ejecutando click 100% JS para evitar remounts de React…')
 
-  const btnHandle = await page.evaluateHandle(() => {
+  const clicked = await page.evaluate(() => {
     const regex = /invitar a alguien|invite someone|invitar|invite|añadir miembro|add member/i
     const allNodes = [...document.querySelectorAll('button, a, [role="button"]')]
     const target = allNodes.find(b => {
       const el = b as HTMLElement
       if (el.offsetHeight === 0 || el.offsetWidth === 0) return false
       return regex.test(el.innerText || '') || regex.test(el.getAttribute('aria-label') || '')
-    })
-    return target || null
-  }).catch(() => null)
+    }) as HTMLElement
 
-  const el = btnHandle ? btnHandle.asElement() : null
+    if (!target) return false
 
-  if (el) {
-    console.log(`[Canva][DOM] ✅ Botón encontrado en el DOM (ElementHandle). Ejecutando click nativo…`)
-    await el.scrollIntoViewIfNeeded().catch(() => {})
-    // Force true bypasses actionability checks, delay helps React register it
-    await el.click({ force: true, delay: 50, timeout: 5000 }).catch(e => console.log('[Canva][DOM] Error click:', e.message))
-    console.log(`[Canva][DOM] ✅ Click nativo exitoso.`)
-    await btnHandle?.dispose()
+    target.scrollIntoView({ block: 'center' })
+    
+    // Simulate full React/browser event lifecycle
+    target.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, cancelable: true }))
+    target.dispatchEvent(new PointerEvent('pointerenter', { bubbles: true, cancelable: true }))
+    target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }))
+    target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
+    target.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true }))
+    target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }))
+    target.click() // Fallback nativo
+    
+    return true
+  }).catch(e => {
+    console.log('[Canva][DOM] Error eval JS:', e.message)
+    return false
+  })
+
+  if (clicked) {
+    console.log(`[Canva][DOM] ✅ Click JS nativo ejecutado exitosamente.`)
     return true
   }
 
-  await btnHandle?.dispose()
-  console.log('[Canva][DOM] ❌ No se encontró botón de invitar')
+  console.log('[Canva][DOM] ❌ No se encontró botón de invitar en el DOM')
   return false
 }
 
