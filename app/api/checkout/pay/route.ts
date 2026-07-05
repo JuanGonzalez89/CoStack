@@ -149,7 +149,11 @@ export async function POST(request: Request) {
       throw lobbyErr
     }
   } catch (error) {
-    console.error("Pay error:", error)
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
+    const detail = error instanceof Error ? error.message : String(error)
+    console.error("[Checkout Pay] Error procesando el pago:", detail, error)
+    return NextResponse.json(
+      { error: "No pudimos procesar el pago.", detail },
+      { status: 500 },
+    )
   }
 }
