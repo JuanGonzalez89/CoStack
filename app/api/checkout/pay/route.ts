@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { CATALOG, isToolLive } from "@/lib/catalog"
+import { CATALOG, isToolLive, computeCheckoutPricing } from "@/lib/catalog"
 import { authorizePayment } from "@/lib/mercadopago.server"
 
 export async function POST(request: Request) {
@@ -124,17 +124,20 @@ export async function POST(request: Request) {
         nextSeat = Math.max(1, maxSeat._max.seatIndex || 1) + 1
       }
 
+      // Precio + comisión CoStack (mismo total que ve el usuario en el checkout)
+      const pricing = computeCheckoutPricing(catalogEntry.pricePerMonth)
+
       // Autorización de Mercado Pago (Congelamiento/Fondos en Escrow)
-      console.log(`[Mercado Pago] Solicitando AUTORIZACIÓN (Retención) por $${catalogEntry.pricePerMonth} USD para el usuario ${userId}`)
-      const paymentIntent = await authorizePayment(userId, catalogEntry.pricePerMonth, cardToken, user.email ?? undefined)
-      
+      console.log(`[Mercado Pago] Solicitando AUTORIZACIÓN (Retención) por $${pricing.total} USD (base $${pricing.base} + comisión $${pricing.commission}) para el usuario ${userId}`)
+      const paymentIntent = await authorizePayment(userId, pricing.total, cardToken, user.email ?? undefined)
+
       // En la DB marcamos status como 'paid' (autorizado para nuestra lógica de lobby)
       await prisma.lobbyMember.create({
         data: {
           lobbyId: lobby.id,
           userId,
           seatIndex: nextSeat,
-          amount: catalogEntry.pricePerMonth,
+          amount: pricing.total,
           status: "paid",
           paymentRef: String(paymentIntent.id),
         },

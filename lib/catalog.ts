@@ -52,6 +52,35 @@ export function getCatalogItem(slug: string): CatalogItem | undefined {
   return CATALOG.find((item) => item.id === slug)
 }
 
+/**
+ * Comisión de CoStack sobre cada transacción (modelo de negocio del TFI: 5-8%).
+ * Se muestra desglosada en el checkout y se suma al total que paga el miembro.
+ */
+export const COMMISSION_RATE = 0.08
+
+/** Redondea a 2 decimales para montos de dinero. */
+function round2(n: number): number {
+  return Math.round(n * 100) / 100
+}
+
+export interface CheckoutPricing {
+  base: number
+  commission: number
+  commissionRate: number
+  total: number
+}
+
+/** Desglosa el precio que ve/paga el miembro: fracción de la licencia + comisión CoStack. */
+export function computeCheckoutPricing(basePrice: number): CheckoutPricing {
+  const commission = round2(basePrice * COMMISSION_RATE)
+  return {
+    base: round2(basePrice),
+    commission,
+    commissionRate: COMMISSION_RATE,
+    total: round2(basePrice + commission),
+  }
+}
+
 /** Slugs de herramientas con provisioning escalable y funcional. */
 export const LIVE_SLUGS = CATALOG.filter((t) => t.status === "live").map((t) => t.id)
 
