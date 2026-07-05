@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import {
-  Search, Flame, ShieldCheck, Users
+  Search, Flame, ShieldCheck, Users, Clock
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,10 +18,14 @@ export function SuscripcionesView({ isOrganizer = false }: { isOrganizer?: boole
   const [selectedTool, setSelectedTool] = useState<string | null>(null)
 
   const filteredTools = CATALOG.filter(tool => {
-    const matchesSearch = tool.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = tool.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           tool.provider.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = activeCategory === "All" || tool.category === activeCategory
     return matchesSearch && matchesCategory
+  }).sort((a, b) => {
+    // Las herramientas disponibles ("live") van primero; las "soon" al final.
+    if (a.status === b.status) return 0
+    return a.status === "live" ? -1 : 1
   })
 
   return (
@@ -82,21 +86,32 @@ export function SuscripcionesView({ isOrganizer = false }: { isOrganizer?: boole
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {filteredTools.map((tool) => {
           const isSoldOut = tool.availableSeats === 0;
+          const isLive = tool.status === "live";
           const savings = Math.round((1 - (tool.pricePerMonth / tool.originalPrice)) * 100);
 
           return (
             <div
               key={tool.id}
               className={cn(
-                "group relative flex flex-col p-8 rounded-[24px] border border-white/5 bg-white/[0.02] transition-all duration-300 overflow-hidden hover:border-white/10 hover:bg-white/[0.04] cursor-pointer hover:-translate-y-1"
+                "group relative flex flex-col p-8 rounded-[24px] border border-white/5 bg-white/[0.02] transition-all duration-300 overflow-hidden",
+                isLive
+                  ? "hover:border-white/10 hover:bg-white/[0.04] cursor-pointer hover:-translate-y-1"
+                  : "opacity-55 grayscale-[0.4]"
               )}
             >
               {/* Etiqueta de Escasez / Promoción */}
               <div className="absolute top-4 right-4 flex items-center gap-2">
+                {isLive ? (
                   <span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-cyan-400 bg-cyan-400/10 px-3 py-1 rounded-full">
                     <Flame className="w-3 h-3" />
                     Admite {tool.availableSeats} miembros
                   </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-zinc-400 bg-zinc-400/10 px-3 py-1 rounded-full">
+                    <Clock className="w-3 h-3" />
+                    Próximamente
+                  </span>
+                )}
               </div>
 
               {/* Info de la Herramienta */}
@@ -127,12 +142,22 @@ export function SuscripcionesView({ isOrganizer = false }: { isOrganizer?: boole
               </div>
 
               {/* CTA */}
-              <Button 
-                onClick={() => setSelectedTool(tool.id)}
-                className="w-full rounded-2xl h-14 font-bold text-base transition-all duration-200 bg-white hover:bg-zinc-200 text-black shadow-none"
-              >
-                {isOrganizer ? "Configurar Grupo y Añadir" : "Unirse vía Automatch"}
-              </Button>
+              {isLive ? (
+                <Button
+                  onClick={() => setSelectedTool(tool.id)}
+                  className="w-full rounded-2xl h-14 font-bold text-base transition-all duration-200 bg-white hover:bg-zinc-200 text-black shadow-none"
+                >
+                  {isOrganizer ? "Configurar Grupo y Añadir" : "Unirse vía Automatch"}
+                </Button>
+              ) : (
+                <Button
+                  disabled
+                  className="w-full rounded-2xl h-14 font-bold text-base bg-white/5 text-zinc-500 border border-white/5 cursor-not-allowed hover:bg-white/5"
+                >
+                  <Clock className="w-4 h-4 mr-2" />
+                  Próximamente
+                </Button>
+              )}
             </div>
           )
         })}

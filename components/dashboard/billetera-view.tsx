@@ -1,7 +1,6 @@
 "use client"
 import { useState } from "react"
 
-import { BillingHeaderCards } from "./billing-header-cards"
 import { HistoryTransactionRow } from "./history-transaction-row"
 import { EmptyState } from "./empty-state"
 import { Wallet } from "lucide-react"
@@ -33,13 +32,10 @@ export function BilleteraView({ isOrganizer, initialPayments, balance, nextCharg
     <div className="space-y-6">
       {hasOverdue && <PaymentRetryBanner href="/suscripciones" />}
 
-      <BillingHeaderCards
-        isOrganizer={isOrganizer}
-        balance={balance}
-        nextCharge={nextCharge}
-        nextChargeDate="30 días"
-        isLoading={false}
-      />
+      <div>
+        <h1 className="text-2xl font-bold text-white mb-1">Historial de pagos</h1>
+        <p className="text-sm text-zinc-400">Todos tus pagos y movimientos en un solo lugar.</p>
+      </div>
 
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">

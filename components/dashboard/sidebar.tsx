@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils"
 import { ROUTES } from "@/lib/constants/routes"
 import { NotificationBell } from "./notification-bell"
 
-export type NavTab = "Dashboard" | "Suscripciones" | "Comunidad Freelance" | "Billetera" | "Ayuda"
+export type NavTab = "Dashboard" | "Suscripciones" | "Comunidad Freelance" | "Historial de pagos" | "Ayuda" | "Ajustes"
 
 export function Sidebar({ 
   isOrganizer = false,
@@ -33,7 +33,7 @@ export function Sidebar({
   const navItems: { label: NavTab; href: string; icon: React.ElementType; badge?: string; adminOnly?: boolean; dot?: boolean }[] = [
     { label: "Dashboard", href: ROUTES.overview, icon: LayoutDashboard },
     { label: "Suscripciones", href: ROUTES.suscripciones, icon: CreditCard, badge: String(activeSubscriptionsCount) },
-    { label: "Billetera", href: ROUTES.billetera, icon: Wallet },
+    { label: "Historial de pagos", href: ROUTES.billetera, icon: Wallet },
     { label: "Ayuda", href: ROUTES.ayuda, icon: HelpCircle },
   ]
   const pathname = usePathname()
