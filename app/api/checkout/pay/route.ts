@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { CATALOG } from "@/lib/catalog"
+import { CATALOG, isToolLive } from "@/lib/catalog"
 import { authorizePayment } from "@/lib/mercadopago.server"
 
 export async function POST(request: Request) {
@@ -21,6 +21,9 @@ export async function POST(request: Request) {
     const { toolSlug, accessMethod = "INVITATION_LINK", cardToken } = await request.json()
     if (!toolSlug) {
       return NextResponse.json({ error: "Falta el identificador de la herramienta." }, { status: 400 })
+    }
+    if (!isToolLive(toolSlug)) {
+      return NextResponse.json({ error: "Esta herramienta todavía no está disponible para compra." }, { status: 400 })
     }
     if (!cardToken) {
       return NextResponse.json({ error: "Falta el token de la tarjeta." }, { status: 400 })

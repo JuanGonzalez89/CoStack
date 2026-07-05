@@ -24,7 +24,7 @@ export function MobileNav({
   const navItems: { label: NavTab; shortLabel: string; href: string; icon: React.ElementType; adminOnly?: boolean }[] = [
     { label: "Dashboard", shortLabel: "Inicio", href: ROUTES.overview, icon: LayoutDashboard },
     { label: "Suscripciones", shortLabel: `Subs ${activeSubscriptionsCount}`, href: ROUTES.suscripciones, icon: CreditCard },
-    { label: "Billetera", shortLabel: "Billetera", href: ROUTES.billetera, icon: Wallet },
+    { label: "Historial de pagos", shortLabel: "Historial", href: ROUTES.billetera, icon: Wallet },
     { label: "Ayuda", shortLabel: "Ayuda", href: ROUTES.ayuda, icon: HelpCircle },
     { label: "Ajustes", shortLabel: "Ajustes", href: ROUTES.settings, icon: Settings },
   ]

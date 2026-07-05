@@ -1,11 +1,15 @@
 import type { ProvisionResult, ProvisionerProvider } from './types'
 import { CanvaInviteLinkProvider } from './providers/canva'
+import { HuggingFaceInviteProvider } from './providers/huggingface'
 import { GitHubProvider } from './providers/github'
 import { WorkerProvider } from './providers/worker'
 
 const staticProviders: ProvisionerProvider[] = [
   new CanvaInviteLinkProvider(),
+  new HuggingFaceInviteProvider(),
   new GitHubProvider(),
+  // WorkerProvider.canHandle() devuelve true para TODO, así que debe ir último:
+  // es el fallback que reenvía al worker remoto cuando ningún provider específico aplica.
   new WorkerProvider(),
 ]
 
