@@ -11,16 +11,20 @@ CoStack es una plataforma pensada para resolver las fricciones operativas y fina
 
 ## Tabla de Contenidos
 
-- [Descripción](#descripci%C3%B3n)
+- [Descripción](#descripción)
 - [Problema que resuelve](#problema-que-resuelve)
-- [Características principales](#caracter%C3%ADsticas-principales)
-- [Stack tecnológico](#stack-tecnol%C3%B3gico)
+- [Características principales](#características-principales)
+- [Stack tecnológico](#stack-tecnológico)
 - [Estructura del proyecto](#estructura-del-proyecto)
-- [Instalación local](#instalaci%C3%B3n-local)
+- [Instalación local](#instalación-local)
 - [Scripts disponibles](#scripts-disponibles)
 - [Vistas del prototipo](#vistas-del-prototipo)
-- [Integración con OpenClaw Bot](#integraci%C3%B3n-con-openclaw-bot)
+- [Entrega automática de acceso (Provisioning)](#entrega-automática-de-acceso-provisioning)
+- [Provisioning de Canva](#provisioning-de-canva-invite-link)
+- [Provisioning de Notion](#provisioning-de-notion-invite-link)
+- [Provisioning de Hugging Face](#provisioning-de-hugging-face-join-link)
 - [Autores](#autores)
+- [Estado del proyecto](#estado-del-proyecto)
 
 ## Descripción
 
@@ -37,65 +41,50 @@ Los equipos freelance que comparten licencias suelen enfrentar tres problemas cr
 ## Características principales
 
 - Cobro automático grupal: cada integrante abona su cuota proporcional de forma fraccionada.
-- Vínculo automático pago-acceso: si un usuario no paga, el sistema corta su acceso automáticamente.
-- Integración con OpenClaw Bot: al confirmar el pago, el bot envía por DM un enlace privado y único para acceder al asiento.
+- Escrow de pago: Mercado Pago autoriza (retiene) el pago de cada miembro apenas se suma a la sala, y recién se captura cuando el grupo se completa — nadie adelanta plata ni corre el riesgo de no cobrarle al resto.
+- Entrega automática de acceso: al completarse el grupo, el sistema provisiona el acceso (link de invitación al equipo/workspace de la herramienta) y lo envía por email a cada miembro automáticamente, sin intervención manual del organizador.
 - Gatekeeper seguro: centralización del acceso sin exponer credenciales originales.
 - Transparencia financiera: visualización clara de gastos, pagos y estado de cada integrante.
 - Comunidad freelance: feed interactivo para ofrecer asientos libres o buscar grupos para co-financiar herramientas.
 
 ## Stack tecnológico
 
-- Next.js
-- React
-- Tailwind CSS
-- shadcn/ui
-- TypeScript
-- Radix UI
-- Recharts
-- React Hook Form
-- Zod
-- lucide-react
-- next-themes
-- Vercel Analytics
+**Frontend**
+- Next.js (App Router) / React / TypeScript
+- Tailwind CSS / shadcn/ui / Radix UI
+- Recharts, React Hook Form, Zod, lucide-react, next-themes, Vercel Analytics
+
+**Backend**
+- Next.js API Routes (`app/api/**`)
+- Prisma ORM + PostgreSQL (`prisma/schema.prisma`)
+- NextAuth (Credentials provider, sesión JWT)
+- Mercado Pago (autorización/captura de pagos, modelo de escrow)
+- Resend (envío de emails transaccionales)
+- Playwright (worker externo de provisioning, ver `workers/provision-worker`)
+
+> Nota: el proyecto también tiene código de Stripe (`app/api/webhooks/payment/route.ts`) de una integración anterior que no está conectada al flujo de compra actual (que usa Mercado Pago). Se mantiene en el repo pero no forma parte del flujo activo.
 
 ## Estructura del proyecto
 
-La base actual del proyecto sigue la organización típica de una app Next.js con App Router:
-
 ```text
 app/
-  layout.tsx
-  page.tsx
-  globals.css
+  (dashboard)/       # rutas autenticadas: overview, suscripciones, asientos, lobby, comunidad, billetera, settings
+  api/                # endpoints: checkout, lobby, groups, webhooks, cron
+  login/, register/
 components/
-  landing/
-  dashboard/
-  ui/
-hooks/
-lib/
-public/
-styles/
-```
-
-Estructura sugerida para escalar el proyecto:
-
-```text
-app/
-  (marketing)/
-  (dashboard)/
-  api/
-components/
-  dashboard/
-  landing/
-  ui/
+  dashboard/, landing/, suscripciones/, onboarding/, ui/
 features/
-  billing/
-  access-control/
-  community/
+  dashboard/          # contratos/tipos compartidos entre server y UI
 lib/
-  utils/
-  validations/
-  constants/
+  provisioner/        # lógica de aprovisionamiento (providers por herramienta)
+  auth.ts, catalog.ts, mercadopago.server.ts, mail.server.ts, env.ts
+prisma/
+  schema.prisma, migrations/, seed.ts
+scripts/              # utilidades de desarrollo/testing (seed, debug, provisioning manual)
+workers/
+  provision-worker/   # worker Node/Express + Playwright, deploy separado (Render)
+hooks/
+public/
 ```
 
 ## Instalación local
@@ -104,6 +93,7 @@ lib/
 
 - Node.js 18 o superior
 - npm 10 o superior
+- Una base de datos PostgreSQL (por ejemplo, un proyecto gratuito en [Neon](https://neon.tech))
 
 ### Pasos
 
@@ -120,13 +110,33 @@ cd CoStack
 npm install
 ```
 
-3. Ejecutar el entorno de desarrollo:
+3. Crear un archivo `.env.local` en la raíz con, como mínimo:
+
+```bash
+DATABASE_URL="postgresql://..."
+NEXTAUTH_SECRET="una-clave-random-de-32-caracteres"
+NEXTAUTH_URL="http://localhost:3000"
+MP_ACCESS_TOKEN="TEST-..."               # Mercado Pago (modo TEST activa el pago demo)
+NEXT_PUBLIC_MP_PUBLIC_KEY="TEST-..."
+RESEND_API_KEY=""                         # opcional en local; sin esto los emails se saltean (best-effort)
+```
+
+Ver también las secciones de Provisioning de Canva, Notion y Hugging Face (más abajo, y en la Tabla de Contenidos) para las env vars específicas de cada herramienta.
+
+4. Generar el cliente de Prisma y aplicar el schema:
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+5. Ejecutar el entorno de desarrollo:
 
 ```bash
 npm run dev
 ```
 
-4. Abrir la app en:
+6. Abrir la app en:
 
 ```text
 http://localhost:3000
@@ -134,10 +144,12 @@ http://localhost:3000
 
 ## Scripts disponibles
 
-- `npm run dev`: inicia el servidor de desarrollo.
+- `npm run dev`: inicia el servidor de desarrollo (corre `prisma generate` antes).
 - `npm run build`: genera la build de producción.
 - `npm start`: compila la aplicación y levanta el servidor de producción.
 - `npm run lint`: ejecuta el linting del proyecto.
+- `npm run generate`: regenera el cliente de Prisma.
+- `npm run seed`: corre `prisma/seed.ts` para poblar datos de prueba.
 
 ## Vistas del prototipo
 
@@ -147,14 +159,17 @@ http://localhost:3000
 - Comunidad: feed social para compartir licencias, ofrecer asientos o encontrar equipos.
 - Billetera: vista financiera para seguir saldo, movimientos e inversión mensual.
 
-## Integración con OpenClaw Bot
+## Entrega automática de acceso (Provisioning)
 
-CoStack incorpora OpenClaw Bot para automatizar la entrega de accesos. El flujo previsto es:
+La entrega de acceso **no depende de un bot de mensajería** (Discord/Telegram/DM) — se resuelve enteramente en el backend cuando la sala (lobby) se completa:
 
-1. El usuario paga su cuota.
-2. El sistema valida el pago.
-3. El bot entrega un enlace privado y único por mensaje directo.
-4. El asiento queda asignado sin exponer credenciales reales.
+1. Cada miembro se suma a la sala y Mercado Pago **autoriza** (retiene) su pago — sin cobrar todavía.
+2. Cuando se llenan todos los cupos, el sistema **captura** los fondos de todos los miembros.
+3. Se ejecuta el **provisioner** correspondiente a la herramienta (`lib/provisioner`), que genera/recupera el link de acceso (invite link al equipo/workspace de la herramienta).
+4. El link se manda automáticamente por **email (Resend)** a cada miembro, y también queda visible en la UI del lobby/dashboard de cada uno.
+5. El asiento queda asignado sin exponer nunca la credencial real de la cuenta master.
+
+Cada herramienta tiene su propio *provider* (`lib/provisioner/providers/*.ts`) que implementa esta lógica; ver el detalle de cada una más abajo.
 
 ## Provisioning de Canva (Invite Link)
 
@@ -200,6 +215,16 @@ Cuando un lobby de Notion se completa, el sistema envía automáticamente un ema
 
 El sistema aplica la misma validación de antigüedad (30 días, warning a los 5 días) que Canva por consistencia, aunque el link de Notion no expira automáticamente. Si se regenera manualmente en Notion (Settings → Members → Invite link → desactivar/generar nuevo), actualizar ambas env vars en Vercel y redesplegar.
 
+## Provisioning de Hugging Face (Join Link)
+
+El acceso a HuggingChat Premium se provisiona con el link público de la organización `CoStack-1` en Hugging Face, que tiene activadas las opciones **"Allow requests to join"** y **"Automatically approve join requests"**. Con esa configuración, cualquiera que abra el link se une al instante — no hace falta invitar a cada miembro individualmente ni hay expiración que gestionar.
+
+### Variables de entorno
+
+| Variable | Descripción | Ejemplo |
+|---|---|---|
+| `HUGGINGFACE_ORG_URL` | URL de la organización (opcional, default `https://huggingface.co/CoStack-1`) | `https://huggingface.co/CoStack-1` |
+
 ## Autores
 
 - Santiago Calderon
@@ -208,6 +233,8 @@ El sistema aplica la misma validación de antigüedad (30 días, warning a los 5
 
 ## Estado del proyecto
 
-Este repositorio contiene un prototipo frontend funcional construido con Next.js y preparado para demostración, iteración de producto y publicación en GitHub. 
+CoStack ya tiene un flujo de compra transaccional real de punta a punta (no solo un prototipo visual): creación/matching de salas (lobbies), escrow de pago con Mercado Pago (autorización → captura), provisioning automático y entrega de acceso por email.
 
-Recientemente se completaron las implementaciones del **Sprint 8** (Refinamiento de UX/UI, inclusión de modales de retiros y credenciales, y flujo dinámico de Automatch) y se proyectó el **Sprint 9** para la migración transaccional completa.
+Herramientas con provisioning **live** (se pueden comprar hoy): Hugging Face, Canva, Notion. El resto del catálogo (GitHub Copilot, JetBrains, ChatGPT, Figma, Midjourney, Vercel) está marcado como "Próximamente" hasta tener un provider escalable para cada una.
+
+Ver `SPRINT_*.md` en la raíz del repo para el detalle de cada iteración; las últimas incorporadas fueron el modo demo de pago (para poder demostrar el checkout en modo TEST de Mercado Pago) y el desglose de la comisión de CoStack en el checkout.
