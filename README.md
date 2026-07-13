@@ -45,7 +45,7 @@ Los equipos freelance que comparten licencias suelen enfrentar tres problemas cr
 - Entrega automática de acceso: al completarse el grupo, el sistema provisiona el acceso (link de invitación al equipo/workspace de la herramienta) y lo envía por email a cada miembro automáticamente, sin intervención manual del organizador.
 - Gatekeeper seguro: centralización del acceso sin exponer credenciales originales.
 - Transparencia financiera: visualización clara de gastos, pagos y estado de cada integrante.
-- Comunidad freelance: feed interactivo para ofrecer asientos libres o buscar grupos para co-financiar herramientas.
+- ~~Comunidad freelance~~ — el código existe (`app/(dashboard)/comunidad`, feed social con posts/likes/rankings) pero **no está expuesto en la navegación del panel** (no aparece en el menú lateral, ver `components/dashboard/sidebar.tsx`) y los posts no persisten. No forma parte del MVP visible hoy; queda como roadmap.
 
 ## Stack tecnológico
 
@@ -156,8 +156,9 @@ http://localhost:3000
 - Landing Page: presentación del producto como el "Administrador Invisible de Software".
 - Dashboard de Gestión de Licencias: panel principal con métricas, estado de pagos y acciones rápidas.
 - Suscripciones: marketplace visual para adquirir nuevas herramientas Enterprise y formar grupos.
-- Comunidad: feed social para compartir licencias, ofrecer asientos o encontrar equipos.
 - Billetera: vista financiera para seguir saldo, movimientos e inversión mensual.
+
+> La vista de Comunidad (`/comunidad`) existe en el código pero no está linkeada en el menú del panel — no es parte de las vistas visibles del MVP actual.
 
 ## Entrega automática de acceso (Provisioning)
 
