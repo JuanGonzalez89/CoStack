@@ -1,5 +1,5 @@
 import {
-  MessageSquare, Pen, GitBranch, Code, Sparkles, NotebookPen
+  MessageSquare, Pen, GitBranch, Code, Sparkles, NotebookPen, Bug
 } from "lucide-react"
 import type { ElementType } from "react"
 
@@ -36,6 +36,7 @@ const PROVIDER_URLS: Record<string, string> = {
   "Anthropic": "https://claude.ai",
   "Hugging Face": "https://huggingface.co",
   "Notion": "https://notion.so",
+  "Sentry": "https://sentry.io",
 }
 
 export const CATALOG: CatalogItem[] = [
@@ -54,6 +55,11 @@ export const CATALOG: CatalogItem[] = [
   // equivalente anual (Notion declara "ahorra hasta 20%" con facturacion anual).
   // Convertido a ARS al tipo de cambio de referencia (~1.487,5 ARS/USD, jul-2026).
   { id: "notion",     name: "Notion Team",       provider: "Notion",    pricePerMonth: 23800,  originalPrice: 29750, monthlyCost: 29750, availableSeats: 4,  icon: NotebookPen,  iconBg: "bg-zinc-400/10",     iconColor: "text-zinc-300",    category: "Design", providerUrl: PROVIDER_URLS["Notion"], status: "live" },
+  // Sentry Team: USD $29/mes individual (mensual), USD $26/mes equivalente anual
+  // (sentry.io/pricing, confirmado con toggle Monthly/Annual real, ~10% de ahorro).
+  // Demo corre sobre el trial gratis de 14 dias (features de Business plan, sin tarjeta);
+  // el modelo real a futuro es comprar el plan Team anual. Convertido a ARS (~1.487,5 ARS/USD).
+  { id: "sentry",     name: "Sentry Team",       provider: "Sentry",    pricePerMonth: 38675,  originalPrice: 43138, monthlyCost: 43138, availableSeats: 4,  icon: Bug,          iconBg: "bg-orange-500/10",   iconColor: "text-orange-500",  category: "IDE",    providerUrl: PROVIDER_URLS["Sentry"], status: "live" },
   { id: "jetbrains",  name: "All Products Pack", provider: "JetBrains", pricePerMonth: 8,  originalPrice: 28, monthlyCost: 28, availableSeats: 1,  icon: Code,         iconBg: "bg-rose-500/10",     iconColor: "text-rose-500",    category: "IDE",   providerUrl: PROVIDER_URLS["JetBrains"], status: "soon" },
   { id: "chatgpt",    name: "ChatGPT Team",      provider: "OpenAI",    pricePerMonth: 15, originalPrice: 30, monthlyCost: 30, availableSeats: 4,  icon: MessageSquare,iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500", category: "AI",   providerUrl: PROVIDER_URLS["OpenAI"], status: "soon" },
   { id: "figma",      name: "Figma Org",         provider: "Figma Inc.",pricePerMonth: 12, originalPrice: 45, monthlyCost: 45, availableSeats: 5,  icon: Pen,          iconBg: "bg-violet-500/10",   iconColor: "text-violet-500",  category: "Design", providerUrl: PROVIDER_URLS["Figma Inc."], status: "soon" },

@@ -23,6 +23,7 @@ CoStack es una plataforma pensada para resolver las fricciones operativas y fina
 - [Provisioning de Canva](#provisioning-de-canva-invite-link)
 - [Provisioning de Notion](#provisioning-de-notion-invite-link)
 - [Provisioning de Hugging Face](#provisioning-de-hugging-face-invite-link)
+- [Provisioning de Sentry](#provisioning-de-sentry-invitación-por-api)
 - [Autores](#autores)
 - [Estado del proyecto](#estado-del-proyecto)
 
@@ -230,6 +231,20 @@ El provisioner (`lib/provisioner/providers/huggingface.ts`) queda en el repo com
 |---|---|---|
 | `HUGGINGFACE_ORG_URL` | Invite link privado de la organización (no la URL pública del org) | `https://huggingface.co/organizations/CoStack-Team/share/XXXXXXXX` |
 
+## Provisioning de Sentry (Invitación por API)
+
+Sentry (monitoreo de errores/APM) es la herramienta del catálogo del campo de **desarrollo de software**. A diferencia de Canva/Notion/Hugging Face, Sentry no tiene un link de invitación público reutilizable — el mecanismo real es la **API oficial de invitación por email** (`POST /organizations/{org}/members/`), documentada en `lib/sentry-bot.server.ts`. Cada miembro recibe su propia invitación individual directo de Sentry (no usamos Resend acá); es más seguro que el patrón de link compartido porque no hay nada descubrible públicamente.
+
+**Nota de negocio:** la demo corre sobre el **trial gratuito de 14 días** de Sentry (sin tarjeta, features de plan Business durante el trial). El modelo de negocio real y documentado es comprar el plan **Team anual** (USD 26/mes vs USD 29/mes facturación mensual — confirmado en sentry.io/pricing, ~10% de ahorro real) y trasladar ese ahorro al miembro, mismo mecanismo que Canva y Notion. La compra real del plan anual queda para cuando haya usuarios pagando de verdad — no se hizo para el MVP.
+
+### Variables de entorno
+
+| Variable | Descripción | Ejemplo |
+|---|---|---|
+| `SENTRY_API_TOKEN` | Personal Token con scope Member (read/write) + Organization (read) | `sntryu_XXXXXXXX` |
+| `SENTRY_ORG_SLUG` | Slug de la organización de Sentry | `costack-fc` |
+| `SENTRY_API_BASE_URL` | Opcional — usar `https://de.sentry.io` si la organización está en la región EU (default `https://sentry.io`) | `https://de.sentry.io` |
+
 ## Autores
 
 - Santiago Calderon
@@ -240,6 +255,8 @@ El provisioner (`lib/provisioner/providers/huggingface.ts`) queda en el repo com
 
 CoStack ya tiene un flujo de compra transaccional real de punta a punta (no solo un prototipo visual): creación/matching de salas (lobbies), escrow de pago con Mercado Pago (autorización → captura), provisioning automático y entrega de acceso por email.
 
-Herramientas con provisioning **live** (se pueden comprar hoy): Canva, Notion — ambas con descuento anual real que sostiene el modelo de negocio de fraccionar una licencia. El resto del catálogo (GitHub Copilot, JetBrains, ChatGPT, Figma, Midjourney, Vercel, y **Hugging Face**) está marcado como "Próximamente"; Hugging Face en particular tiene el provisioner ya implementado pero se dejó fuera de la venta porque su plan Team no tiene descuento por volumen ni anual (ver sección de Hugging Face más abajo).
+Herramientas con provisioning **live** (se pueden comprar hoy): Canva, Notion y Sentry — las tres con descuento anual real que sostiene el modelo de negocio de fraccionar una licencia. Sentry es el ejemplo del catálogo del campo de desarrollo de software; la demo corre sobre su trial gratuito de 14 días, y la compra real del plan anual queda documentada como el modelo de negocio a futuro (ver sección de Sentry más abajo). El resto del catálogo (GitHub Copilot, JetBrains, ChatGPT, Figma, Midjourney, Vercel, y **Hugging Face**) está marcado como "Próximamente"; Hugging Face tiene el provisioner ya implementado pero se dejó fuera de la venta porque su plan Team no tiene descuento por volumen ni anual (ver sección de Hugging Face más abajo).
+
+GitHub tiene un caso distinto: no se vende como producto aparte (no hay ahorro real posible, GitHub Team cuesta lo mismo por asiento sin importar cuánta gente se sume). El `GitHubProvider` (`lib/provisioner/providers/github.ts`, API oficial de invitaciones) queda documentado como funcionalidad de colaboración incluida para los grupos que ya se armaron por otra herramienta, no como un ítem de venta independiente.
 
 Ver `SPRINT_*.md` en la raíz del repo para el detalle de cada iteración; las últimas incorporadas fueron el modo demo de pago (para poder demostrar el checkout en modo TEST de Mercado Pago) y el desglose de la comisión de CoStack en el checkout.

@@ -3,6 +3,7 @@ import { CanvaInviteLinkProvider } from './providers/canva'
 import { NotionInviteLinkProvider } from './providers/notion'
 import { HuggingFaceInviteProvider } from './providers/huggingface'
 import { GitHubProvider } from './providers/github'
+import { SentryProvider } from './providers/sentry'
 import { WorkerProvider } from './providers/worker'
 
 const staticProviders: ProvisionerProvider[] = [
@@ -10,6 +11,7 @@ const staticProviders: ProvisionerProvider[] = [
   new NotionInviteLinkProvider(),
   new HuggingFaceInviteProvider(),
   new GitHubProvider(),
+  new SentryProvider(),
   // WorkerProvider.canHandle() devuelve true para TODO, así que debe ir último:
   // es el fallback que reenvía al worker remoto cuando ningún provider específico aplica.
   new WorkerProvider(),

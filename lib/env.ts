@@ -22,6 +22,10 @@ const envSchema = z.object({
   NOTION_INVITE_LINK_GENERATED_AT: z.string().optional(),
   // Hugging Face — URL de la organización con auto-approve de join
   HUGGINGFACE_ORG_URL: z.string().url().optional(),
+  // Sentry — Personal Token con scope Member (read/write) + Organization (read)
+  SENTRY_API_TOKEN: z.string().min(10).optional(),
+  SENTRY_ORG_SLUG: z.string().min(1).optional(),
+  SENTRY_API_BASE_URL: z.string().url().optional(),
   // Email (Resend)
   RESEND_API_KEY: z.string().min(1).optional(),
 })
