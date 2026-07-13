@@ -36,6 +36,15 @@ export async function GET(
 
     const currentUser = await prisma.user.findUnique({ where: { email: session.user.email! }, select: { id: true } })
     const isCreator = currentUser?.id === lobby.creatorId
+    const isMember = lobby.members.some((m) => m.userId === currentUser?.id)
+
+    // Solo el creador o un miembro de la sala pueden ver su estado (incluye el
+    // accessToken/link de invitación). Sin esto, cualquier usuario logueado que
+    // consiga un lobbyId ajeno podría leer el link de invitación de otra sala.
+    if (!isCreator && !isMember) {
+      return NextResponse.json({ error: "No pertenecés a esta sala." }, { status: 403 })
+    }
+
     const now = new Date()
 
     if (lobby.status === "waiting" && lobby.expiresAt < now) {

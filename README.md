@@ -183,6 +183,23 @@ El link expira a los 30 días. El sistema loguea un warning cuando faltan menos 
    - `CANVA_INVITE_LINK_GENERATED_AT` → poner la fecha de hoy (`YYYY-MM-DD`)
 6. Redesplegar la aplicación para que tome los nuevos valores
 
+## Provisioning de Notion (Invite Link)
+
+El acceso a Notion se provisiona con el mismo patrón que Canva: un **link de invitación al workspace**, generado desde la cuenta del workspace (Settings → Members → Invite link). A diferencia de Canva, este es un mecanismo oficial de Notion (no un workaround), así que no está sujeto a bloqueos anti-bot.
+
+Cuando un lobby de Notion se completa, el sistema envía automáticamente un email a cada miembro con el link de invitación (mismo servicio de Resend que usa Canva).
+
+### Variables de entorno
+
+| Variable | Descripción | Ejemplo |
+|---|---|---|
+| `NOTION_INVITE_LINK` | URL del link de invitación al workspace | `https://www.notion.so/invite/XXXXXXXX` |
+| `NOTION_INVITE_LINK_GENERATED_AT` | Fecha en que se generó (YYYY-MM-DD) | `2026-07-01` |
+
+### Regeneración del link
+
+El sistema aplica la misma validación de antigüedad (30 días, warning a los 5 días) que Canva por consistencia, aunque el link de Notion no expira automáticamente. Si se regenera manualmente en Notion (Settings → Members → Invite link → desactivar/generar nuevo), actualizar ambas env vars en Vercel y redesplegar.
+
 ## Autores
 
 - Santiago Calderon

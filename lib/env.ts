@@ -17,6 +17,9 @@ const envSchema = z.object({
   // Canva invite link (ver README para instrucciones de regeneración)
   CANVA_INVITE_LINK: z.string().url().optional(),
   CANVA_INVITE_LINK_GENERATED_AT: z.string().optional(),
+  // Notion invite link (mismo patrón que Canva, ver README)
+  NOTION_INVITE_LINK: z.string().url().optional(),
+  NOTION_INVITE_LINK_GENERATED_AT: z.string().optional(),
   // Hugging Face — URL de la organización con auto-approve de join
   HUGGINGFACE_ORG_URL: z.string().url().optional(),
   // Email (Resend)

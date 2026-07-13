@@ -30,7 +30,7 @@ export class CanvaInviteLinkProvider implements ProvisionerProvider {
   }
 
   async fulfill(
-    _lobbyId: string,
+    lobbyId: string,
     _toolName: string,
     members: { email: string; userId: string }[],
   ): Promise<ProvisionResult> {
@@ -109,7 +109,8 @@ export class CanvaInviteLinkProvider implements ProvisionerProvider {
         if (!member.email) continue
         try {
           await sendInviteLinkEmail(member.email, 'Canva', inviteLink)
-          console.log(`[CanvaProvider] ✅ Email enviado a ${member.email}`)
+          // Log de auditoría: quién recibió el link de invitación y en qué sala.
+          console.log(`[CanvaProvider] ✅ Email enviado a ${member.email} (lobby=${lobbyId}, userId=${member.userId})`)
         } catch (err) {
           const msg = `Error enviando email a ${member.email}: ${(err as Error).message}`
           console.warn(`[CanvaProvider] ⚠️  ${msg}`)

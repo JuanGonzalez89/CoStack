@@ -1,11 +1,13 @@
 import type { ProvisionResult, ProvisionerProvider } from './types'
 import { CanvaInviteLinkProvider } from './providers/canva'
+import { NotionInviteLinkProvider } from './providers/notion'
 import { HuggingFaceInviteProvider } from './providers/huggingface'
 import { GitHubProvider } from './providers/github'
 import { WorkerProvider } from './providers/worker'
 
 const staticProviders: ProvisionerProvider[] = [
   new CanvaInviteLinkProvider(),
+  new NotionInviteLinkProvider(),
   new HuggingFaceInviteProvider(),
   new GitHubProvider(),
   // WorkerProvider.canHandle() devuelve true para TODO, así que debe ir último:

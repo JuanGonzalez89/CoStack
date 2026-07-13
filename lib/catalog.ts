@@ -1,5 +1,5 @@
 import {
-  MessageSquare, Pen, GitBranch, Code, Sparkles
+  MessageSquare, Pen, GitBranch, Code, Sparkles, NotebookPen
 } from "lucide-react"
 import type { ElementType } from "react"
 
@@ -35,12 +35,14 @@ const PROVIDER_URLS: Record<string, string> = {
   "Canva": "https://canva.com",
   "Anthropic": "https://claude.ai",
   "Hugging Face": "https://huggingface.co",
+  "Notion": "https://notion.so",
 }
 
 export const CATALOG: CatalogItem[] = [
   { id: "huggingface",name: "HuggingChat Premium",provider: "Hugging Face",pricePerMonth: 5, originalPrice: 20, monthlyCost: 20, availableSeats: 3, icon: Sparkles, iconBg: "bg-amber-500/10", iconColor: "text-amber-500", category: "AI", providerUrl: PROVIDER_URLS["Hugging Face"], status: "live" },
   { id: "copilot",    name: "GitHub Copilot",   provider: "GitHub",    pricePerMonth: 5,  originalPrice: 10, monthlyCost: 10, availableSeats: 2,  icon: GitBranch,    iconBg: "bg-slate-200/50",   iconColor: "text-slate-700",   category: "AI",     providerUrl: PROVIDER_URLS["GitHub"], status: "soon" },
   { id: "canva",      name: "Canva Pro Team",    provider: "Canva",     pricePerMonth: 6,  originalPrice: 30, monthlyCost: 30, availableSeats: 3,  icon: Pen,          iconBg: "bg-blue-500/10",     iconColor: "text-blue-500",    category: "Design", providerUrl: PROVIDER_URLS["Canva"], status: "live" },
+  { id: "notion",     name: "Notion Team",       provider: "Notion",    pricePerMonth: 7,  originalPrice: 20, monthlyCost: 20, availableSeats: 4,  icon: NotebookPen,  iconBg: "bg-zinc-400/10",     iconColor: "text-zinc-300",    category: "Design", providerUrl: PROVIDER_URLS["Notion"], status: "live" },
   { id: "jetbrains",  name: "All Products Pack", provider: "JetBrains", pricePerMonth: 8,  originalPrice: 28, monthlyCost: 28, availableSeats: 1,  icon: Code,         iconBg: "bg-rose-500/10",     iconColor: "text-rose-500",    category: "IDE",   providerUrl: PROVIDER_URLS["JetBrains"], status: "soon" },
   { id: "chatgpt",    name: "ChatGPT Team",      provider: "OpenAI",    pricePerMonth: 15, originalPrice: 30, monthlyCost: 30, availableSeats: 4,  icon: MessageSquare,iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500", category: "AI",   providerUrl: PROVIDER_URLS["OpenAI"], status: "soon" },
   { id: "figma",      name: "Figma Org",         provider: "Figma Inc.",pricePerMonth: 12, originalPrice: 45, monthlyCost: 45, availableSeats: 5,  icon: Pen,          iconBg: "bg-violet-500/10",   iconColor: "text-violet-500",  category: "Design", providerUrl: PROVIDER_URLS["Figma Inc."], status: "soon" },
