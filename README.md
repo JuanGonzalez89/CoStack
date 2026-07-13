@@ -218,11 +218,11 @@ El sistema aplica la misma validación de antigüedad (30 días, warning a los 5
 
 ## Provisioning de Hugging Face (Invite Link)
 
-El acceso se provisiona con el mismo patrón que Canva/Notion: un **invite link privado** de la organización de Hugging Face, generado desde Organization Settings → Members → **"Enable inviting users by sharing a link"**.
+**Esta herramienta está implementada técnicamente pero no se ofrece a la venta** (`lib/catalog.ts` la tiene con `status: "soon"`, no aparece como comprable en el catálogo). Motivo: el plan Team de Hugging Face se factura mensual y por asiento ($20/usuario/mes), sin descuento por volumen ni opción anual pública — a diferencia de Canva y Notion, no hay ningún ahorro real que CoStack pueda capturar y trasladar al usuario. Sumar gente a una organización no reduce el costo por persona (el número de asientos facturados se ajusta automáticamente a la cantidad de miembros), así que no encaja con el modelo de negocio de fraccionar una licencia anual.
 
-⚠️ **No usar** la opción "Allow requests to join from the organization page" + "Automatically approve join requests" — esa combinación hace que la página de la organización sea pública e indexable en Hugging Face, y **cualquier usuario** (no solo quien recibió el email) puede pedir unirse y quedar admitido al instante. El invite link privado, en cambio, solo lo conoce quien lo recibió por email — mismo modelo de seguridad que Canva y Notion.
+El provisioner (`lib/provisioner/providers/huggingface.ts`) queda en el repo como prueba técnica de que la arquitectura de aprovisionamiento (invite link privado + email automático vía Resend) generaliza a cualquier herramienta con ese mecanismo nativo, sin necesitar automatización con bots.
 
-**Nota sobre el valor real:** HuggingChat es gratis para todos los usuarios de Hugging Face independientemente de cualquier suscripción — no existe una versión "premium" del chat en sí. Los beneficios de un plan PRO/Team (más storage, límites de API, créditos de inference, ZeroGPU) son del Hub en general. Verificar con la organización real qué beneficio concreto se está entregando antes de asegurarlo en la defensa.
+⚠️ Nota de seguridad si se reactiva a futuro: usar siempre el **invite link privado** (Organization Settings → Members → "Enable inviting users by sharing a link"), nunca la opción "Allow requests to join from the organization page" + "Automatically approve join requests" — esa combinación hace pública e indexable la organización, y cualquier usuario de Hugging Face (no solo quien recibió el email) puede unirse sin haber pagado nunca.
 
 ### Variables de entorno
 
@@ -240,6 +240,6 @@ El acceso se provisiona con el mismo patrón que Canva/Notion: un **invite link 
 
 CoStack ya tiene un flujo de compra transaccional real de punta a punta (no solo un prototipo visual): creación/matching de salas (lobbies), escrow de pago con Mercado Pago (autorización → captura), provisioning automático y entrega de acceso por email.
 
-Herramientas con provisioning **live** (se pueden comprar hoy): Hugging Face, Canva, Notion. El resto del catálogo (GitHub Copilot, JetBrains, ChatGPT, Figma, Midjourney, Vercel) está marcado como "Próximamente" hasta tener un provider escalable para cada una.
+Herramientas con provisioning **live** (se pueden comprar hoy): Canva, Notion — ambas con descuento anual real que sostiene el modelo de negocio de fraccionar una licencia. El resto del catálogo (GitHub Copilot, JetBrains, ChatGPT, Figma, Midjourney, Vercel, y **Hugging Face**) está marcado como "Próximamente"; Hugging Face en particular tiene el provisioner ya implementado pero se dejó fuera de la venta porque su plan Team no tiene descuento por volumen ni anual (ver sección de Hugging Face más abajo).
 
 Ver `SPRINT_*.md` en la raíz del repo para el detalle de cada iteración; las últimas incorporadas fueron el modo demo de pago (para poder demostrar el checkout en modo TEST de Mercado Pago) y el desglose de la comisión de CoStack en el checkout.

@@ -39,7 +39,11 @@ const PROVIDER_URLS: Record<string, string> = {
 }
 
 export const CATALOG: CatalogItem[] = [
-  { id: "huggingface",name: "HuggingChat Premium",provider: "Hugging Face",pricePerMonth: 5, originalPrice: 20, monthlyCost: 20, availableSeats: 3, icon: Sparkles, iconBg: "bg-amber-500/10", iconColor: "text-amber-500", category: "AI", providerUrl: PROVIDER_URLS["Hugging Face"], status: "live" },
+  // status "soon": el plan Team de Hugging Face se factura mensual y por asiento sin
+  // descuento por volumen ni opcion anual (a diferencia de Canva/Notion), asi que no
+  // encaja con el modelo de negocio de CoStack. El provisioner sigue implementado
+  // (ver lib/provisioner/providers/huggingface.ts) como prueba tecnica, pero no se vende.
+  { id: "huggingface",name: "HuggingChat Premium",provider: "Hugging Face",pricePerMonth: 5, originalPrice: 20, monthlyCost: 20, availableSeats: 3, icon: Sparkles, iconBg: "bg-amber-500/10", iconColor: "text-amber-500", category: "AI", providerUrl: PROVIDER_URLS["Hugging Face"], status: "soon" },
   { id: "copilot",    name: "GitHub Copilot",   provider: "GitHub",    pricePerMonth: 5,  originalPrice: 10, monthlyCost: 10, availableSeats: 2,  icon: GitBranch,    iconBg: "bg-slate-200/50",   iconColor: "text-slate-700",   category: "AI",     providerUrl: PROVIDER_URLS["GitHub"], status: "soon" },
   { id: "canva",      name: "Canva Pro Team",    provider: "Canva",     pricePerMonth: 6,  originalPrice: 30, monthlyCost: 30, availableSeats: 3,  icon: Pen,          iconBg: "bg-blue-500/10",     iconColor: "text-blue-500",    category: "Design", providerUrl: PROVIDER_URLS["Canva"], status: "live" },
   { id: "notion",     name: "Notion Team",       provider: "Notion",    pricePerMonth: 7,  originalPrice: 20, monthlyCost: 20, availableSeats: 4,  icon: NotebookPen,  iconBg: "bg-zinc-400/10",     iconColor: "text-zinc-300",    category: "Design", providerUrl: PROVIDER_URLS["Notion"], status: "live" },
