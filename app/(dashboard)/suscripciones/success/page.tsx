@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { CATALOG } from "@/lib/catalog"
 import { ROUTES } from "@/lib/constants/routes"
+import { formatCurrency } from "@/lib/utils"
 import { CheckCircle2, LayoutDashboard, CreditCard, Key, HelpCircle, Loader2, XCircle } from "lucide-react"
 import { toast } from "sonner"
 
@@ -155,7 +156,7 @@ export default function SuccessPage() {
             </div>
             <div className="flex justify-between items-center py-3 border-t border-white/5">
               <span className="text-zinc-400">Pagaste</span>
-              <span className="text-emerald-400 font-bold text-lg">${tool.pricePerMonth}.00</span>
+              <span className="text-emerald-400 font-bold text-lg">${formatCurrency(tool.pricePerMonth)}</span>
             </div>
             <div className="flex justify-between items-center py-3 border-t border-white/5">
               <span className="text-zinc-400">Estado</span>

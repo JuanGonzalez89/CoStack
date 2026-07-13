@@ -1,4 +1,5 @@
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
+import { formatCurrency } from '@/lib/utils'
 
 const history = [
   { id: '1', type: 'income', description: 'Cobro de ChatGPT Team · Martín Pérez', amount: 30.0, date: '2026-05-18' },
@@ -35,7 +36,7 @@ export default function WalletHistoryPage() {
               </div>
               <span className="self-center text-xs text-muted-foreground">{item.date}</span>
               <span className={item.type === 'income' ? 'self-center text-right font-mono text-sm font-semibold text-emerald-500' : 'self-center text-right font-mono text-sm font-semibold text-red-500'}>
-                {item.type === 'income' ? '+' : '-'}${item.amount.toFixed(2)}
+                {item.type === 'income' ? '+' : '-'}${formatCurrency(item.amount)}
               </span>
             </li>
           ))}

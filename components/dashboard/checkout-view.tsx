@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Clock, ShieldCheck, Zap, Users, Lock, Loader2, CreditCard } from "lucide-react"
 import { toast } from "sonner"
 import { CATALOG, computeCheckoutPricing } from "@/lib/catalog"
+import { formatCurrency } from "@/lib/utils"
 
 interface CheckoutViewProps {
   toolSlug: string
@@ -297,19 +298,19 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-zinc-400">{tool.name} ({tool.availableSeats} cupos)</span>
-                  <span className="font-semibold text-white">${pricing.base.toFixed(2)}</span>
+                  <span className="font-semibold text-white">${formatCurrency(pricing.base)}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-zinc-400">Comisión CoStack ({Math.round(pricing.commissionRate * 100)}%)</span>
-                  <span className="font-semibold text-zinc-300">${pricing.commission.toFixed(2)}</span>
+                  <span className="font-semibold text-zinc-300">${formatCurrency(pricing.commission)}</span>
                 </div>
               </div>
 
               <div className="border-t border-white/5 pt-4 mb-6 flex justify-between items-end">
                 <span className="font-bold text-white">Total</span>
                 <div className="text-right">
-                  <span className="text-3xl font-black text-white block">${pricing.total.toFixed(2)}</span>
-                  <span className="text-xs text-zinc-500">USD / mes</span>
+                  <span className="text-3xl font-black text-white block">${formatCurrency(pricing.total)}</span>
+                  <span className="text-xs text-zinc-500">ARS / mes</span>
                 </div>
               </div>
 
@@ -326,7 +327,7 @@ export function CheckoutView({ toolSlug, isOrganizer = false }: CheckoutViewProp
                 ) : (
                   <>
                     <Lock className="w-4 h-4" />
-                    Pagar · ${pricing.total.toFixed(2)}
+                    Pagar · ${formatCurrency(pricing.total)}
                   </>
                 )}
               </Button>

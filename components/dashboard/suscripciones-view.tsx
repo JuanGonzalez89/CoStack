@@ -7,7 +7,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 import { LicenseDetailModal } from "@/components/suscripciones/license-detail-modal"
 import { CATALOG } from "@/lib/catalog"
 
@@ -129,13 +129,13 @@ export function SuscripcionesView({ isOrganizer = false }: { isOrganizer?: boole
               <div className="mt-auto pt-5 border-t border-white/5 flex items-end justify-between mb-8">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm text-zinc-500 line-through">Oficial: ${tool.originalPrice}</p>
+                    <p className="text-sm text-zinc-500 line-through">Oficial: ${formatCurrency(tool.originalPrice)}</p>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md">
                       Ahorrás {savings}%
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-5xl font-bold tracking-tight text-white">${tool.pricePerMonth}</span>
+                    <span className="text-5xl font-bold tracking-tight text-white">${formatCurrency(tool.pricePerMonth)}</span>
                     <span className="text-sm font-medium text-zinc-500">/mes por integrante</span>
                   </div>
                 </div>

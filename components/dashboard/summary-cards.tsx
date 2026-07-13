@@ -1,5 +1,6 @@
 import { CalendarClock, DollarSign, Layers, Users } from 'lucide-react'
 import type { DashboardSnapshot } from '@/lib/dashboard-snapshot'
+import { formatCurrency } from '@/lib/utils'
 
 type SummaryCard = {
   title: string
@@ -73,7 +74,7 @@ export function SummaryCards({ snapshot, isOrganizer = true }: { snapshot: Dashb
     },
     {
       title: 'Ahorro Mensual',
-      value: `$${totalSavings.toFixed(2)}`,
+      value: `$${formatCurrency(totalSavings)}`,
       sub: 'vs Precio oficial',
       icon: DollarSign,
       color: 'emerald',
@@ -90,7 +91,7 @@ export function SummaryCards({ snapshot, isOrganizer = true }: { snapshot: Dashb
   const organizerCards: SummaryCard[] = [
     {
       title: 'Gasto operativo',
-      value: `$${paidAmount.toFixed(2)}`,
+      value: `$${formatCurrency(paidAmount)}`,
       sub: 'Mensual estimado',
       icon: DollarSign,
       color: 'cyan',

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 import type { ToolCardData } from "@/features/dashboard/contracts"
+import { formatCurrency } from "@/lib/utils"
 
 interface SubscriptionDetailModalProps {
   tool: ToolCardData | null
@@ -64,7 +65,7 @@ export function SubscriptionDetailModal({ tool, accessToken, open, onOpenChange 
           <div className="grid grid-cols-2 gap-3">
             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
               <p className="text-xs text-zinc-500 mb-1">Pagás por mes</p>
-              <p className="text-2xl font-bold text-white">${tool.monthlyCost}.00</p>
+              <p className="text-2xl font-bold text-white">${formatCurrency(tool.monthlyCost)}</p>
             </div>
             <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
               <p className="text-xs text-zinc-500 mb-1">Vence en</p>

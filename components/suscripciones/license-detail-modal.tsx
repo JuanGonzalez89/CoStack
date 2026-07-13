@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { CheckCircle2, Zap, ShieldCheck, ArrowRight, X, HelpCircle } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 import { CATALOG } from "@/lib/catalog"
 import type { CatalogItem } from "@/lib/catalog"
 
@@ -47,8 +47,8 @@ export function LicenseDetailModal({ toolSlug, isOrganizer = false, onClose }: L
               <DialogDescription className="text-xs text-zinc-400">por {tool.provider}</DialogDescription>
             </div>
             <div className="ml-auto text-right">
-              <span className="text-zinc-500 line-through text-sm">${tool.originalPrice}</span>
-              <p className="text-2xl font-black text-white">${tool.pricePerMonth}</p>
+              <span className="text-zinc-500 line-through text-sm">${formatCurrency(tool.originalPrice)}</span>
+              <p className="text-2xl font-black text-white">${formatCurrency(tool.pricePerMonth)}</p>
               <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">-{savings}%</span>
             </div>
           </div>

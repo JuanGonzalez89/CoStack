@@ -1,6 +1,7 @@
 "use client"
 
 import { User, Shield, CreditCard, Mail, HelpCircle } from "lucide-react"
+import { formatCurrency } from "@/lib/utils"
 
 interface ActiveSub {
   toolName: string
@@ -70,7 +71,7 @@ export function SettingsPageClient({ userName, userEmail, userRole, subscription
                   <p className="text-white font-medium text-sm">{sub.toolName}</p>
                   <p className="text-xs text-zinc-500">Renueva el {new Date(sub.renewDate).toLocaleDateString('es-AR')}</p>
                 </div>
-                <span className="text-emerald-400 font-bold">${sub.amount.toFixed(2)}/mes</span>
+                <span className="text-emerald-400 font-bold">${formatCurrency(sub.amount)}/mes</span>
               </div>
             ))}
           </div>

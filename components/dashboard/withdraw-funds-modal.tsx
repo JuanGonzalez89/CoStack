@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button"
 import { Wallet, Loader2, ArrowRightLeft } from "lucide-react"
 import { toast } from "sonner"
+import { formatCurrency } from "@/lib/utils"
 
 export function WithdrawFundsModal({ balance, children }: { balance: number, children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -17,7 +18,7 @@ export function WithdrawFundsModal({ balance, children }: { balance: number, chi
     await new Promise(resolve => setTimeout(resolve, 2000))
     setIsProcessing(false)
     setIsOpen(false)
-    toast.success(`Retiro de $${balance.toFixed(2)} iniciado con éxito a ${method === "mp" ? "MercadoPago" : "Crypto Wallet"}.`)
+    toast.success(`Retiro de $${formatCurrency(balance)} iniciado con éxito a ${method === "mp" ? "MercadoPago" : "Crypto Wallet"}.`)
   }
 
   return (
@@ -32,7 +33,7 @@ export function WithdrawFundsModal({ balance, children }: { balance: number, chi
           </div>
           <DialogTitle className="text-center text-xl">Retirar Fondos</DialogTitle>
           <DialogDescription className="text-center text-zinc-400">
-            Tienes <strong className="text-zinc-200">${balance.toFixed(2)}</strong> disponibles para retirar.
+            Tienes <strong className="text-zinc-200">${formatCurrency(balance)}</strong> disponibles para retirar.
           </DialogDescription>
         </DialogHeader>
         

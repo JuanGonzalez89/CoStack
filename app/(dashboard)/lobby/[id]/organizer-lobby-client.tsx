@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { ROUTES } from "@/lib/constants/routes"
 import { SubscriptionDetailModal } from "@/components/suscripciones/subscription-detail-modal"
 import type { ToolCardData } from "@/features/dashboard/contracts"
+import { formatCurrency } from "@/lib/utils"
 
 function calculateTimeLeft(expiresAt: string): { hours: number; minutes: number; seconds: number } | null {
   const diff = new Date(expiresAt).getTime() - Date.now()
@@ -122,7 +123,7 @@ export function OrganizerLobbyClient({ lobbyId }: { lobbyId: string }) {
         </div>
         <div className="text-right">
           <p className="text-sm text-zinc-500 mb-1">Precio por miembro</p>
-          <p className="text-3xl font-bold text-emerald-400">${data.pricePerSeat?.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-emerald-400">${formatCurrency(data.pricePerSeat ?? 0)}</p>
         </div>
       </div>
 
@@ -194,7 +195,7 @@ export function OrganizerLobbyClient({ lobbyId }: { lobbyId: string }) {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-emerald-400">${member.amount.toFixed(2)}</p>
+                        <p className="font-bold text-emerald-400">${formatCurrency(member.amount)}</p>
                         <p className="text-xs text-zinc-500">Aportado</p>
                       </div>
                     </div>
@@ -258,7 +259,7 @@ export function OrganizerLobbyClient({ lobbyId }: { lobbyId: string }) {
               </li>
               <li className="flex gap-2">
                 <span className="text-rose-400 shrink-0">✗</span>
-                Si expira el tiempo: se cancela la sala y se te devuelve tu pago inicial de ${data.pricePerSeat?.toFixed(2)} sin vueltas.
+                Si expira el tiempo: se cancela la sala y se te devuelve tu pago inicial de ${formatCurrency(data.pricePerSeat ?? 0)} sin vueltas.
               </li>
             </ul>
           </div>

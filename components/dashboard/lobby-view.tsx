@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { useLobbyPolling } from "@/hooks/use-lobby-polling"
 import { SubscriptionDetailModal } from "@/components/suscripciones/subscription-detail-modal"
 import type { ToolCardData } from "@/features/dashboard/contracts"
+import { formatCurrency } from "@/lib/utils"
 
 interface LobbyViewProps {
   tool: ToolCardData
@@ -130,7 +131,7 @@ export function LobbyView({ tool, open, onOpenChange }: LobbyViewProps) {
                 <p className="font-semibold text-white text-sm">No se completaron los cupos a tiempo</p>
               </div>
               <p className="text-sm text-zinc-400">
-                No se alcanzaron los {total} cupos necesarios en 24 horas. Tu pago de <strong className="text-white">${data.pricePerSeat?.toFixed(2)}</strong> será devuelto automáticamente.
+                No se alcanzaron los {total} cupos necesarios en 24 horas. Tu pago de <strong className="text-white">${formatCurrency(data.pricePerSeat ?? 0)}</strong> será devuelto automáticamente.
               </p>
             </div>
             <Button
@@ -211,7 +212,7 @@ export function LobbyView({ tool, open, onOpenChange }: LobbyViewProps) {
                         {memberLabel}
                       </span>
                     </div>
-                    <span className="text-emerald-400 font-semibold">${member.amount.toFixed(2)}</span>
+                    <span className="text-emerald-400 font-semibold">${formatCurrency(member.amount)}</span>
                   </div>
                 )
               })}

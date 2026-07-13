@@ -1,5 +1,6 @@
 import { Wallet, CalendarClock } from "lucide-react"
 import { WithdrawFundsModal } from "./withdraw-funds-modal"
+import { formatCurrency } from "@/lib/utils"
 
 interface BillingHeaderCardsProps {
   balance: number
@@ -25,7 +26,7 @@ export function BillingHeaderCards({ balance, nextCharge, nextChargeDate, isLoad
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
             <p className="text-3xl font-bold text-zinc-50 tracking-tight">
-              {isLoading ? "..." : `$${balance.toFixed(2)}`}
+              {isLoading ? "..." : `$${formatCurrency(balance)}`}
             </p>
             <p className="text-xs text-zinc-500 mt-1">
               {isOrganizer ? "A liberarse el próximo ciclo" : "Disponible"}
@@ -54,7 +55,7 @@ export function BillingHeaderCards({ balance, nextCharge, nextChargeDate, isLoad
         <div className="flex items-end justify-between">
           <div>
             <p className="text-3xl font-bold text-zinc-50 tracking-tight">
-              {isLoading ? "..." : `$${nextCharge.toFixed(2)}`}
+              {isLoading ? "..." : `$${formatCurrency(nextCharge)}`}
             </p>
             <p className="text-xs text-zinc-500 mt-1">
               {nextChargeDate ? `Fecha de corte: ${nextChargeDate}` : 'Calculando...'}

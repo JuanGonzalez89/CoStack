@@ -1,5 +1,5 @@
 import { ArrowUpRight, ArrowDownLeft } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 import type { StatusBadgeStatus } from "@/features/dashboard/contracts"
 import { StatusBadge } from "./status-badge"
 
@@ -44,7 +44,7 @@ export function HistoryTransactionRow({ description, date, amount, status, type 
           isIncome ? "text-emerald-500" : "text-zinc-50"
         )}
       >
-        {amountPrefix}${amount.toFixed(2)}
+        {amountPrefix}${formatCurrency(amount)}
       </p>
     </div>
   )

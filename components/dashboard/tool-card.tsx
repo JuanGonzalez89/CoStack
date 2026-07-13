@@ -4,7 +4,7 @@ import { CreditCard, Loader2, Lock, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StatusBadge, type StatusTone } from '@/components/dashboard/status-badge'
 import type { ToolCardData, ToolCardState } from '@/features/dashboard/contracts'
-import { cn } from '@/lib/utils'
+import { cn, formatCurrency } from '@/lib/utils'
 
 const statusLabels: Record<ToolCardState, { label: string; tone: StatusTone }> = {
   pending: { label: 'Cuota Pendiente', tone: 'warning' },
@@ -71,7 +71,7 @@ export function ToolCard({ tool, onRequestPay, onSelect, onOpenLobby, isOrganize
         </div>
 
         <div className="mb-5 flex items-baseline gap-1.5">
-          <span className="text-4xl font-bold tracking-tight text-zinc-50">${tool.monthlyCost}</span>
+          <span className="text-4xl font-bold tracking-tight text-zinc-50">${formatCurrency(tool.monthlyCost)}</span>
           <span className="text-sm font-medium text-zinc-500">/mes</span>
         </div>
         
