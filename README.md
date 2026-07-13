@@ -22,7 +22,7 @@ CoStack es una plataforma pensada para resolver las fricciones operativas y fina
 - [Entrega automática de acceso (Provisioning)](#entrega-automática-de-acceso-provisioning)
 - [Provisioning de Canva](#provisioning-de-canva-invite-link)
 - [Provisioning de Notion](#provisioning-de-notion-invite-link)
-- [Provisioning de Hugging Face](#provisioning-de-hugging-face-join-link)
+- [Provisioning de Hugging Face](#provisioning-de-hugging-face-invite-link)
 - [Autores](#autores)
 - [Estado del proyecto](#estado-del-proyecto)
 
@@ -216,15 +216,19 @@ Cuando un lobby de Notion se completa, el sistema envía automáticamente un ema
 
 El sistema aplica la misma validación de antigüedad (30 días, warning a los 5 días) que Canva por consistencia, aunque el link de Notion no expira automáticamente. Si se regenera manualmente en Notion (Settings → Members → Invite link → desactivar/generar nuevo), actualizar ambas env vars en Vercel y redesplegar.
 
-## Provisioning de Hugging Face (Join Link)
+## Provisioning de Hugging Face (Invite Link)
 
-El acceso a HuggingChat Premium se provisiona con el link público de la organización `CoStack-1` en Hugging Face, que tiene activadas las opciones **"Allow requests to join"** y **"Automatically approve join requests"**. Con esa configuración, cualquiera que abra el link se une al instante — no hace falta invitar a cada miembro individualmente ni hay expiración que gestionar.
+El acceso se provisiona con el mismo patrón que Canva/Notion: un **invite link privado** de la organización de Hugging Face, generado desde Organization Settings → Members → **"Enable inviting users by sharing a link"**.
+
+⚠️ **No usar** la opción "Allow requests to join from the organization page" + "Automatically approve join requests" — esa combinación hace que la página de la organización sea pública e indexable en Hugging Face, y **cualquier usuario** (no solo quien recibió el email) puede pedir unirse y quedar admitido al instante. El invite link privado, en cambio, solo lo conoce quien lo recibió por email — mismo modelo de seguridad que Canva y Notion.
+
+**Nota sobre el valor real:** HuggingChat es gratis para todos los usuarios de Hugging Face independientemente de cualquier suscripción — no existe una versión "premium" del chat en sí. Los beneficios de un plan PRO/Team (más storage, límites de API, créditos de inference, ZeroGPU) son del Hub en general. Verificar con la organización real qué beneficio concreto se está entregando antes de asegurarlo en la defensa.
 
 ### Variables de entorno
 
 | Variable | Descripción | Ejemplo |
 |---|---|---|
-| `HUGGINGFACE_ORG_URL` | URL de la organización (opcional, default `https://huggingface.co/CoStack-1`) | `https://huggingface.co/CoStack-1` |
+| `HUGGINGFACE_ORG_URL` | Invite link privado de la organización (no la URL pública del org) | `https://huggingface.co/organizations/CoStack-Team/share/XXXXXXXX` |
 
 ## Autores
 

@@ -2,26 +2,28 @@ import type { ProvisionResult, ProvisionerProvider } from '../types'
 import { sendInviteLinkEmail } from '@/lib/mail.server'
 
 /**
- * HuggingFaceInviteProvider — Provisioning de Hugging Face vía link de unión a la organización.
+ * HuggingFaceInviteProvider — Provisioning de Hugging Face vía invite link privado de la organización.
  *
- * En vez de automatizar la invitación con Playwright (que solo corre en local/headed y
- * no funciona en Vercel ni en el worker headless), se usa el link público de la
- * organización 'CoStack-1', que tiene activadas las opciones:
- *   [x] Allow requests to join
- *   [x] Automatically approve join requests
+ * Mismo patrón que Canva/Notion: un link de invitación reutilizable, generado desde
+ * Organization Settings > Members > "Enable inviting users by sharing a link".
  *
- * Con esa configuración, cualquier usuario que abra la URL se une al instante con un
- * click — no hace falta enviar invitaciones una por una ni tocar el DOM.
+ * ⚠️  NO usar la página pública de la organización con "Allow requests to join from
+ * the organization page" + "Automatically approve join requests" — esa combinación
+ * es descubrible por cualquier usuario de Hugging Face (la página del org es pública
+ * e indexable), no solo por quien recibe el email. El invite link privado, en cambio,
+ * solo lo conoce quien lo recibió por email, igual que el patrón de Canva/Notion.
  *
  * Env vars:
- *   HUGGINGFACE_ORG_URL — URL de la organización (default: https://huggingface.co/CoStack-1)
+ *   HUGGINGFACE_ORG_URL — invite link privado de la organización
+ *     (Organization Settings > Members > Join settings > "Enable inviting users by
+ *     sharing a link" > Copy link). Ejemplo: https://huggingface.co/organizations/{org}/share/{token}
  */
 
 const HUGGINGFACE_SLUGS = ['huggingface', 'huggingchat', 'ia']
-const DEFAULT_ORG_URL = 'https://huggingface.co/CoStack-1'
+const DEFAULT_INVITE_URL = 'https://huggingface.co/CoStack-1'
 
 export class HuggingFaceInviteProvider implements ProvisionerProvider {
-  name = 'Hugging Face Join Link'
+  name = 'Hugging Face Invite Link'
 
   canHandle(toolSlug: string): boolean {
     return HUGGINGFACE_SLUGS.includes(toolSlug)
@@ -32,7 +34,7 @@ export class HuggingFaceInviteProvider implements ProvisionerProvider {
     _toolName: string,
     members: { email: string; userId: string }[],
   ): Promise<ProvisionResult> {
-    const orgUrl = process.env.HUGGINGFACE_ORG_URL || DEFAULT_ORG_URL
+    const orgUrl = process.env.HUGGINGFACE_ORG_URL || DEFAULT_INVITE_URL
 
     // --- Enviar email con el link a cada miembro (best-effort) ---
     // Si Resend no está configurado o falla, el provisioning sigue exitoso:
