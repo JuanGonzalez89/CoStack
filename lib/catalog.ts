@@ -60,11 +60,16 @@ export const CATALOG: CatalogItem[] = [
   // features dice "Users: 1 (Developer) / Unlimited (Team) / Unlimited (Business)",
   // y verificado contra la API de billing real de nuestra propia cuenta de prueba:
   // no existe un campo de precio por miembro, solo "maxMembers" como tope, no como
-  // multiplicador). USD $29/mes individual (mensual) o $26/mes anual (~10% ahorro
-  // si lo comprás solo). El ahorro real de CoStack viene de DIVIDIR esa tarifa fija
-  // entre los miembros del lobby -- pricePerMonth = costo total anual (originalPrice)
-  // / availableSeats. Convertido a ARS (~1.487,5 ARS/USD, jul-2026).
-  { id: "sentry",     name: "Sentry Team",       provider: "Sentry",    pricePerMonth: 9669,  originalPrice: 43138, monthlyCost: 43138, availableSeats: 4,  icon: Bug,          iconBg: "bg-orange-500/10",   iconColor: "text-orange-500",  category: "IDE",    providerUrl: PROVIDER_URLS["Sentry"], status: "live" },
+  // multiplicador).
+  // originalPrice = $29/mes individual, facturacion mensual, ARS 43.138 (lo que pagarias
+  //                 SOLO, sin CoStack, sin compromiso anual) -- usado para el cartel "Oficial".
+  // monthlyCost    = $26/mes anual, costo REAL total del plan que paga CoStack, ARS 38.675
+  //                 (ya incluye el ahorro de facturacion anual vs mensual).
+  // pricePerMonth  = monthlyCost / availableSeats = 38.675 / 4 = 9.669 (lo que paga cada
+  //                 miembro, ANTES de la comision del 8% que se suma en el checkout).
+  // O sea Sentry combina DOS ahorros a la vez (anual + division entre el grupo), por eso
+  // el ahorro final es mucho mayor que Canva/Notion (que solo tienen el primero).
+  { id: "sentry",     name: "Sentry Team",       provider: "Sentry",    pricePerMonth: 9669,  originalPrice: 43138, monthlyCost: 38675, availableSeats: 4,  icon: Bug,          iconBg: "bg-orange-500/10",   iconColor: "text-orange-500",  category: "IDE",    providerUrl: PROVIDER_URLS["Sentry"], status: "live" },
   { id: "jetbrains",  name: "All Products Pack", provider: "JetBrains", pricePerMonth: 8,  originalPrice: 28, monthlyCost: 28, availableSeats: 1,  icon: Code,         iconBg: "bg-rose-500/10",     iconColor: "text-rose-500",    category: "IDE",   providerUrl: PROVIDER_URLS["JetBrains"], status: "soon" },
   { id: "chatgpt",    name: "ChatGPT Team",      provider: "OpenAI",    pricePerMonth: 15, originalPrice: 30, monthlyCost: 30, availableSeats: 4,  icon: MessageSquare,iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500", category: "AI",   providerUrl: PROVIDER_URLS["OpenAI"], status: "soon" },
   { id: "figma",      name: "Figma Org",         provider: "Figma Inc.",pricePerMonth: 12, originalPrice: 45, monthlyCost: 45, availableSeats: 5,  icon: Pen,          iconBg: "bg-violet-500/10",   iconColor: "text-violet-500",  category: "Design", providerUrl: PROVIDER_URLS["Figma Inc."], status: "soon" },
